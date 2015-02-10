@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 public class DeployPolicyIntegrationTest extends AbstractTest {
 

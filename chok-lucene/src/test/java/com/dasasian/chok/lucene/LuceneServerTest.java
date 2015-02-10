@@ -22,12 +22,12 @@ import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.testutil.mockito.ChainedAnswer;
 import com.dasasian.chok.testutil.mockito.SleepingAnswer;
 import com.dasasian.chok.util.NodeConfiguration;
-import junit.framework.Assert;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.*;
 import org.apache.lucene.util.Version;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 import org.mockito.invocation.InvocationOnMock;
@@ -212,7 +212,7 @@ public class LuceneServerTest extends AbstractTest {
                 Assert.assertEquals(last.getTotalHits(), hitsMapWritable.getTotalHits());
                 float lastScore = last.getHitList().get(0).getScore();
                 float currentScore = hitsMapWritable.getHitList().get(0).getScore();
-                Assert.assertEquals(lastScore, currentScore);
+                Assert.assertEquals(lastScore, currentScore, 0.01);
             }
         }
         server.shutdown();

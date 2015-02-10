@@ -15,7 +15,7 @@
  */
 package com.dasasian.chok.lucene;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import org.apache.hadoop.io.Writable;
 import org.mortbay.log.Log;
 
@@ -146,6 +146,6 @@ public class DocumentFrequencyWritable implements Writable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("totalNumberOfDocs", getNumDocs()).add("termFrequencies", getAll()).toString();
+        return MoreObjects.toStringHelper(this).add("totalNumberOfDocs", getNumDocs()).add("termFrequencies", getAll()).toString();
     }
 }

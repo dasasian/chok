@@ -67,10 +67,10 @@ public class Node implements ConnectedComponent {
     private static Server startRPCServer(String hostName, final int startPort, IContentServer nodeManaged, int handlerCount) {
         int serverPort = startPort;
         int tryCount = 10000;
-        Server _rpcServer = null;
-        while (_rpcServer == null) {
+        Server rpcServer = null;
+        while (rpcServer == null) {
             try {
-                _rpcServer = RPC.getServer(nodeManaged, "0.0.0.0", serverPort, handlerCount, false, new Configuration());
+                rpcServer = RPC.getServer(nodeManaged, "0.0.0.0", serverPort, handlerCount, false, new Configuration());
                 LOG.info(nodeManaged.getClass().getSimpleName() + " server started on : " + hostName + ":" + serverPort);
             }
             catch (final BindException e) {
@@ -86,13 +86,8 @@ public class Node implements ConnectedComponent {
                 throw new RuntimeException("unable to create rpc server", e);
             }
         }
-        try {
-            _rpcServer.start();
-        }
-        catch (final IOException e) {
-            throw new RuntimeException("failed to start rpc server", e);
-        }
-        return _rpcServer;
+        rpcServer.start();
+        return rpcServer;
     }
 
     /**
