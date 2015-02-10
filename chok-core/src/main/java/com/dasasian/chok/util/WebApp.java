@@ -60,7 +60,6 @@ public class WebApp {
     }
 
     public void startWebServer() throws Exception {
-
         Server server = new Server();
         Connector connector = new SelectChannelConnector();
         connector.setPort(_port);

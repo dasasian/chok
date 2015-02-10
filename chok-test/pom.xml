@@ -31,25 +31,53 @@
         <version>1.0</version>
     </parent>
 
-    <artifactId>chok-ec2</artifactId>
+    <artifactId>chok-test</artifactId>
 
     <dependencies>
-
         <dependency>
             <groupId>com.dasasian.chok</groupId>
             <artifactId>chok-core</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.google.code.typica</groupId>
-            <artifactId>typica</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-core</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-test</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.easytesting</groupId>
+            <artifactId>fest-assert</artifactId>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
 

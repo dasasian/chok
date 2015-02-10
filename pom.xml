@@ -31,6 +31,7 @@
 
     <modules>
         <module>chok-core</module>
+        <module>chok-test</module>
         <module>chok-lucene</module>
         <module>chok-mapfile</module>
         <module>chok-ec2</module>
@@ -42,6 +43,13 @@
                 <groupId>com.dasasian.chok</groupId>
                 <artifactId>chok-core</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.dasasian.chok</groupId>
+                <artifactId>chok-test</artifactId>
+                <version>${project.version}</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
@@ -126,42 +134,49 @@
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>
                 <version>0.1.51</version>
+                <!--<scope>test</scope>-->
             </dependency>
 
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
                 <version>4.12</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>1.10.19</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.easytesting</groupId>
                 <artifactId>fest-assert</artifactId>
                 <version>1.4</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-core</artifactId>
                 <version>1.2.1</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-library</artifactId>
                 <version>1.2.1</version>
+                <scope>test</scope>
             </dependency>
 
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-test</artifactId>
                 <version>1.2.1</version>
+                <scope>test</scope>
             </dependency>
 
         </dependencies>

@@ -40,6 +40,11 @@
             <artifactId>chok-core</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.dasasian.chok</groupId>
+            <artifactId>chok-test</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
