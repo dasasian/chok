@@ -170,6 +170,5 @@ public class CircularListTest extends AbstractTest {
         list.getNext();
         assertEquals("1", list.getTop());
         assertEquals("3", list.getTail());
-
     }
 }
