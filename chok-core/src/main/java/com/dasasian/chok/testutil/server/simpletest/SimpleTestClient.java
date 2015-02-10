@@ -34,7 +34,15 @@ import java.util.List;
 public class SimpleTestClient implements ISimpleTestClient {
 
     protected final static Logger LOG = Logger.getLogger(SimpleTestClient.class);
-
+    private static final Method SLEEP_METHOD;
+    private static final int SLEEP_METHOD_SHARD_ARG_IDX = 1;
+    static {
+        try {
+            SLEEP_METHOD = ISimpleTestServer.class.getMethod("testRequest", new Class[]{String.class, String[].class});
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Could not find method testRequest() in ITestServer!");
+        }
+    }
     private Client client;
 
     public SimpleTestClient(final INodeSelectionPolicy nodeSelectionPolicy) {
@@ -48,25 +56,12 @@ public class SimpleTestClient implements ISimpleTestClient {
     public SimpleTestClient(final ZkConfiguration config) {
         client = new Client(ISimpleTestServer.class, config);
     }
-
     public SimpleTestClient(final INodeSelectionPolicy policy, final ZkConfiguration config) {
         client = new Client(ISimpleTestServer.class, policy, config);
     }
 
     public SimpleTestClient(final INodeSelectionPolicy policy, final ZkConfiguration config, final ClientConfiguration clientConfiguration) {
         client = new Client(ISimpleTestServer.class, policy, config, clientConfiguration);
-    }
-
-    private static final Method SLEEP_METHOD;
-    private static final int SLEEP_METHOD_SHARD_ARG_IDX = 1;
-
-    static {
-        try {
-            SLEEP_METHOD = ISimpleTestServer.class.getMethod("testRequest", new Class[]{String.class, String[].class});
-        }
-        catch (NoSuchMethodException e) {
-            throw new RuntimeException("Could not find method testRequest() in ITestServer!");
-        }
     }
 
     @Override

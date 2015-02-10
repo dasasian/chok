@@ -34,17 +34,15 @@ import java.util.List;
 public class LoadTestMasterOperation implements MasterOperation {
 
     private static final Logger LOG = Logger.getLogger(LoadTestMasterOperation.class);
-
-    private String masterName;
     private final int numberOfTesterNodes;
     private final int startRate;
     private final int endRate;
     private final int step;
-
     private final long runTime;
     private final AbstractQueryExecutor queryExecutor;
     private final File resultDir;
     private final long startTime;
+    private String masterName;
     private int currentIteration;
     private long currentIterationStartTime;
 
@@ -88,8 +86,7 @@ public class LoadTestMasterOperation implements MasterOperation {
             if (!resultDir.isDirectory()) {
                 throw new IllegalStateException("result dir '" + resultDir.getAbsolutePath() + "' cannot be created");
             }
-        }
-        else if (!masterName.equals(context.getMaster().getMasterName())) {
+        } else if (!masterName.equals(context.getMaster().getMasterName())) {
             throw new IllegalStateException("master change detected - load test not safe for this since it writes local log files!");
         }
         List<String> testNodes = context.getProtocol().getLiveNodes();
@@ -164,14 +161,12 @@ public class LoadTestMasterOperation implements MasterOperation {
                     if (elapsedTime != -1) {
                         timeStandardDeviation.increment(elapsedTime);
                         timeMean.increment(elapsedTime);
-                    }
-                    else {
+                    } else {
                         ++errors;
                     }
                 }
                 resultWriter.write(queryRate + "\t" + ((double) queryResults.size() / (runTime / 1000)) + "\t" + queryResults.size() + "\t" + errors + "\t" + (int) timeMean.getResult() + "\t" + (int) timeStandardDeviation.getResult() + "\n");
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 throw new IllegalStateException("Failed to write statistics data.", e);
             }
             try {
@@ -179,21 +174,18 @@ public class LoadTestMasterOperation implements MasterOperation {
                 LOG.info("statistics written to " + statisticsFile.getAbsolutePath());
                 statisticsWriter.close();
                 resultWriter.close();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 LOG.warn("Failed to close statistics file.");
             }
             if (queryRate + step <= endRate) {
                 currentIteration++;
                 LOG.info("triggering next iteration " + currentIteration);
                 context.getMasterQueue().add(this);
-            }
-            else {
+            } else {
                 LOG.info("finish load test in iteration " + currentIteration + " after " + (System.currentTimeMillis() - startTime) + " ms");
                 context.getProtocol().removeFlag(getName());
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             context.getProtocol().removeFlag(getName());
         }
     }

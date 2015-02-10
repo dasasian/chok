@@ -34,8 +34,7 @@ public class ZkChokUtil {
         HostAndPort hostAndPort = HostAndPort.fromString(server);
         if (!hostAndPort.hasPort()) {
             throw new IllegalArgumentException("No Port Specified for ZkServer");
-        }
-        else {
+        } else {
             String host = hostAndPort.getHostText();
 //            if (!host.equals("127.0.0.1") && !host.equals("localhost")) {
 //                throw new IllegalArgumentException("Attempting to start ZkServer remotely on " + host + " valid values are 127.0.0.1 or localhost");

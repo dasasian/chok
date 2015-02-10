@@ -32,7 +32,7 @@ import static org.junit.Assert.assertTrue;
 public class DeployPolicyIntegrationTest extends AbstractTest {
 
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000,TestNodeConfigurationFactory.class);
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
 
     public TestIndex testIndexWithOnShard = TestIndex.createTestIndex(temporaryFolder, 1);
 

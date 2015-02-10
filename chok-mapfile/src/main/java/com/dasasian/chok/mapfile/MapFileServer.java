@@ -76,8 +76,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
             synchronized (readerByShard) {
                 readerByShard.put(shardName, reader);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOG.error("Error opening shard " + shardName + " " + shardDir.getAbsolutePath(), e);
             throw e;
         }
@@ -98,14 +97,12 @@ public class MapFileServer implements IContentServer, IMapFileServer {
             if (reader != null) {
                 try {
                     reader.close();
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     LOG.error("Error closing shard " + shardName, e);
                     throw e;
                 }
                 readerByShard.remove(shardName);
-            }
-            else {
+            } else {
                 LOG.warn("Shard " + shardName + " not found!");
             }
         }
@@ -149,8 +146,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
         for (final MapFile.Reader reader : readerByShard.values()) {
             try {
                 reader.close();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 LOG.error("Error in shutdown", e);
             }
         }
@@ -172,8 +168,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
         executor.shutdown();
         try {
             executor.awaitTermination(1, TimeUnit.MINUTES); // TODO: config, 10 sec?
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             LOG.warn("Interrupted while waiting on MapLookup threads", e);
         }
         executor.shutdownNow();
@@ -184,8 +179,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
                 if (result != null) {
                     resultList.add(result);
                 }
-            }
-            catch (ExecutionException e) {
+            } catch (ExecutionException e) {
         /*
          * This MapFile red threw an exception. Stop processing and throw an
          * IOE.
@@ -197,15 +191,13 @@ public class MapFileServer implements IContentServer, IMapFileServer {
                 }
                 // Wrap MapFile.Reader's exception in an IOException.
                 throw new IOException("Error in MapLookup", t);
-            }
-            catch (TimeoutException e) {
+            } catch (TimeoutException e) {
         /*
          * Result is not ready. Should not happen, because future is done.
          * Continue as if MapLookup had returned null.
          */
                 LOG.warn("Timed out while getting MapLookup", e);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
         /*
          * Something went wrong while waiting for result. Should not happen
          * because we wait for 0 msec, and the future is done. Continue as if

@@ -42,7 +42,7 @@ import java.util.Set;
 public class MasterIntegrationTest extends AbstractTest {
 
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000,TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
 
     @Test(timeout = 20000)
     public void testDeployAndUndeployIndex() throws Exception {

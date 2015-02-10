@@ -39,9 +39,8 @@ public class NodeProxyManager implements INodeProxyManager {
     private final Configuration hadoopConf;
     private final Map<String, VersionedProtocol> node2ProxyMap = new ConcurrentHashMap<>();
     private final INodeSelectionPolicy selectionPolicy;
-
-    private int successiveProxyFailuresBeforeReestablishing = 3;
     private final Multiset<String> failedNodeInteractions = HashMultiset.create();
+    private int successiveProxyFailuresBeforeReestablishing = 3;
 
     public NodeProxyManager(Class<? extends VersionedProtocol> serverClass, Configuration hadoopConf, INodeSelectionPolicy selectionPolicy) {
         this.serverClass = serverClass;
@@ -51,7 +50,7 @@ public class NodeProxyManager implements INodeProxyManager {
 
     /**
      * @return how many successive proxy invocation errors must happen before the
-     *         proxy is re-established.
+     * proxy is re-established.
      */
     public int getSuccessiveProxyFailuresBeforeReestablishing() {
         return successiveProxyFailuresBeforeReestablishing;
@@ -85,8 +84,7 @@ public class NodeProxyManager implements INodeProxyManager {
                     try {
                         versionedProtocol = createNodeProxy(nodeName);
                         node2ProxyMap.put(nodeName, versionedProtocol);
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         LOG.error("Could not create proxy for node '" + nodeName, e);
                     }
                 }

@@ -20,9 +20,9 @@ import org.mockito.stubbing.Answer;
 
 public class PauseAnswer<T> implements Answer<T> {
 
+    private final T _returnValue;
     private volatile boolean _executionStarted;
     private volatile boolean _pauseCanceled;
-    private final T _returnValue;
     private Exception _resumeException;
 
     public PauseAnswer(T returnValue) {
@@ -47,8 +47,7 @@ public class PauseAnswer<T> implements Answer<T> {
             if (!_executionStarted) {
                 wait();
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }

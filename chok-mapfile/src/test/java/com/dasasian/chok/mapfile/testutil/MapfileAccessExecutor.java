@@ -24,8 +24,8 @@ import com.dasasian.chok.util.ZkConfiguration;
 @SuppressWarnings("serial")
 public class MapfileAccessExecutor extends AbstractQueryExecutor {
 
-    private IMapFileClient _client;
     private final ZkConfiguration _zkConfOfTargetCluster;
+    private IMapFileClient _client;
 
     public MapfileAccessExecutor(String[] indices, String[] queries, ZkConfiguration zkConfOfTargetCluster) {
         super(indices, queries);

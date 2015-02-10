@@ -36,11 +36,30 @@ import java.util.Map.Entry;
 
 public abstract class AbstractIndexOperation implements MasterOperation {
 
+    public static final char INDEX_SHARD_NAME_SEPARATOR = '#';
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
-    public static final char INDEX_SHARD_NAME_SEPARATOR = '#';
-
     private Map<String, List<String>> _newShardsByNodeMap = new HashMap<>();
+
+    public static String createShardName(String indexName, String shardPath) {
+        int lastIndexOf = shardPath.lastIndexOf("/");
+        if (lastIndexOf == -1) {
+            lastIndexOf = 0;
+        }
+        String shardFolderName = shardPath.substring(lastIndexOf + 1, shardPath.length());
+        if (shardFolderName.endsWith(".zip")) {
+            shardFolderName = shardFolderName.substring(0, shardFolderName.length() - 4);
+        }
+        return indexName + INDEX_SHARD_NAME_SEPARATOR + shardFolderName;
+    }
+
+    public static String getIndexNameFromShardName(String shardName) {
+        try {
+            return shardName.substring(0, shardName.indexOf(INDEX_SHARD_NAME_SEPARATOR));
+        } catch (IndexOutOfBoundsException e) {
+            throw new IllegalArgumentException(shardName + " is not a valid shard name");
+        }
+    }
 
     protected List<OperationId> distributeIndexShards(MasterContext context, final IndexMetaData indexMD, Collection<String> liveNodes, List<MasterOperation> runningOperations) throws IndexDeployException {
         if (liveNodes.isEmpty()) {
@@ -124,27 +143,6 @@ public abstract class AbstractIndexOperation implements MasterOperation {
         return currentNodeToShardsMap;
     }
 
-    public static String createShardName(String indexName, String shardPath) {
-        int lastIndexOf = shardPath.lastIndexOf("/");
-        if (lastIndexOf == -1) {
-            lastIndexOf = 0;
-        }
-        String shardFolderName = shardPath.substring(lastIndexOf + 1, shardPath.length());
-        if (shardFolderName.endsWith(".zip")) {
-            shardFolderName = shardFolderName.substring(0, shardFolderName.length() - 4);
-        }
-        return indexName + INDEX_SHARD_NAME_SEPARATOR + shardFolderName;
-    }
-
-    public static String getIndexNameFromShardName(String shardName) {
-        try {
-            return shardName.substring(0, shardName.indexOf(INDEX_SHARD_NAME_SEPARATOR));
-        }
-        catch (IndexOutOfBoundsException e) {
-            throw new IllegalArgumentException(shardName + " is not a valid shard name");
-        }
-    }
-
     protected boolean canAndShouldRegulateReplication(InteractionProtocol protocol, IndexMetaData indexMD) {
         ReplicationReport replicationReport = protocol.getReplicationReport(indexMD);
         return canAndShouldRegulateReplication(protocol, replicationReport);
@@ -165,8 +163,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
         ErrorType errorType;
         if (e instanceof IndexDeployException) {
             errorType = ((IndexDeployException) e).getErrorType();
-        }
-        else {
+        } else {
             errorType = ErrorType.UNKNOWN;
         }
         IndexDeployError deployError = new IndexDeployError(indexMD.getName(), errorType);
@@ -184,8 +181,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
             if (canAndShouldRegulateReplication(context.getProtocol(), replicationReport)) {
                 context.getProtocol().addMasterOperation(new BalanceIndexOperation(indexMD.getName()));
             }
-        }
-        else {
+        } else {
             IndexDeployError deployError = new IndexDeployError(indexMD.getName(), ErrorType.SHARDS_NOT_DEPLOYABLE);
             for (OperationResult operationResult : results) {
                 if (operationResult != null) {// node-crashed produces null
@@ -199,8 +195,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
         }
         if (newIndex) {
             context.getProtocol().publishIndex(indexMD);
-        }
-        else {
+        } else {
             context.getProtocol().updateIndexMD(indexMD);
         }
     }

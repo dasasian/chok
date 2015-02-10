@@ -127,8 +127,7 @@ class NodeInteraction<T> implements Runnable {
                 }
             }
             this.result.addResult(result, shards);
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             // Notify the work queue, so it can mark the node as down.
             shardManager.reportNodeCommunicationFailure(node, t);
             if (tryCount >= maxTryCount) {
@@ -145,8 +144,7 @@ class NodeInteraction<T> implements Runnable {
                     for (String newNode : retryMap.keySet()) {
                         workQueue.execute(newNode, retryMap, tryCount + 1, maxTryCount);
                     }
-                }
-                catch (ShardAccessException e) {
+                } catch (ShardAccessException e) {
                     LOG.error(String.format("Error calling %s (try # %d of %d) (id=%d)", (methodDesc != null ? methodDesc : method + " on " + node), tryCount, maxTryCount, instanceId), t);
                     result.addError(e, shards);
                 }
@@ -166,8 +164,7 @@ class NodeInteraction<T> implements Runnable {
             builder.append(sep);
             if (args[i] == null) {
                 builder.append("null");
-            }
-            else if (args[i] instanceof String[]) {
+            } else if (args[i] instanceof String[]) {
                 // TODO: all array types, lists, maps.
                 String[] strs = (String[]) args[i];
                 String sep2 = "";
@@ -177,8 +174,7 @@ class NodeInteraction<T> implements Runnable {
                     sep2 = ", ";
                 }
                 builder.append("]");
-            }
-            else {
+            } else {
                 builder.append(args[i].toString());
             }
             sep = ", ";
@@ -193,8 +189,7 @@ class NodeInteraction<T> implements Runnable {
         if (result != null) {
             try {
                 s = result.toString();
-            }
-            catch (Throwable t) {
+            } catch (Throwable t) {
                 LOG.trace("Error calling toString() on result", t);
                 s = "(toString() err)";
             }

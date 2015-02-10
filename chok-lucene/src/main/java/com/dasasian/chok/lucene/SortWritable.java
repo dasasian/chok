@@ -41,8 +41,7 @@ public class SortWritable implements Writable {
         ObjectInputStream objectStream = new ObjectInputStream(new ByteArrayInputStream(bs));
         try {
             _sort = (Sort) objectStream.readObject();
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new IOException("Unable to deseriaize lucene query", e);
         }
 

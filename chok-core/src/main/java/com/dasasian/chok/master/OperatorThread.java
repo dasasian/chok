@@ -78,26 +78,22 @@ class OperatorThread extends Thread {
                         List<MasterOperation> runningOperations = _registry.getRunningOperations();
                         ExecutionInstruction instruction = operation.getExecutionInstruction(runningOperations);
                         nodeOperationIds = executeOperation(operation, instruction, runningOperations);
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         ExceptionUtil.rethrowInterruptedException(e);
                         LOG.error("failed to execute " + operation, e);
                     }
                     if (nodeOperationIds != null && !nodeOperationIds.isEmpty()) {
                         OperationWatchdog watchdog = _queue.moveOperationToWatching(operation, nodeOperationIds);
                         _registry.watchFor(watchdog);
-                    }
-                    else {
+                    } else {
                         _queue.remove();
                     }
-                }
-                catch (Throwable e) {
+                } catch (Throwable e) {
                     ExceptionUtil.rethrowInterruptedException(e);
                     LOG.fatal("master operation failure", e);
                 }
             }
-        }
-        catch (final InterruptedException | ZkInterruptedException e) {
+        } catch (final InterruptedException | ZkInterruptedException e) {
             Thread.interrupted();
             // let go the thread
         }
@@ -111,8 +107,7 @@ class OperatorThread extends Thread {
             if (watchdog.isDone()) {
                 LOG.info("release done watchdog " + watchdog);
                 _queue.removeWatchdog(watchdog);
-            }
-            else {
+            } else {
                 _registry.watchFor(watchdog);
             }
         }
@@ -157,8 +152,7 @@ class OperatorThread extends Thread {
                 }
             }
             LOG.info("SAFE MODE: leaving safe mode with " + previousLiveNodes.size() + " connected nodes");
-        }
-        finally {
+        } finally {
             _safeMode = false;
         }
     }

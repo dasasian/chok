@@ -33,11 +33,10 @@ import java.util.concurrent.TimeUnit;
 public class LoadTestNodeOperation implements NodeOperation {
 
     protected final static Logger LOG = Logger.getLogger(LoadTestNodeOperation.class);
-
-    protected Random _random = new Random(System.currentTimeMillis());
     protected final AbstractQueryExecutor _queryExecutor;
-    protected int _queryRate;
     protected final long _runTime;
+    protected Random _random = new Random(System.currentTimeMillis());
+    protected int _queryRate;
 
     public LoadTestNodeOperation(AbstractQueryExecutor queryExecutor, int queryRate, long runTime) {
         _queryExecutor = queryExecutor;
@@ -54,8 +53,7 @@ public class LoadTestNodeOperation implements NodeOperation {
         LOG.info("starting loadtest: queries/sec:" + _queryRate + " | runTimeInSec: " + _runTime / 1000 + " | threads: " + threads + " | requestsPerThread: " + requestPerThread);
         try {
             _queryExecutor.init(context);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("failed to init query executor " + _queryExecutor, e);
         }
         ExecutorService executorService = Executors.newFixedThreadPool(threads);
@@ -74,21 +72,20 @@ public class LoadTestNodeOperation implements NodeOperation {
         }
         try {
             _queryExecutor.close(context);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("failed to close query executor " + _queryExecutor, e);
         }
         return new LoadTestNodeOperationResult(context.getNode().getName(), statistics);
     }
 
     private final class TestSearcherRunnable implements Runnable {
-        private int _queryIndex;
-        private int _testDelay;
         private final NodeContext _context;
         private final ExecutorService _executorService;
         private final List<LoadTestQueryResult> _statistics;
         private final long _startTime;
         private final int _requestPerThread;
+        private int _queryIndex;
+        private int _testDelay;
         private int _requestCounter;
 
         TestSearcherRunnable(int testDelay, NodeContext context, ExecutorService executorService, List<LoadTestQueryResult> statistics, long startTime, int requestPerThread) {
@@ -114,8 +111,7 @@ public class LoadTestNodeOperation implements NodeOperation {
                 try {
                     _queryExecutor.execute(_context, queryString);
                     _statistics.add(new LoadTestQueryResult(queryStartTime, System.currentTimeMillis(), queryString, _context.getNode().getName()));
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     _statistics.add(new LoadTestQueryResult(queryStartTime, -1, queryString, _context.getNode().getName()));
                     LOG.error("Search failed.", e);
                 }
@@ -126,8 +122,7 @@ public class LoadTestNodeOperation implements NodeOperation {
                     Thread.sleep(sleepTime);
                     _executorService.execute(this);
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 ExceptionUtil.retainInterruptFlag(e);
             }
 

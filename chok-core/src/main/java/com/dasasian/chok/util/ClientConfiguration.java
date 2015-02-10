@@ -17,8 +17,8 @@ package com.dasasian.chok.util;
 
 /**
  * Configuration for a {@link Client}.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * <b>RPC Configuration</b><br>
  * For the client-node interaction hadoop rpc is used as the underlying
  * communication technology. <br>

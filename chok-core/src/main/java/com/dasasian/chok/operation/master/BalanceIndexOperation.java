@@ -56,8 +56,7 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
                 LOG.warn("skip balancing for index '" + _indexName + "' cause source '" + path + "' does not exists anymore");
                 return null;
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOG.error("skip balancing of index '" + _indexName + "' cause failed to access source '" + indexMD.getPath() + "'", e);
             return null;
         }
@@ -66,8 +65,7 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
         try {
             List<OperationId> operationIds = distributeIndexShards(context, indexMD, protocol.getLiveNodes(), runningOperations);
             return operationIds;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ExceptionUtil.rethrowInterruptedException(e);
             LOG.error("failed to deploy balance " + _indexName, e);
             handleMasterDeployException(protocol, indexMD, e);

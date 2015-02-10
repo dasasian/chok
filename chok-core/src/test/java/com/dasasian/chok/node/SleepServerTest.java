@@ -77,16 +77,14 @@ public class SleepServerTest extends AbstractTest {
         try {
             server.sleep(0L, 0, new String[]{"not-found"});
             fail("Should have failed");
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             assertEquals("Node sleepy invalid shards: not-found", e.getMessage());
         }
         server.addShard("s1", null);
         server.sleep(0L, 0, new String[]{"s1"});
         try {
             server.sleep(0L, 0, new String[]{"s1", "s2"});
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             assertEquals("Node sleepy invalid shards: s2", e.getMessage());
         }
         server.addShard("s2", null);

@@ -75,8 +75,7 @@ public class MergeSort {
 
             if (iterators.get(listWithSmallesElement).hasNext()) {
                 currentElements.set(listWithSmallesElement, iterators.get(listWithSmallesElement).next());
-            }
-            else {
+            } else {
                 // we remove this list
                 iterators.remove(listWithSmallesElement);
                 currentElements.remove(listWithSmallesElement);
@@ -103,8 +102,7 @@ public class MergeSort {
                     // the left one comes first
                     sortedResult.add(currentLeftElement);
                     currentLeftElement = null;
-                }
-                else {
+                } else {
                     // the right one comes first
                     sortedResult.add(currentRightElement);
                     currentRightElement = null;
@@ -114,8 +112,7 @@ public class MergeSort {
                     // go to next element
                     if (leftIterator.hasNext()) {
                         currentLeftElement = leftIterator.next();
-                    }
-                    else {
+                    } else {
                         // we can add all element from the right half and
                         // quit
                         if (currentRightElement != null) {
@@ -132,8 +129,7 @@ public class MergeSort {
                     // go to next element
                     if (rightIterator.hasNext()) {
                         currentRightElement = rightIterator.next();
-                    }
-                    else {
+                    } else {
                         // we can add all element from the left half and
                         // quit
                         if (currentLeftElement != null) {

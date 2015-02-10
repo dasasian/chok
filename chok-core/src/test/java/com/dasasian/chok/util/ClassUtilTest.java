@@ -34,8 +34,7 @@ public class ClassUtilTest {
         try {
             ClassUtil.getPrivateFieldValue(testClass2, "fieldXY");
             fail("should throw exception");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // expected
         }
     }

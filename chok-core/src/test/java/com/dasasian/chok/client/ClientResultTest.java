@@ -142,15 +142,13 @@ public class ClientResultTest extends AbstractTest {
         try {
             new ClientResult<String>(null, (Collection<String>) null);
             fail("Should have thrown an exception");
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // Good.
         }
         try {
             new ClientResult<String>(null, new ArrayList<String>());
             fail("Should have thrown an exception");
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             // Good.
         }
         ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
@@ -202,13 +200,6 @@ public class ClientResultTest extends AbstractTest {
         assertEquals(3, r.getArrivalTimes().size());
         assertTrue(r.isComplete());
         assertTrue(r.isOK());
-    }
-
-    protected static class ToStringFails {
-        @Override
-        public String toString() {
-            throw new RuntimeException("err");
-        }
     }
 
     @Test
@@ -395,8 +386,7 @@ public class ClientResultTest extends AbstractTest {
             if (i % 1 == 0) {
                 r.addResult(result, shardA);
                 r.addError(error, shardB);
-            }
-            else {
+            } else {
                 r.addError(error, shardB);
                 r.addResult(result, shardA);
             }
@@ -496,8 +486,7 @@ public class ClientResultTest extends AbstractTest {
         try {
             r.iterator().remove();
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
     }
@@ -507,59 +496,51 @@ public class ClientResultTest extends AbstractTest {
         try {
             s.remove(0);
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
         try {
             s.clear();
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
         if (!s.isEmpty()) {
             try {
                 s.remove(s.iterator().next());
                 fail("Should be read only");
-            }
-            catch (UnsupportedOperationException e) {
+            } catch (UnsupportedOperationException e) {
                 // expected
             }
         }
         try {
             s.removeAll(new ArrayList<ClientResult<String>.Entry>());
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
         try {
             s.retainAll(new ArrayList<ClientResult<String>.Entry>());
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
         try {
             s.add(null);
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
         try {
             s.addAll(new ArrayList());
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
         try {
             s.iterator().remove();
             fail("Should be read only");
-        }
-        catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException e) {
             // expected
         }
     }
@@ -603,11 +584,17 @@ public class ClientResultTest extends AbstractTest {
             long remainingTime = waitUntil - now;
             try {
                 Thread.sleep(remainingTime);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 // ignore and continue waiting
             }
             now = System.currentTimeMillis();
+        }
+    }
+
+    protected static class ToStringFails {
+        @Override
+        public String toString() {
+            throw new RuntimeException("err");
         }
     }
 

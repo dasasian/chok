@@ -25,15 +25,15 @@ import java.util.*;
  * A multithreaded destination for results and/or errors. Results are produced
  * by nodes and we pass lists of shards to nodes. But due to replication and
  * retries, we associate sets of shards with the results, not nodes.
- * <p/>
+ * <p>
  * Multiple NodeInteractions will be writing to this object at the same time. If
  * not closed, expect the contents to change. For example isComplete() might
  * return false and then a call to getResults() might return a complete set (in
  * which case another call to isComplete() would return true). If you need
  * complex state information, rather than making multiple calls, you should use
- * <p/>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
+ * <p>
  * You can get these results from a WorkQueue by polling or blocking. Once you
  * have an ClientResult instance you may poll it or block on it. Whenever
  * resutls or errors are added notifyAll() is called. The ClientResult can
@@ -117,8 +117,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
                 for (String shard : entry.shards) {
                     if (seenShards.contains(shard)) {
                         LOG.warn("Duplicate occurances of shard " + shard);
-                    }
-                    else if (!allShards.contains(shard)) {
+                    } else if (!allShards.contains(shard)) {
                         LOG.warn("Unknown shard " + shard + " returned results");
                     }
                 }
@@ -173,8 +172,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
                 for (String shard : entry.shards) {
                     if (seenShards.contains(shard)) {
                         LOG.warn("Duplicate occurances of shard " + shard);
-                    }
-                    else if (!allShards.contains(shard)) {
+                    } else if (!allShards.contains(shard)) {
                         LOG.warn("Unknown shard " + shard + " returned results");
                     }
                 }
@@ -241,7 +239,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
 
     /**
      * @return the subset of all shards from whom we have not seen either results
-     *         or errors.
+     * or errors.
      */
     public synchronized Set<String> getMissingShards() {
         Set<String> missing = new HashSet<>(allShards);
@@ -268,8 +266,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
     public synchronized Collection<T> getResultsOrThrowException() throws Throwable {
         if (isError()) {
             throw getError();
-        }
-        else {
+        } else {
             return getResults();
         }
     }
@@ -286,8 +283,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
     public synchronized Collection<T> getResultsOrThrowChokException() throws ChokException {
         if (isError()) {
             throw getChokException();
-        }
-        else {
+        } else {
             return getResults();
         }
     }
@@ -313,8 +309,8 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
 
     /**
      * @return a randomly chosen ChokException if one exists, else a
-     *         ChokException wrapped around a randomly chosen error if one
-     *         exists, else null.
+     * ChokException wrapped around a randomly chosen error if one
+     * exists, else null.
      */
     public synchronized ChokException getChokException() {
         Throwable error = null;
@@ -322,16 +318,14 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
             if (e.error != null) {
                 if (e.error instanceof ChokException) {
                     return (ChokException) e.error;
-                }
-                else {
+                } else {
                     error = e.error;
                 }
             }
         }
         if (error != null) {
             return new ChokException("Error", error);
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -339,7 +333,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
     /**
      * @param result The result to look up.
      * @return What shards produced the result, and when it arrived. Returns null
-     *         if result not found.
+     * if result not found.
      */
     public synchronized Entry getResultEntry(T result) {
         return resultMap.get(result);
@@ -348,7 +342,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
     /**
      * @param error The error to look up.
      * @return What shards produced the error, and when it arrived. Returns null
-     *         if error not found.
+     * if error not found.
      */
     public synchronized Entry getErrorEntry(Throwable error) {
         return resultMap.get(error);
@@ -370,7 +364,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
 
     /**
      * @return true if result is complete (all shards reporting in) and no errors
-     *         occurred.
+     * occurred.
      */
     public synchronized boolean isOK() {
         return isComplete() && !isError();
@@ -378,7 +372,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
 
     /**
      * @return the ratio (0.0 .. 1.0) of shards we have seen. 0.0 when no shards,
-     *         1.0 when complete.
+     * 1.0 when complete.
      */
     public synchronized double getShardCoverage() {
         int seen = seenShards.size();
@@ -399,8 +393,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
     public Set<Entry> entrySet() {
         if (closed) {
             return Collections.unmodifiableSet(entries);
-        }
-        else {
+        } else {
             synchronized (this) {
                 // Set will keep changing, make a snapshot.
                 return Collections.unmodifiableSet(new HashSet<>(entries));
@@ -427,16 +420,13 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
             public int compare(Entry o1, Entry o2) {
                 if (o1.time != o2.time) {
                     return o1.time < o2.time ? -1 : 1;
-                }
-                else {
+                } else {
                     // Break ties in favor of results.
                     if (o1.result != null && o2.result == null) {
                         return -1;
-                    }
-                    else if (o2.result != null && o1.result == null) {
+                    } else if (o2.result != null && o1.result == null) {
                         return 1;
-                    }
-                    else {
+                    } else {
                         return 0;
                     }
                 }
@@ -460,15 +450,13 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
                         synchronized (this) {
                             this.wait(waitTime);
                         }
-                    }
-                    catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         LOG.debug("Interrupted", e);
                     }
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(String.format("Done waiting, results = %s", this));
                     }
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -530,16 +518,14 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
             if (result != null) {
                 try {
                     resultStr = result.toString();
-                }
-                catch (Throwable t) {
+                } catch (Throwable t) {
                     LOG.trace("Error calling toString() on result", t);
                     resultStr = "(toString() err)";
                 }
                 if (resultStr == null) {
                     resultStr = "(null toString())";
                 }
-            }
-            else {
+            } else {
                 resultStr = error != null ? error.getClass().getSimpleName() : "null";
             }
             return String.format("%s from %s at %d", resultStr, shards, time);

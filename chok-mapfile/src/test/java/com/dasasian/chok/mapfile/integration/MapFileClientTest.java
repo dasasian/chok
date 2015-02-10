@@ -41,20 +41,16 @@ import static org.junit.Assert.*;
  */
 public class MapFileClientTest extends AbstractTest {
 
-    @SuppressWarnings("unused")
-    private static Logger LOG = Logger.getLogger(MapFileClientTest.class);
-
     private static final String INDEX1 = "index1";
     private static final String INDEX2 = "index2";
+    protected static final String[] INDEX_BOTH = {INDEX1, INDEX2};
     private static final String[] INDEX_1 = {INDEX1};
     private static final String[] INDEX_2 = {INDEX2};
-    protected static final String[] INDEX_BOTH = {INDEX1, INDEX2};
-
-    private IMapFileClient client;
-
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(MapFileServer.class, 2, 20000,TestNodeConfigurationFactory.class);
-
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(MapFileServer.class, 2, 20000, TestNodeConfigurationFactory.class);
+    @SuppressWarnings("unused")
+    private static Logger LOG = Logger.getLogger(MapFileClientTest.class);
+    private IMapFileClient client;
 
     @Before
     public void setUp() throws Exception {
@@ -130,8 +126,7 @@ public class MapFileClientTest extends AbstractTest {
                         try {
                             assertEquals(entries.get(key), getOneResult(key, INDEX_BOTH));
                             count.incrementAndGet();
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             System.err.println(e);
                             exceptions.add(e);
                             break;

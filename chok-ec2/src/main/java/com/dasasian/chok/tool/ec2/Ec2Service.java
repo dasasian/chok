@@ -62,8 +62,7 @@ public abstract class Ec2Service {
                     }
                 }
             }
-        }
-        catch (EC2Exception e) {
+        } catch (EC2Exception e) {
             throw new IOException("Unable to get Instances", e);
         }
         return set;
@@ -111,8 +110,7 @@ public abstract class Ec2Service {
             // ec2-delete-group $CLUSTER
             _ec2.deleteSecurityGroup(cluster);
 
-        }
-        catch (EC2Exception e) {
+        } catch (EC2Exception e) {
             throw new IOException("Unable to terminate instances.", e);
         }
 
@@ -169,8 +167,7 @@ public abstract class Ec2Service {
             SshUtil.sshRemoteCommand(masterInfo.getExternalHost(), "chmod 600 /root/.ssh/id_rsa", _keyPath);
 
             return masterInfo;
-        }
-        catch (EC2Exception e) {
+        } catch (EC2Exception e) {
             throw new IOException("Unable to interact with AWS", e);
         }
 
@@ -182,8 +179,7 @@ public abstract class Ec2Service {
             groupSet.add(cluster);
             _ec2.runInstances(_startAIM, numOfSlaves, numOfSlaves, groupSet, null, _keyName);
             return waitUntilStarted(cluster, 5 * 60 * 1000);
-        }
-        catch (EC2Exception e) {
+        } catch (EC2Exception e) {
             throw new IOException("Unable to create slaves", e);
         }
 
@@ -224,8 +220,7 @@ public abstract class Ec2Service {
                     return true;
                 }
             }
-        }
-        catch (EC2Exception e) {
+        } catch (EC2Exception e) {
             // ignoring in this special case...
         }
         return false;
@@ -244,8 +239,7 @@ public abstract class Ec2Service {
                     }
                 }
             }
-        }
-        catch (EC2Exception e) {
+        } catch (EC2Exception e) {
             throw new IOException("Unable to get Instances", e);
         }
         return false;
@@ -267,8 +261,7 @@ public abstract class Ec2Service {
                             if ("pending".equals(instance.getState())) {
                                 pending = true;
                                 break;
-                            }
-                            else if ("running".equals(instance.getState())) {
+                            } else if ("running".equals(instance.getState())) {
                                 list.add(new Ec2Instance(instance.getPrivateDnsName(), instance.getDnsName()));
                             }
                         }
@@ -284,8 +277,7 @@ public abstract class Ec2Service {
             }
             throw new IOException("Not all instances booted within given time");
 
-        }
-        catch (EC2Exception e) {
+        } catch (EC2Exception e) {
             throw new IOException("Unable to retrive instances", e);
         }
 

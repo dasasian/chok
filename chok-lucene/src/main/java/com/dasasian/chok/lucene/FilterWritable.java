@@ -40,8 +40,7 @@ public class FilterWritable implements Writable {
         ObjectInputStream objectStream = new ObjectInputStream(new ByteArrayInputStream(bs));
         try {
             _filter = (Filter) objectStream.readObject();
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new IOException("Unable to deseriaize lucene filter", e);
         }
 

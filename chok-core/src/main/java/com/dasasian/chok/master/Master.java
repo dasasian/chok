@@ -78,8 +78,7 @@ public class Master implements ConnectedComponent {
             operatorThread.interrupt();
             try {
                 operatorThread.join();
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Thread.interrupted();
                 // proceed
             }
@@ -180,8 +179,7 @@ public class Master implements ConnectedComponent {
                 try {
                     operatorThread.join();
                     operatorThread = null;
-                }
-                catch (final InterruptedException e1) {
+                } catch (final InterruptedException e1) {
                     // proceed
                 }
             }

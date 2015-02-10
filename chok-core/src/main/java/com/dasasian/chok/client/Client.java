@@ -42,12 +42,11 @@ public class Client implements ConnectedComponent, AutoCloseable {
     protected final Map<String, List<String>> indexToShards = Maps.newHashMap();
 
     protected final INodeSelectionPolicy selectionPolicy;
-    private long queryCount = 0;
     private final long startupTime;
-
     private final ClientConfiguration clientConfiguration;
     private final int maxTryCount;
     protected InteractionProtocol protocol;
+    private long queryCount = 0;
     private INodeProxyManager proxyManager;
 
     public Client(Class<? extends VersionedProtocol> serverClass) {
@@ -101,8 +100,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
                 IndexMetaData indexMD = Client.this.protocol.getIndexMD(name);
                 if (isIndexSearchable(indexMD)) {
                     addIndexForSearching(indexMD);
-                }
-                else {
+                } else {
                     addIndexForWatching(name);
                 }
             }
@@ -137,12 +135,10 @@ public class Client implements ConnectedComponent, AutoCloseable {
                 selectionPolicy.remove(shard);
                 protocol.unregisterChildListener(this, PathDef.SHARD_TO_NODES, shard);
             }
-        }
-        else {
+        } else {
             if (indicesToWatch.contains(index)) {
                 protocol.unregisterDataChanges(this, PathDef.INDICES_METADATA, index);
-            }
-            else {
+            } else {
                 LOG.warn("got remove event for index '" + index + "' but have no shards for it");
             }
         }
@@ -154,8 +150,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
             if (indexMD != null) {// could be undeployed in meantime
                 if (isIndexSearchable(indexMD)) {
                     addIndexForSearching(indexMD);
-                }
-                else {
+                } else {
                     addIndexForWatching(index);
                 }
             }
@@ -386,8 +381,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
             List<String> shardsForIndex = indexToShards.get(index);
             if (shardsForIndex != null) {
                 allShards.addAll(shardsForIndex);
-            }
-            else {
+            } else {
                 Pattern pattern = Pattern.compile(index);
                 int matched = 0;
                 for (String ind : ImmutableSet.copyOf(indexToShards.keySet())) {

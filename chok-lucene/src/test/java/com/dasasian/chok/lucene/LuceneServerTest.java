@@ -50,10 +50,9 @@ import static org.mockito.Mockito.*;
 
 public class LuceneServerTest extends AbstractTest {
 
+    public final TestLuceneNodeConfigurationFactory nodeConfigurationFactory = new TestLuceneNodeConfigurationFactory(temporaryFolder);
     // query parser
     private QueryParser queryParser = new QueryParser(Version.LUCENE_30, "", new KeywordAnalyzer());
-
-    public final TestLuceneNodeConfigurationFactory nodeConfigurationFactory = new TestLuceneNodeConfigurationFactory(temporaryFolder);
 
     @Test
     public void testPriorityQueue() throws Exception {
@@ -207,8 +206,7 @@ public class LuceneServerTest extends AbstractTest {
             HitsMapWritable hitsMapWritable = future.get();
             if (last == null) {
                 last = hitsMapWritable;
-            }
-            else {
+            } else {
                 Assert.assertEquals(last.getTotalHits(), hitsMapWritable.getTotalHits());
                 float lastScore = last.getHitList().get(0).getScore();
                 float currentScore = hitsMapWritable.getHitList().get(0).getScore();

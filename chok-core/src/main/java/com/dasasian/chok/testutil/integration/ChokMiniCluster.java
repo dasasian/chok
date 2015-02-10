@@ -99,7 +99,7 @@ public class ChokMiniCluster extends ExternalResource {
 
         zkConfiguration = zkTestSystem.getZkConfiguration().rootPath(zkRootPath);
 
-        LOG.info("~~~~~~~~~~~~~~~ starting chok mini cluster @ "+zkRootPath+" ~~~~~~~~~~~~~~~");
+        LOG.info("~~~~~~~~~~~~~~~ starting chok mini cluster @ " + zkRootPath + " ~~~~~~~~~~~~~~~");
         final ZkClient zkClient = zkTestSystem.getZkClient();
 
         protocol = new InteractionProtocol(zkClient, zkConfiguration);
@@ -114,7 +114,7 @@ public class ChokMiniCluster extends ExternalResource {
         TestUtil.waitUntilLeaveSafeMode(master);
         TestUtil.waitUntilNumberOfLiveNode(protocol, nodes.size());
         TestUtil.waitUntilEmptyOperationQueues(protocol, master, nodes);
-        LOG.info("~~~~~~~~~~~~~~~ chok mini cluster @ "+zkRootPath+" started ~~~~~~~~~~~~~~~");
+        LOG.info("~~~~~~~~~~~~~~~ chok mini cluster @ " + zkRootPath + " started ~~~~~~~~~~~~~~~");
     }
 
     public Node startAdditionalNode() throws Exception {
@@ -141,7 +141,7 @@ public class ChokMiniCluster extends ExternalResource {
     }
 
     public void stop(ZkTestSystem zkTestSystem, String zkRootPath) throws Exception {
-        LOG.info("~~~~~~~~~~~~~~~ stopping chok mini cluster @ "+zkRootPath+" ~~~~~~~~~~~~~~~");
+        LOG.info("~~~~~~~~~~~~~~~ stopping chok mini cluster @ " + zkRootPath + " ~~~~~~~~~~~~~~~");
         stop();
         LOG.info("~~~~~~~~~~~~~~~ chok mini cluster @ " + zkRootPath + " stopped ~~~~~~~~~~~~~~~");
 
@@ -157,8 +157,7 @@ public class ChokMiniCluster extends ExternalResource {
         }
         try {
             Thread.sleep(100);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.interrupted();
         }
         if (secondaryMaster != null) {
@@ -221,8 +220,7 @@ public class ChokMiniCluster extends ExternalResource {
 
         try {
             TestUtil.waitUntilIndexDeployed(protocol, indexName);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         return indices;
@@ -270,7 +268,7 @@ public class ChokMiniCluster extends ExternalResource {
     }
 
     public ZkConfiguration getZkConfiguration() {
-        if(zkConfiguration != null) {
+        if (zkConfiguration != null) {
             return zkConfiguration;
         }
         return zkTestSystem.getZkConfiguration();

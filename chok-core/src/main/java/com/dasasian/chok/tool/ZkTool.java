@@ -34,36 +34,6 @@ public class ZkTool {
         zkClient = ZkChokUtil.startZkClient(conf, 5000);
     }
 
-    public void ls(String path) {
-        List<String> children = zkClient.getChildren(path);
-        System.out.println(String.format("Found %s items", children.size()));
-        if (path.charAt(path.length() - 1) != ZkConfiguration.PATH_SEPARATOR) {
-            path += ZkConfiguration.PATH_SEPARATOR;
-        }
-        for (String child : children) {
-            System.out.println(path + child);
-        }
-    }
-
-    public void rm(String path, boolean recursiv) {
-        if (recursiv) {
-            zkClient.deleteRecursive(path);
-        }
-        else {
-            zkClient.delete(path);
-        }
-    }
-
-    public void read(String path) {
-        Serializable data = zkClient.readData(path);
-        System.out.println("from type: " + data.getClass().getName());
-        System.out.println("to string: " + data.toString());
-    }
-
-    private void close() {
-        zkClient.close();
-    }
-
     public static void main(String[] args) {
         final Options options = new Options();
 
@@ -92,26 +62,51 @@ public class ZkTool {
             if (line.hasOption(lsOption.getOpt())) {
                 String path = line.getOptionValue(lsOption.getOpt());
                 zkTool.ls(path);
-            }
-            else if (line.hasOption(readOption.getOpt())) {
+            } else if (line.hasOption(readOption.getOpt())) {
                 String path = line.getOptionValue(readOption.getOpt());
                 zkTool.read(path);
-            }
-            else if (line.hasOption(rmOption.getOpt())) {
+            } else if (line.hasOption(rmOption.getOpt())) {
                 String path = line.getOptionValue(rmOption.getOpt());
                 zkTool.rm(path, false);
-            }
-            else if (line.hasOption(rmrOption.getOpt())) {
+            } else if (line.hasOption(rmrOption.getOpt())) {
                 String path = line.getOptionValue(rmrOption.getOpt());
                 zkTool.rm(path, true);
             }
             zkTool.close();
-        }
-        catch (ParseException e) {
+        } catch (ParseException e) {
             System.out.println(e.getClass().getSimpleName() + ": " + e.getMessage());
             formatter.printHelp(ZkTool.class.getSimpleName(), options);
         }
 
+    }
+
+    public void ls(String path) {
+        List<String> children = zkClient.getChildren(path);
+        System.out.println(String.format("Found %s items", children.size()));
+        if (path.charAt(path.length() - 1) != ZkConfiguration.PATH_SEPARATOR) {
+            path += ZkConfiguration.PATH_SEPARATOR;
+        }
+        for (String child : children) {
+            System.out.println(path + child);
+        }
+    }
+
+    public void rm(String path, boolean recursiv) {
+        if (recursiv) {
+            zkClient.deleteRecursive(path);
+        } else {
+            zkClient.delete(path);
+        }
+    }
+
+    public void read(String path) {
+        Serializable data = zkClient.readData(path);
+        System.out.println("from type: " + data.getClass().getName());
+        System.out.println("to string: " + data.toString());
+    }
+
+    private void close() {
+        zkClient.close();
     }
 
 }

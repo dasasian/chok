@@ -41,14 +41,13 @@ import static org.mockito.Mockito.*;
 
 public class NodeMockTest extends AbstractTest {
 
-    private InteractionProtocol protocol = mock(InteractionProtocol.class);
-    private IContentServer contentServer = mock(IContentServer.class);
+    public static TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 1);
     private final NodeConfigurationFactory nodeConfigurationFactory = new TestNodeConfigurationFactory(temporaryFolder);
     private final NodeConfiguration testConfiguration = nodeConfigurationFactory.getConfiguration();
+    private InteractionProtocol protocol = mock(InteractionProtocol.class);
+    private IContentServer contentServer = mock(IContentServer.class);
     private Node node = new Node(protocol, testConfiguration, contentServer);
     private NodeQueue queue = mock(NodeQueue.class);
-
-    public static TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 1);
 
     @Before
     public void setUp() throws IOException {

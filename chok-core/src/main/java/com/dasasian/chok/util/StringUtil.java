@@ -59,7 +59,7 @@ public class StringUtil {
      * @param string
      * @param length
      * @return the given path + as many whitespace that the given string reaches
-     *         the given length
+     * the given length
      */
     public static String fillWithWhiteSpace(String string, int length) {
         int neededWhiteSpace = length - string.length();

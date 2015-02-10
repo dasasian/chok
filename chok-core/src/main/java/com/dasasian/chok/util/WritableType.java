@@ -30,20 +30,15 @@ public enum WritableType {
     public static WritableType detectWritableType(Object comparable) {
         if (comparable instanceof Byte) {
             return WritableType.BYTE;
-        }
-        else if (comparable instanceof Integer) {
+        } else if (comparable instanceof Integer) {
             return WritableType.INT;
-        }
-        else if (comparable instanceof String) {
+        } else if (comparable instanceof String) {
             return WritableType.TEXT;
-        }
-        else if (comparable instanceof Float) {
+        } else if (comparable instanceof Float) {
             return WritableType.FLOAT;
-        }
-        else if (comparable instanceof Long) {
+        } else if (comparable instanceof Long) {
             return WritableType.LONG;
-        }
-        else if (comparable instanceof Double) {
+        } else if (comparable instanceof Double) {
             return WritableType.DOUBLE;
         }
         throw new IllegalArgumentException("no conversion rule for comparable of type " + comparable.getClass().getName());
@@ -55,6 +50,15 @@ public enum WritableType {
             writablTypes[i] = detectWritableType(comparables[i]);
         }
         return writablTypes;
+    }
+
+    public static WritableComparable[] convertComparable(WritableType[] writableTypes, Object[] comparables) {
+        WritableComparable[] writableComparables = new WritableComparable[comparables.length];
+        for (int i = 0; i < writableComparables.length; i++) {
+            writableComparables[i] = writableTypes[i].convertComparable(comparables[i]);
+
+        }
+        return writableComparables;
     }
 
     public WritableComparable newWritableComparable() {
@@ -95,15 +99,6 @@ public enum WritableType {
                 return new DoubleWritable((Double) object);
         }
         throw getUnhandledTypeException();
-    }
-
-    public static WritableComparable[] convertComparable(WritableType[] writableTypes, Object[] comparables) {
-        WritableComparable[] writableComparables = new WritableComparable[comparables.length];
-        for (int i = 0; i < writableComparables.length; i++) {
-            writableComparables[i] = writableTypes[i].convertComparable(comparables[i]);
-
-        }
-        return writableComparables;
     }
 
     private RuntimeException getUnhandledTypeException() {

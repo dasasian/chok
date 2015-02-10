@@ -29,13 +29,12 @@ import java.util.*;
  */
 public class CheckCommand extends ProtocolCommand {
 
-    public CheckCommand() {
-        super("check", "[-b] [-n] [-S]", "Analyze index/shard/node status. -b for batch mode, -n don't write column names, -S for sorting the index/shard/node names.");
-    }
-
     private boolean _batchMode;
     private boolean _skipColumnNames;
     private boolean _sorted;
+    public CheckCommand() {
+        super("check", "[-b] [-n] [-S]", "Analyze index/shard/node status. -b for batch mode, -n don't write column names, -S for sorting the index/shard/node names.");
+    }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
@@ -58,8 +57,7 @@ public class CheckCommand extends ProtocolCommand {
             IndexMetaData indexMD = protocol.getIndexMD(index);
             if (indexMD.hasDeployError()) {
                 indexStateCounterMap.increment(IndexState.ERROR);
-            }
-            else {
+            } else {
                 indexStateCounterMap.increment(IndexState.DEPLOYED);
             }
         }
@@ -92,8 +90,7 @@ public class CheckCommand extends ProtocolCommand {
                 int shardReplication = replicationReport.getReplicationCount(shard.getName());
                 if (shardReplication < indexMD.getReplicationLevel()) {
                     System.out.println("\tshard " + shard + " is under-replicated (" + shardReplication + "/" + indexMD.getReplicationLevel() + ")");
-                }
-                else if (shardReplication > indexMD.getReplicationLevel()) {
+                } else if (shardReplication > indexMD.getReplicationLevel()) {
                     System.out.println("\tshard " + shard + " is over-replicated (" + shardReplication + "/" + indexMD.getReplicationLevel() + ")");
                 }
             }

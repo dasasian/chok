@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * Interface for the client calls that will arrive via Hadoop RPC.
- * <p/>
+ * <p>
  * This server looks up Text entries from MapFiles using Text keys.
  */
 public interface IMapFileServer extends VersionedProtocol {

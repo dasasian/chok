@@ -38,8 +38,7 @@ public class MasterQueue extends BlockingQueue<MasterOperation> {
         for (String elementName : watchdogs) {
             try {
                 this.zkClient.delete(getElementPath(elementName));
-            }
-            catch (ZkNoNodeException e) {
+            } catch (ZkNoNodeException e) {
                 // ignore, can be already deleted by other queue instance
             }
         }

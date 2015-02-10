@@ -42,7 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * remove excess replicas from.
  *
  * @deprecated DefaultDistributionPolicy already contains the same functionality
- *             since version 6.1
+ * since version 6.1
  */
 public class LowestShardCountDistributionPolicy implements IDeployPolicy {
 
@@ -56,52 +56,6 @@ public class LowestShardCountDistributionPolicy implements IDeployPolicy {
         }
 
     };
-
-    static class OrderedBucket implements Comparable<OrderedBucket> {
-        final Map.Entry<String, AtomicInteger> bucket;
-
-        public OrderedBucket(final Map.Entry<String, AtomicInteger> bucket) {
-            this.bucket = bucket;
-        }
-
-        public String getKey() {
-            return bucket.getKey();
-        }
-
-        public AtomicInteger getValue() {
-            return bucket.getValue();
-        }
-
-        @Override
-        public int compareTo(OrderedBucket o2) {
-            if (o2 == this) {
-                return 0;
-            }
-            // sort null entries to the end
-            if (bucket == null) {
-                return 1;
-            }
-            if (o2.bucket == null) {
-                return -1;
-            }
-            int res = getValue().get() - o2.getValue().get();
-            if (res != 0) {
-                return res;
-            }
-            res = o2.getKey().compareTo(getKey());
-            if (res != 0) {
-                return res;
-            }
-            return o2.hashCode() - hashCode();
-        }
-
-        public String toString() {
-            if (bucket == null) {
-                return "null";
-            }
-            return "[ " + bucket.getKey() + '=' + bucket.getValue().get() + "] ";
-        }
-    }
 
     private TreeSet<OrderedBucket> produceOrdedNodeList(final Map<String, List<String>> currentNode2ShardsMap, List<String> aliveNodes) {
 
@@ -164,8 +118,7 @@ public class LowestShardCountDistributionPolicy implements IDeployPolicy {
 
             if (neededDeployments > 0) {
                 LOG.warn("cannot replicate shard '" + shard + "' " + replicationLevel + " times, cause only " + orderedNodes.size() + " nodes connected");
-            }
-            else if (neededDeployments < 0) {
+            } else if (neededDeployments < 0) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("found shard '" + shard + "' over-replicated");
                 }
@@ -211,8 +164,7 @@ public class LowestShardCountDistributionPolicy implements IDeployPolicy {
                 nodeShards.getValue().incrementAndGet(); // Increment the count
                 neededDeployments--;
             }
-        }
-        finally { // Put any nodes that were removed form the ordered list back,
+        } finally { // Put any nodes that were removed form the ordered list back,
             // this automatically re-orders the list as well
             orderedNodes.addAll(toAddBack);
         }
@@ -256,8 +208,7 @@ public class LowestShardCountDistributionPolicy implements IDeployPolicy {
                 nodeShards.getValue().decrementAndGet(); // change the count
                 neededDeployments++;
             }
-        }
-        finally {
+        } finally {
             orderedNodes.addAll(toAddBack);
         }
     }
@@ -268,6 +219,52 @@ public class LowestShardCountDistributionPolicy implements IDeployPolicy {
             return 0;
         }
         return list.size();
+    }
+
+    static class OrderedBucket implements Comparable<OrderedBucket> {
+        final Map.Entry<String, AtomicInteger> bucket;
+
+        public OrderedBucket(final Map.Entry<String, AtomicInteger> bucket) {
+            this.bucket = bucket;
+        }
+
+        public String getKey() {
+            return bucket.getKey();
+        }
+
+        public AtomicInteger getValue() {
+            return bucket.getValue();
+        }
+
+        @Override
+        public int compareTo(OrderedBucket o2) {
+            if (o2 == this) {
+                return 0;
+            }
+            // sort null entries to the end
+            if (bucket == null) {
+                return 1;
+            }
+            if (o2.bucket == null) {
+                return -1;
+            }
+            int res = getValue().get() - o2.getValue().get();
+            if (res != 0) {
+                return res;
+            }
+            res = o2.getKey().compareTo(getKey());
+            if (res != 0) {
+                return res;
+            }
+            return o2.hashCode() - hashCode();
+        }
+
+        public String toString() {
+            if (bucket == null) {
+                return "null";
+            }
+            return "[ " + bucket.getKey() + '=' + bucket.getValue().get() + "] ";
+        }
     }
 
 }

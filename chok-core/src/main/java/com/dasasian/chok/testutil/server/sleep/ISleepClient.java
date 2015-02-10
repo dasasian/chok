@@ -28,8 +28,7 @@ public interface ISleepClient {
      *
      * @param msec How long each node should sleep for.
      * @return the total number of shards referenced (note: sleeping is done per-node).
-     * @throws com.dasasian.chok.util.ChokException
-     *          If an IO exception occurs.
+     * @throws com.dasasian.chok.util.ChokException If an IO exception occurs.
      */
     public int sleep(long msec) throws ChokException;
 

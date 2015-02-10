@@ -23,13 +23,13 @@ package com.dasasian.chok.client;
  * the results themselves (type T), it only considers the number of shards
  * reporting (with a T result, or a Throwable if an error occured) compared to
  * the total number of shards.
- * <p/>
+ * <p>
  * If you must return in 5 seconds use new ResultCompletePolicy(5000). If you
  * want to do your own polling, use new ResultCompletePolicy(0, false). If you
  * want to wait a minimum of 3 seconds (but return sooner if results are
  * complete), then wait another 2 seconds for 95% coverage (shard based), then
  * use new ResultCompletePolicy(3000, 2000, 0.95, true).
- * <p/>
+ * <p>
  * You could also write a custom IResultPolicy that looks inside the result
  * objects to decide how much longer to wait.
  */
@@ -102,10 +102,10 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
      *
      * @param result The results we have so far.
      * @return if > 0, sleep at most that many msec, or until a new result
-     *         arrives, or the result is closed, whichever comes first. Then call
-     *         this method again. If 0, stop waiting and return the result
-     *         immediately. if < 0, shutdown the WorkQueue, close the result, and
-     *         return it immediately.
+     * arrives, or the result is closed, whichever comes first. Then call
+     * this method again. If 0, stop waiting and return the result
+     * immediately. if < 0, shutdown the WorkQueue, close the result, and
+     * return it immediately.
      */
     public long waitTime(ClientResult<T> result) {
         boolean done = result.isClosed();
@@ -113,11 +113,9 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
         if (!done) {
             if (now < completeStopTime) {
                 done = result.isComplete();
-            }
-            else if (now < coverageStopTime) {
+            } else if (now < coverageStopTime) {
                 done = result.getShardCoverage() >= coverage;
-            }
-            else {
+            } else {
                 done = true;
             }
         }

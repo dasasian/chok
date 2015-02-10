@@ -55,8 +55,7 @@ public class DeployClientZkTest extends AbstractZkTest {
         try {
             deployClient.removeIndex(indexMD.getName());
             fail("should throw exception");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // expected
         }
 

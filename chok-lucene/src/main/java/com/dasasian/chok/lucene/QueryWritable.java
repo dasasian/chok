@@ -41,8 +41,7 @@ public class QueryWritable implements Writable {
         ObjectInputStream objectStream = new ObjectInputStream(new ByteArrayInputStream(bs));
         try {
             _query = (Query) objectStream.readObject();
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new IOException("Unable to deseriaize lucene query", e);
         }
 

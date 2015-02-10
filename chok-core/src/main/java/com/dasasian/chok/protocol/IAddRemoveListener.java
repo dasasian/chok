@@ -19,9 +19,9 @@ package com.dasasian.chok.protocol;
  * Registerable with {@link InteractionProtocol}.
  *
  * @see InteractionProtocol#registerIndexListener(ConnectedComponent,
- *      IndexListener)
+ * IndexListener)
  * @see InteractionProtocol#registerNodeListener(ConnectedComponent,
- *      NodeListener)
+ * NodeListener)
  */
 public interface IAddRemoveListener {
 

@@ -55,8 +55,7 @@ public class ThrottledInputStreamTest extends AbstractTest {
                             }
                             Thread.sleep(new Random().nextInt(1000));
                         }
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         errors.add("unknown exception: " + e.getMessage());
                     }
                 }
@@ -176,15 +175,13 @@ public class ThrottledInputStreamTest extends AbstractTest {
                 do {
                     if (_readWithBuffer) {
                         readBytes = _inputStream.read(buffer);
-                    }
-                    else {
+                    } else {
                         _inputStream.read();
                         readBytes = 1;
                     }
                     _totalReadBytes += readBytes;
                 } while (readBytes != -1 && !_stopped);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 fail("exception on read:" + e.getMessage());
             }
             _readTime = System.currentTimeMillis() - startTime;

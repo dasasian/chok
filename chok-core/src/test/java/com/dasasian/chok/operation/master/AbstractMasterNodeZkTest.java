@@ -37,9 +37,8 @@ public abstract class AbstractMasterNodeZkTest extends AbstractZkTest {
     protected static final List EMPTY_LIST = Collections.EMPTY_LIST;
 
     protected final TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 4);
-
-    protected Master mockMaster;
     public MasterContext masterContext;
+    protected Master mockMaster;
 
     @Before
     public void setMasterContext() {

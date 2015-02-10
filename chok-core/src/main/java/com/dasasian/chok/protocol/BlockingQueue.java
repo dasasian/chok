@@ -25,27 +25,8 @@ import java.util.List;
 
 public class BlockingQueue<T extends Serializable> {
 
-    protected static class Element<T> {
-        private String name;
-        private T data;
-
-        public Element(String name, T data) {
-            this.name = name;
-            this.data = data;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public T getData() {
-            return data;
-        }
-    }
-
     protected final ZkClient zkClient;
     private final String elementsPath;
-
     public BlockingQueue(ZkClient zkClient, String rootPath) {
         this.zkClient = zkClient;
         elementsPath = rootPath + "/operations";
@@ -69,8 +50,7 @@ public class BlockingQueue<T extends Serializable> {
         try {
             String sequential = zkClient.createPersistentSequential(getElementRoughPath(), element);
             return sequential.substring(sequential.lastIndexOf('/') + 1);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw ExceptionUtil.convertToRuntimeException(e);
         }
     }
@@ -138,21 +118,35 @@ public class BlockingQueue<T extends Serializable> {
                 try {
                     String elementPath = getElementPath(elementName);
                     return new Element<>(elementName, (T) zkClient.readData(elementPath));
-                }
-                catch (ZkNoNodeException e) {
+                } catch (ZkNoNodeException e) {
                     // somebody else picked up the element first, so we have to
                     // retry with the new first element
                 }
             }
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             throw e;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw ExceptionUtil.convertToRuntimeException(e);
-        }
-        finally {
+        } finally {
             zkClient.unsubscribeChildChanges(elementsPath, notifyListener);
+        }
+    }
+
+    protected static class Element<T> {
+        private String name;
+        private T data;
+
+        public Element(String name, T data) {
+            this.name = name;
+            this.data = data;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public T getData() {
+            return data;
         }
     }
 

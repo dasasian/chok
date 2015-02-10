@@ -43,8 +43,7 @@ public class UpgradeRegistry {
             if (isPre0_6Cluster) {
                 LOG.info("version of cluster not found - assuming 0.5");
                 clusterVersion = new Version("0.5", "Unknown", "Unknown", "Unknown");
-            }
-            else {
+            } else {
                 clusterVersion = distributionVersion;
             }
         }

@@ -51,8 +51,7 @@ public class SshUtil {
             command = "C0644 " + filesize + " ";
             if (sourcePath.lastIndexOf('/') > 0) {
                 command += sourcePath.substring(sourcePath.lastIndexOf('/') + 1);
-            }
-            else {
+            } else {
                 command += sourcePath;
             }
             command += "\n";
@@ -83,8 +82,7 @@ public class SshUtil {
             out.close();
             channel.disconnect();
             session.disconnect();
-        }
-        catch (JSchException e) {
+        } catch (JSchException e) {
             throw new IOException("Unable to copy key file to host: ", e);
         }
     }
@@ -124,53 +122,17 @@ public class SshUtil {
                 }
                 try {
                     Thread.sleep(1000);
-                }
-                catch (InterruptedException ee) {
+                } catch (InterruptedException ee) {
                     Thread.currentThread().interrupt();
                 }
             }
             channel.disconnect();
             session.disconnect();
-        }
-        catch (JSchException e) {
+        } catch (JSchException e) {
             return false;
             // throw new IOException("Unable to ssh into master", e);
         }
         return true;
-    }
-
-    static class SshUser implements UserInfo {
-
-        @Override
-        public String getPassphrase() {
-            return "";
-        }
-
-        @Override
-        public String getPassword() {
-            return "";
-        }
-
-        @Override
-        public boolean promptPassphrase(String arg0) {
-            return true;
-        }
-
-        @Override
-        public boolean promptPassword(String arg0) {
-            return true;
-        }
-
-        @Override
-        public boolean promptYesNo(String arg0) {
-            return true;
-        }
-
-        @Override
-        public void showMessage(String arg0) {
-            System.out.println(arg0);
-        }
-
     }
 
     /**
@@ -205,6 +167,40 @@ public class SshUtil {
             }
         }
         return b;
+    }
+
+    static class SshUser implements UserInfo {
+
+        @Override
+        public String getPassphrase() {
+            return "";
+        }
+
+        @Override
+        public String getPassword() {
+            return "";
+        }
+
+        @Override
+        public boolean promptPassphrase(String arg0) {
+            return true;
+        }
+
+        @Override
+        public boolean promptPassword(String arg0) {
+            return true;
+        }
+
+        @Override
+        public boolean promptYesNo(String arg0) {
+            return true;
+        }
+
+        @Override
+        public void showMessage(String arg0) {
+            System.out.println(arg0);
+        }
+
     }
 
 }

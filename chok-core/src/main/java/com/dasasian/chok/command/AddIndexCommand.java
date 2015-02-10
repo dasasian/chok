@@ -24,13 +24,12 @@ import com.dasasian.chok.util.ZkConfiguration;
  */
 public class AddIndexCommand extends ProtocolCommand {
 
-    public AddIndexCommand() {
-        super("addIndex", "<index name> <path to index> [<replication level>]", "Add a index to Chok");
-    }
-
     private String name;
     private String path;
     private int replicationLevel = 3;
+    public AddIndexCommand() {
+        super("addIndex", "<index name> <path to index> [<replication level>]", "Add a index to Chok");
+    }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {

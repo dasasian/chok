@@ -65,8 +65,7 @@ public class RemoveObsoleteShardsOperation implements MasterOperation {
                     // index has been removed
                     obsoleteShards.add(shardName);
                 }
-            }
-            catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 LOG.warn("found shard with invalid name '" + shardName + "' - instruct removal");
                 obsoleteShards.add(shardName);
             }

@@ -38,8 +38,7 @@ public class NodeQueue extends BlockingQueue<NodeOperation> {
         for (String elementName : results) {
             try {
                 this.zkClient.delete(getElementPath(elementName));
-            }
-            catch (ZkNoNodeException e) {
+            } catch (ZkNoNodeException e) {
                 // ignore, can be already deleted by other queue instance
             }
         }

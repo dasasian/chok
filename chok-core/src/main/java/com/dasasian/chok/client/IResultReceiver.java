@@ -24,7 +24,7 @@ public interface IResultReceiver<T> {
 
     /**
      * @return true if the result is closed, and therefore not accepting any new
-     *         results.
+     * results.
      */
     public boolean isClosed();
 

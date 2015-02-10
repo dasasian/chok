@@ -35,8 +35,7 @@ public class ZkConfigurationLoaderTest extends AbstractTest {
             System.setProperty(ChokConfiguration.CHOK_CONFIGURATION_HOME, "/alt");
             ZkConfiguration conf = ZkConfigurationLoader.loadConfiguration();
             assertEquals("./alt-zookeeper-data", conf.getDataDir());
-        }
-        finally {
+        } finally {
             System.clearProperty(ChokConfiguration.CHOK_CONFIGURATION_HOME);
         }
     }

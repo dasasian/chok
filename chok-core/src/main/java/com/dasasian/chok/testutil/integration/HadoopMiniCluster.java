@@ -43,6 +43,13 @@ public class HadoopMiniCluster {
         _tasktrackerCount = tasktrackerCount;
     }
 
+    public static void main(String[] args) throws IOException, InterruptedException {
+        HadoopMiniCluster hadoopCluster = new HadoopMiniCluster(9000, 9001, 2, 4);
+        hadoopCluster.start();
+        Thread.sleep(2000);
+        hadoopCluster.stop();
+    }
+
     public void start() throws IOException {
         LOG.info("starting hadoop cluster...");
         Configuration conf = new Configuration();
@@ -67,12 +74,5 @@ public class HadoopMiniCluster {
         LOG.info("stopping hadoop cluster...");
         _mrCluster.shutdown();
         _dfsCluster.shutdown();
-    }
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        HadoopMiniCluster hadoopCluster = new HadoopMiniCluster(9000, 9001, 2, 4);
-        hadoopCluster.start();
-        Thread.sleep(2000);
-        hadoopCluster.stop();
     }
 }

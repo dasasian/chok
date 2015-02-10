@@ -27,18 +27,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class MetricLogger implements IZkDataListener, ConnectedComponent {
 
-    public enum OutputType {
-        Log4J, SysOut
-    }
-
     private final static Logger LOG = Logger.getLogger(MetricLogger.class);
-
+    protected final InteractionProtocol protocol;
     private final OutputType outputType;
     private final ReentrantLock lock;
-
-    protected final InteractionProtocol protocol;
     private long loggedRecords = 0;
-
     public MetricLogger(OutputType outputType, InteractionProtocol protocol) {
         this.protocol = protocol;
         this.outputType = outputType;
@@ -114,6 +107,10 @@ public class MetricLogger implements IZkDataListener, ConnectedComponent {
     @Override
     public void reconnect() {
         // nothing to do
+    }
+
+    public enum OutputType {
+        Log4J, SysOut
     }
 
 }

@@ -45,7 +45,7 @@ import java.util.concurrent.*;
 /**
  * The back end server which searches a set of Lucene indices. Each shard is a
  * Lucene index directory.
- * <p/>
+ * <p>
  * Normal usage is to first call getDocFreqs() to get the global term
  * frequencies, then pass that back in to search(). This way you get uniform
  * scoring across all the nodes / instances of LuceneServer.
@@ -63,6 +63,44 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     private ISearcherFactory searcherFactory;
 
     public LuceneServer() {
+    }
+
+    /**
+     * Merges the already sorted sub-lists to one big sorted list.
+     */
+    private static List<Hit> mergeFieldSort(FieldSortComparator comparator, int count, ScoreDoc[][] sortedFieldDocs, String[] shards, String nodeName) {
+        int[] arrayPositions = new int[sortedFieldDocs.length];
+        final List<Hit> sortedResult = new ArrayList<>(count);
+
+        BitSet listDone = new BitSet(sortedFieldDocs.length);
+        for (int subListIndex = 0; subListIndex < arrayPositions.length; subListIndex++) {
+            if (sortedFieldDocs[subListIndex].length == 0) {
+                listDone.set(subListIndex, true);
+            }
+        }
+        do {
+            int fieldDocArrayWithSmallestFieldDoc = -1;
+            FieldDoc smallestFieldDoc = null;
+            for (int subListIndex = 0; subListIndex < arrayPositions.length; subListIndex++) {
+                if (!listDone.get(subListIndex)) {
+                    FieldDoc hit = (FieldDoc) sortedFieldDocs[subListIndex][arrayPositions[subListIndex]];
+                    if (smallestFieldDoc == null || comparator.compare(hit.fields, smallestFieldDoc.fields) < 0) {
+                        smallestFieldDoc = hit;
+                        fieldDocArrayWithSmallestFieldDoc = subListIndex;
+                    }
+                }
+            }
+            ScoreDoc[] smallestElementList = sortedFieldDocs[fieldDocArrayWithSmallestFieldDoc];
+            FieldDoc fieldDoc = (FieldDoc) smallestElementList[arrayPositions[fieldDocArrayWithSmallestFieldDoc]];
+            arrayPositions[fieldDocArrayWithSmallestFieldDoc]++;
+            final Hit hit = new Hit(shards[fieldDocArrayWithSmallestFieldDoc], nodeName, fieldDoc.score, fieldDoc.doc);
+            hit.setSortFields(WritableType.convertComparable(comparator.getFieldTypes(), fieldDoc.fields));
+            sortedResult.add(hit);
+            if (arrayPositions[fieldDocArrayWithSmallestFieldDoc] >= smallestElementList.length) {
+                listDone.set(fieldDocArrayWithSmallestFieldDoc, true);
+            }
+        } while (sortedResult.size() < count && listDone.cardinality() < arrayPositions.length);
+        return sortedResult;
     }
 
     @Override
@@ -113,8 +151,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
         try {
             IndexSearcher indexSearcher = searcherFactory.createSearcher(shardName, shardDir);
             searcherByShard.put(shardName, indexSearcher);
-        }
-        catch (CorruptIndexException e) {
+        } catch (CorruptIndexException e) {
             LOG.error("Error building index for shard " + shardName, e);
             throw e;
         }
@@ -132,8 +169,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
         }
         try {
             remove.close();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOG.error("LuceneServer " + nodeName + " error removing shard " + shardName, e);
         }
     }
@@ -309,8 +345,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
             if (field.isBinary()) {
                 final byte[] binaryValue = field.getBinaryValue();
                 result.put(new Text(name), new BytesWritable(binaryValue));
-            }
-            else {
+            } else {
                 final String stringValue = field.stringValue();
                 result.put(new Text(name), new Text(stringValue));
             }
@@ -368,11 +403,9 @@ public class LuceneServer implements IContentServer, ILuceneServer {
                 if (scoreDocExample == null && scoreDocs[callIndex].length > 0) {
                     scoreDocExample = scoreDocs[callIndex][0];
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 throw new IOException("Multithread shard search interrupted:", e);
-            }
-            catch (ExecutionException e) {
+            } catch (ExecutionException e) {
                 throw new IOException("Multithread shard search could not be executed:", e);
             }
         }
@@ -401,8 +434,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
                                 // the queue
                                 done.set(i, true);
                             }
-                        }
-                        else {
+                        } else {
                             // no docs left in this shard
                             done.set(i, true);
                         }
@@ -418,8 +450,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
                 }
             }
             finalHitList = hq;
-        }
-        else {
+        } else {
             WritableType[] sortFieldsTypes;
             FieldDoc fieldDoc = (FieldDoc) scoreDocExample;
             sortFieldsTypes = WritableType.detectWritableTypes(fieldDoc.fields);
@@ -432,44 +463,6 @@ public class LuceneServer implements IContentServer, ILuceneServer {
                 result.addHit(hit);
             }
         }
-    }
-
-    /**
-     * Merges the already sorted sub-lists to one big sorted list.
-     */
-    private static List<Hit> mergeFieldSort(FieldSortComparator comparator, int count, ScoreDoc[][] sortedFieldDocs, String[] shards, String nodeName) {
-        int[] arrayPositions = new int[sortedFieldDocs.length];
-        final List<Hit> sortedResult = new ArrayList<>(count);
-
-        BitSet listDone = new BitSet(sortedFieldDocs.length);
-        for (int subListIndex = 0; subListIndex < arrayPositions.length; subListIndex++) {
-            if (sortedFieldDocs[subListIndex].length == 0) {
-                listDone.set(subListIndex, true);
-            }
-        }
-        do {
-            int fieldDocArrayWithSmallestFieldDoc = -1;
-            FieldDoc smallestFieldDoc = null;
-            for (int subListIndex = 0; subListIndex < arrayPositions.length; subListIndex++) {
-                if (!listDone.get(subListIndex)) {
-                    FieldDoc hit = (FieldDoc) sortedFieldDocs[subListIndex][arrayPositions[subListIndex]];
-                    if (smallestFieldDoc == null || comparator.compare(hit.fields, smallestFieldDoc.fields) < 0) {
-                        smallestFieldDoc = hit;
-                        fieldDocArrayWithSmallestFieldDoc = subListIndex;
-                    }
-                }
-            }
-            ScoreDoc[] smallestElementList = sortedFieldDocs[fieldDocArrayWithSmallestFieldDoc];
-            FieldDoc fieldDoc = (FieldDoc) smallestElementList[arrayPositions[fieldDocArrayWithSmallestFieldDoc]];
-            arrayPositions[fieldDocArrayWithSmallestFieldDoc]++;
-            final Hit hit = new Hit(shards[fieldDocArrayWithSmallestFieldDoc], nodeName, fieldDoc.score, fieldDoc.doc);
-            hit.setSortFields(WritableType.convertComparable(comparator.getFieldTypes(), fieldDoc.fields));
-            sortedResult.add(hit);
-            if (arrayPositions[fieldDocArrayWithSmallestFieldDoc] >= smallestElementList.length) {
-                listDone.set(fieldDocArrayWithSmallestFieldDoc, true);
-            }
-        } while (sortedResult.size() < count && listDone.cardinality() < arrayPositions.length);
-        return sortedResult;
     }
 
     /**
@@ -487,8 +480,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
         final Searchable searchable = getSearcherByShard(shardName);
         if (fieldNames == null) {
             return searchable.doc(docId);
-        }
-        else {
+        } else {
             return searchable.doc(docId, new MapFieldSelector(fieldNames));
         }
     }
@@ -508,77 +500,16 @@ public class LuceneServer implements IContentServer, ILuceneServer {
             final IndexSearcher searcher = getSearcherByShard(shard);
             if (searcher == null) {
                 throw new IllegalStateException("no index-server for shard '" + shard + "' found - probably undeployed");
-            }
-            else {
+            } else {
                 queries[i] = searcher.rewrite(original);
             }
         }
         if (queries.length > 0 && queries[0] != null) {
             return queries[0].combine(queries);
-        }
-        else {
+        } else {
             LOG.error("No queries available for shards: " + Arrays.toString(shardNames));
         }
         return original;
-    }
-
-    /**
-     * Implements a single thread of a search. Each shard has a separate
-     * SearchCall and they are run more or less in parallel.
-     */
-    protected class SearchCall implements Callable<SearchResult> {
-
-        protected final String _shardName;
-        protected final Weight _weight;
-        protected final int _limit;
-        protected final Sort _sort;
-        protected final long _timeout;
-        protected final int _callIndex;
-        protected final Filter _filter;
-
-        public SearchCall(String shardName, Weight weight, int limit, Sort sort, long timeout, int callIndex, Filter filter) {
-            _shardName = shardName;
-            _weight = weight;
-            _limit = limit;
-            _sort = sort;
-            _timeout = timeout;
-            _callIndex = callIndex;
-            _filter = filter;
-        }
-
-        @Override
-        @SuppressWarnings({"rawtypes"})
-        public SearchResult call() throws Exception {
-            final IndexSearcher indexSearcher = getSearcherByShard(_shardName);
-            int nDocs = Math.min(_limit, indexSearcher.maxDoc());
-
-            TopDocsCollector resultCollector;
-            if (_sort != null) {
-                boolean fillFields = true;// see IndexSearcher#search(...)
-                boolean fieldSortDoTrackScores = false;
-                boolean fieldSortDoMaxScore = false;
-                resultCollector = TopFieldCollector.create(_sort, nDocs, fillFields, fieldSortDoTrackScores, fieldSortDoMaxScore, !_weight.scoresDocsOutOfOrder());
-            }
-            else {
-                resultCollector = TopScoreDocCollector.create(nDocs, !_weight.scoresDocsOutOfOrder());
-            }
-            try {
-                indexSearcher.search(_weight, _filter, wrapInTimeoutCollector(resultCollector));
-            }
-            catch (TimeExceededException e) {
-                LOG.warn("encountered exceeded timout for query '" + _weight.getQuery() + " on shard '" + _shardName + "' with timeout set to '" + _timeout + "'");
-            }
-            TopDocs docs = resultCollector.topDocs();
-            return new SearchResult(docs.totalHits, docs.scoreDocs, _callIndex);
-        }
-
-        @SuppressWarnings({"rawtypes"})
-        private Collector wrapInTimeoutCollector(TopDocsCollector resultCollector) {
-            if (_timeout <= 0) {
-                return resultCollector;
-            }
-            return new TimeLimitingCollector(resultCollector, Counter.newCounter(), _timeout);
-        }
     }
 
     protected static class SearchResult {
@@ -607,9 +538,6 @@ public class LuceneServer implements IContentServer, ILuceneServer {
 
     }
 
-    // Cached document frequency source from apache lucene
-    // MultiSearcher.
-
     /**
      * Document Frequency cache acting as a Dummy-Searcher. This class is not a
      * fully-fledged Searcher, but only supports the methods necessary to
@@ -633,8 +561,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
             int df;
             try {
                 df = dfMap.get(new TermWritable(term.field(), term.text()));
-            }
-            catch (final NullPointerException e) {
+            } catch (final NullPointerException e) {
                 throw new IllegalArgumentException("df for term " + term.text() + " not available in df-map:" + dfMap, e);
             }
             return df;
@@ -699,6 +626,9 @@ public class LuceneServer implements IContentServer, ILuceneServer {
         }
     }
 
+    // Cached document frequency source from apache lucene
+    // MultiSearcher.
+
     protected static class ChokHitQueue extends PriorityQueue<Hit> implements Iterable<Hit> {
 
         private final int _maxSize;
@@ -748,6 +678,63 @@ public class LuceneServer implements IContentServer, ILuceneServer {
                     throw new UnsupportedOperationException("Can't remove using this iterator");
                 }
             };
+        }
+    }
+
+    /**
+     * Implements a single thread of a search. Each shard has a separate
+     * SearchCall and they are run more or less in parallel.
+     */
+    protected class SearchCall implements Callable<SearchResult> {
+
+        protected final String _shardName;
+        protected final Weight _weight;
+        protected final int _limit;
+        protected final Sort _sort;
+        protected final long _timeout;
+        protected final int _callIndex;
+        protected final Filter _filter;
+
+        public SearchCall(String shardName, Weight weight, int limit, Sort sort, long timeout, int callIndex, Filter filter) {
+            _shardName = shardName;
+            _weight = weight;
+            _limit = limit;
+            _sort = sort;
+            _timeout = timeout;
+            _callIndex = callIndex;
+            _filter = filter;
+        }
+
+        @Override
+        @SuppressWarnings({"rawtypes"})
+        public SearchResult call() throws Exception {
+            final IndexSearcher indexSearcher = getSearcherByShard(_shardName);
+            int nDocs = Math.min(_limit, indexSearcher.maxDoc());
+
+            TopDocsCollector resultCollector;
+            if (_sort != null) {
+                boolean fillFields = true;// see IndexSearcher#search(...)
+                boolean fieldSortDoTrackScores = false;
+                boolean fieldSortDoMaxScore = false;
+                resultCollector = TopFieldCollector.create(_sort, nDocs, fillFields, fieldSortDoTrackScores, fieldSortDoMaxScore, !_weight.scoresDocsOutOfOrder());
+            } else {
+                resultCollector = TopScoreDocCollector.create(nDocs, !_weight.scoresDocsOutOfOrder());
+            }
+            try {
+                indexSearcher.search(_weight, _filter, wrapInTimeoutCollector(resultCollector));
+            } catch (TimeExceededException e) {
+                LOG.warn("encountered exceeded timout for query '" + _weight.getQuery() + " on shard '" + _shardName + "' with timeout set to '" + _timeout + "'");
+            }
+            TopDocs docs = resultCollector.topDocs();
+            return new SearchResult(docs.totalHits, docs.scoreDocs, _callIndex);
+        }
+
+        @SuppressWarnings({"rawtypes"})
+        private Collector wrapInTimeoutCollector(TopDocsCollector resultCollector) {
+            if (_timeout <= 0) {
+                return resultCollector;
+            }
+            return new TimeLimitingCollector(resultCollector, Counter.newCounter(), _timeout);
         }
     }
 

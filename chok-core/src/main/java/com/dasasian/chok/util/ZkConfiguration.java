@@ -46,6 +46,38 @@ public class ZkConfiguration implements Serializable {
         this.rootPath = rootPath;
     }
 
+    public static String buildPath(String... folders) {
+        return buildPath(PATH_SEPARATOR, folders);
+    }
+
+    static String buildPath(char separator, String... folders) {
+        StringBuilder builder = new StringBuilder();
+        for (String folder : folders) {
+            builder.append(folder);
+            builder.append(separator);
+        }
+        if (builder.length() > 0) {
+            builder.deleteCharAt(builder.length() - 1);
+        }
+        return builder.toString();
+    }
+
+    public static String getName(String path) {
+        return path.substring(path.lastIndexOf(PATH_SEPARATOR) + 1);
+    }
+
+    public static String getParent(String path) {
+        if (path.length() == 1) {
+            return null;
+        }
+        String name = getName(path);
+        String parent = path.substring(0, path.length() - name.length() - 1);
+        if (parent.equals("")) {
+            return String.valueOf(PATH_SEPARATOR);
+        }
+        return parent;
+    }
+
     public boolean isEmbedded() {
         return embedded;
     }
@@ -91,36 +123,20 @@ public class ZkConfiguration implements Serializable {
         return buildPath(getRootPath(), WORK, node + "-queue");
     }
 
-    public static String buildPath(String... folders) {
-        return buildPath(PATH_SEPARATOR, folders);
+    /**
+     * @param pathDef
+     * @return ${chok.root}/pathDef/name1/name2/...
+     */
+    public String getPath(PathDef pathDef, String... names) {
+        if (names.length == 0) {
+            return buildPath(getRootPath(), pathDef.getPath(PATH_SEPARATOR));
+        }
+        String suffixPath = buildPath(names);
+        return buildPath(getRootPath(), pathDef.getPath(PATH_SEPARATOR), suffixPath);
     }
 
-    static String buildPath(char separator, String... folders) {
-        StringBuilder builder = new StringBuilder();
-        for (String folder : folders) {
-            builder.append(folder);
-            builder.append(separator);
-        }
-        if (builder.length() > 0) {
-            builder.deleteCharAt(builder.length() - 1);
-        }
-        return builder.toString();
-    }
-
-    public static String getName(String path) {
-        return path.substring(path.lastIndexOf(PATH_SEPARATOR) + 1);
-    }
-
-    public static String getParent(String path) {
-        if (path.length() == 1) {
-            return null;
-        }
-        String name = getName(path);
-        String parent = path.substring(0, path.length() - name.length() - 1);
-        if (parent.equals("")) {
-            return String.valueOf(PATH_SEPARATOR);
-        }
-        return parent;
+    public ZkConfiguration rootPath(String zkRootPath) {
+        return new ZkConfiguration(embedded, servers, timeOut, tickTime, initLimit, syncLimit, dataDir, logDataDir, zkRootPath);
     }
 
     public enum PathDef {
@@ -156,21 +172,5 @@ public class ZkConfiguration implements Serializable {
         public boolean isVip() {
             return _vip;
         }
-    }
-
-    /**
-     * @param pathDef
-     * @return ${chok.root}/pathDef/name1/name2/...
-     */
-    public String getPath(PathDef pathDef, String... names) {
-        if (names.length == 0) {
-            return buildPath(getRootPath(), pathDef.getPath(PATH_SEPARATOR));
-        }
-        String suffixPath = buildPath(names);
-        return buildPath(getRootPath(), pathDef.getPath(PATH_SEPARATOR), suffixPath);
-    }
-
-    public ZkConfiguration rootPath(String zkRootPath) {
-        return new ZkConfiguration(embedded, servers, timeOut, tickTime, initLimit, syncLimit, dataDir, logDataDir, zkRootPath);
     }
 }

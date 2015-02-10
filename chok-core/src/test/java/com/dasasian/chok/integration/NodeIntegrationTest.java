@@ -38,7 +38,7 @@ import static org.junit.Assert.assertFalse;
 public class NodeIntegrationTest extends AbstractTest {
 
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000,TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
 
     @Test
     public void testContentServer() throws Exception {

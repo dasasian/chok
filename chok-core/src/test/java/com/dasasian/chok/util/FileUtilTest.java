@@ -36,11 +36,9 @@ import static org.junit.Assert.assertTrue;
 public class FileUtilTest extends AbstractTest {
 
     public static final String INDEX_TXT = "index.txt";
-
+    protected final File testZipFile = new File(FileUtilTest.class.getResource("/test.zip").getFile());
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
-
-    protected final File testZipFile = new File(FileUtilTest.class.getResource("/test.zip").getFile());
 
     @Test
     public void testUnzipFileFile() throws IOException {
@@ -97,23 +95,19 @@ public class FileUtilTest extends AbstractTest {
                     while ((b = fis.read()) >= 0) {
                         sourceOut.write(b);
                     }
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     System.err.println("shard transfer via pipe failed: " + e);
                     e.printStackTrace(System.err);
                     failed.set(true);
-                }
-                finally {
+                } finally {
                     try {
                         fis.close();
-                    }
-                    catch (IOException ignore) {
+                    } catch (IOException ignore) {
                         // ignore
                     }
                     try {
                         sourceOut.close();
-                    }
-                    catch (IOException ignore) {
+                    } catch (IOException ignore) {
                         // ignore
                     }
                 }

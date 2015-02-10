@@ -34,12 +34,11 @@ import java.util.Map;
  */
 public class StartMapFileNodeCommand extends ProtocolCommand {
 
+    private NodeConfiguration nodeConfiguration;
+    private IContentServer server = null;
     public StartMapFileNodeCommand() {
         super("startNode", "[-p <port number>] [-f <shard folder>]", "Starts a local node");
     }
-
-    private NodeConfiguration nodeConfiguration;
-    private IContentServer server = null;
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, Map<String, String> optionMap) {
@@ -55,15 +54,13 @@ public class StartMapFileNodeCommand extends ProtocolCommand {
 
         try {
             nodeConfiguration = NodeConfigurationLoader.loadConfiguration(startPort, shardFolder);
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
         try {
             server = new MapFileServer();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Error instantiating MapFileServer", e);
         }
     }

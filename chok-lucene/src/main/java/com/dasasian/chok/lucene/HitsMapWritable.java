@@ -82,8 +82,7 @@ public class HitsMapWritable implements Writable {
             final Hit hit;
             if (sortFieldTypesLen > 0) {
                 hit = new Hit(shard, _nodeName, score, docId, _sortFieldTypes);
-            }
-            else {
+            } else {
                 hit = new Hit(shard, _nodeName, score, docId);
             }
             addHit(hit);
@@ -113,8 +112,7 @@ public class HitsMapWritable implements Writable {
         out.writeInt(_totalHits);
         if (_sortFieldTypes == null) {
             out.writeByte(0);
-        }
-        else {
+        } else {
             out.writeByte(_sortFieldTypes.length);
             for (WritableType writableType : _sortFieldTypes) {
                 out.writeByte(writableType.ordinal());
@@ -137,8 +135,7 @@ public class HitsMapWritable implements Writable {
             WritableComparable[] sortFields = hit.getSortFields();
             if (sortFields == null) {
                 out.writeByte(0);
-            }
-            else {
+            } else {
                 out.writeByte(sortFields.length);
                 for (Writable writable : sortFields) {
                     writable.write(out);

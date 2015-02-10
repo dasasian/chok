@@ -56,8 +56,7 @@ public class OperationRegistry {
             OperationWatchdog watchdog = iterator.next();
             if (watchdog.isDone()) {
                 iterator.remove(); // lazy cleaning
-            }
-            else {
+            } else {
                 operations.add(watchdog.getOperation());
             }
         }

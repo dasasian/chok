@@ -27,11 +27,11 @@ import java.util.Arrays;
  */
 public class LogMetricsCommand extends ProtocolCommand {
 
+    private MetricLogger.OutputType _outputType;
+
     public LogMetricsCommand() {
         super("logMetrics", "[sysout|log4j]", "Subscribes to the Metrics updates and logs them to log file or console");
     }
-
-    private MetricLogger.OutputType _outputType;
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {

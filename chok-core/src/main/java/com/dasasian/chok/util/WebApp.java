@@ -32,6 +32,11 @@ public class WebApp {
         _port = port;
     }
 
+    public static void main(String[] args) throws Exception {
+        WebApp webApp = new WebApp(new String[]{args[0]}, Integer.parseInt(args[1]));
+        webApp.startWebServer();
+    }
+
     private String findWarInPathOrChilds(String[] warPaths) {
         for (String path : warPaths) {
             File file = new File(path);
@@ -68,11 +73,6 @@ public class WebApp {
 
         server.start();
         server.join();
-    }
-
-    public static void main(String[] args) throws Exception {
-        WebApp webApp = new WebApp(new String[]{args[0]}, Integer.parseInt(args[1]));
-        webApp.startWebServer();
     }
 
 }

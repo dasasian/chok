@@ -25,11 +25,11 @@ import com.dasasian.chok.util.ZkConfiguration;
  */
 public class RedeployIndexCommand extends ProtocolCommand {
 
+    private String _indexName;
+
     public RedeployIndexCommand() {
         super("redeployIndex", "<index name>", "Undeploys and deploys an index");
     }
-
-    private String _indexName;
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {

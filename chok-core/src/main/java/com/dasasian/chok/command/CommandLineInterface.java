@@ -69,8 +69,7 @@ public class CommandLineInterface {
             command = getCommand(args[0]);
             command.parseArguments(args);
             command.execute();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             printError(e.getMessage());
             if (showStackTrace) {
                 e.printStackTrace();

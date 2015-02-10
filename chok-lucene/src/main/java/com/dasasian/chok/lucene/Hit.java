@@ -58,8 +58,7 @@ public class Hit implements Writable, Comparable<Hit> {
         _shard = new Text(shard);
         if (node != null) {
             _node = new Text(node);
-        }
-        else {
+        } else {
             _node = null;
         }
         _score = score;
@@ -94,12 +93,12 @@ public class Hit implements Writable, Comparable<Hit> {
         _docId = docId;
     }
 
-    public void setSortFields(WritableComparable[] sortFields) {
-        _sortFields = sortFields;
-    }
-
     public WritableComparable[] getSortFields() {
         return _sortFields;
+    }
+
+    public void setSortFields(WritableComparable[] sortFields) {
+        _sortFields = sortFields;
     }
 
     public void readFields(final DataInput in) throws IOException {
@@ -108,8 +107,7 @@ public class Hit implements Writable, Comparable<Hit> {
         if (hasNode) {
             _node = new Text();
             _node.readFields(in);
-        }
-        else {
+        } else {
             _node = null;
         }
         _shard = new Text();
@@ -130,16 +128,14 @@ public class Hit implements Writable, Comparable<Hit> {
         if (_node != null) {
             out.writeBoolean(true);
             _node.write(out);
-        }
-        else {
+        } else {
             out.writeBoolean(false);
         }
         _shard.write(out);
         out.writeInt(_docId);
         if (_sortFields == null) {
             out.writeByte(0);
-        }
-        else {
+        } else {
             out.writeByte(_sortFields.length);
             for (Writable writable : _sortFields) {
                 writable.write(out);
@@ -183,14 +179,12 @@ public class Hit implements Writable, Comparable<Hit> {
         if (_node == null) {
             if (other._node != null)
                 return false;
-        }
-        else if (!_node.equals(other._node))
+        } else if (!_node.equals(other._node))
             return false;
         if (_shard == null) {
             if (other._shard != null)
                 return false;
-        }
-        else if (!_shard.equals(other._shard))
+        } else if (!_shard.equals(other._shard))
             return false;
         if (_docId != other._docId)
             return false;

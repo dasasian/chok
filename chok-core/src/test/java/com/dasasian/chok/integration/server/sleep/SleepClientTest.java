@@ -54,15 +54,12 @@ import static org.junit.Assert.*;
  */
 public class SleepClientTest extends AbstractTest {
 
-    protected static final Logger LOG = Logger.getLogger(SleepClientTest.class);
-
     public static final String INDEX_NAME = "index1";
+    protected static final Logger LOG = Logger.getLogger(SleepClientTest.class);
     private static final String[] INDEXES_ARRAY = new String[]{INDEX_NAME};
-
-    private SleepClient client;
-
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SleepServer.class, 1, 20000,TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SleepServer.class, 1, 20000, TestNodeConfigurationFactory.class);
+    private SleepClient client;
 
     @Before
     public void start() throws Exception {
@@ -126,8 +123,7 @@ public class SleepClientTest extends AbstractTest {
                         int n = rand2.nextInt(20);
                         try {
                             client.sleepIndices(n, INDEXES_ARRAY);
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             System.err.println(e);
                             exceptions.add(e);
                             break;
@@ -152,8 +148,7 @@ public class SleepClientTest extends AbstractTest {
         try {
             client.sleepShards(0, 0, new String[]{"doesNotExist"});
             fail("Should have failed.");
-        }
-        catch (ChokException e) {
+        } catch (ChokException e) {
             assertEquals("Shard 'doesNotExist' is currently not reachable", e.getMessage());
         }
     }
@@ -164,8 +159,7 @@ public class SleepClientTest extends AbstractTest {
 
             client.sleepIndices(0, 0, new String[]{"doesNotExist"});
             fail("Should have failed.");
-        }
-        catch (ChokException e) {
+        } catch (ChokException e) {
             assertTrue(e.getMessage().startsWith("Index [pattern(s)] '[doesNotExist]' do not match to any deployed index: ["));
         }
     }

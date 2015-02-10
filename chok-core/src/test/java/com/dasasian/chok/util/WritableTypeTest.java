@@ -96,8 +96,7 @@ public class WritableTypeTest extends AbstractTest {
         try {
             WritableType.detectWritableType(new Date());
             fail("should throw exception");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // expected
         }
 

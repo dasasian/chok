@@ -134,8 +134,7 @@ public class Hits implements Writable {
                     if (highest == null) {
                         highest = hit;
                         pointer = i;
-                    }
-                    else if (hit.getScore() > highest.getScore()) {
+                    } else if (hit.getScore() > highest.getScore()) {
                         highest = hit;
                         pointer = i;
                     }

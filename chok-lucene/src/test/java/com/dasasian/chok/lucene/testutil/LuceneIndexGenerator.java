@@ -86,8 +86,7 @@ public class LuceneIndexGenerator implements IndexGenerator<LuceneServer> {
                 new File(index, "done").createNewFile();
             }
 
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("Unable to write index", e);
         }
     }

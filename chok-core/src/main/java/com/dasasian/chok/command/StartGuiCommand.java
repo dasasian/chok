@@ -29,12 +29,11 @@ import java.util.Map;
  */
 public class StartGuiCommand extends Command {
 
+    private int _port = 8080;
+    private File _war;
     public StartGuiCommand() {
         super("startGui", "[-war <pathToWar>] [-port <port>]", "Starts the web based chok.gui");
     }
-
-    private int _port = 8080;
-    private File _war;
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, Map<String, String> optionMap) {
@@ -51,8 +50,7 @@ public class StartGuiCommand extends Command {
         List<String> paths = new ArrayList<>();
         if (_war != null) {
             paths.add(_war.getAbsolutePath());
-        }
-        else {
+        } else {
             paths.add(".");
             paths.add("./extras/chok.gui");
         }

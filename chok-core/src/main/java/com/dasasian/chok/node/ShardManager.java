@@ -61,8 +61,7 @@ public class ShardManager {
                 installShard(shardName, shardPath, localShardFolder);
             }
             return localShardFolder;
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             FileUtil.deleteFolder(localShardFolder);
             throw e;
         }
@@ -118,13 +117,11 @@ public class ShardManager {
 
                     if (isZip) {
                         FileUtil.unzip(path, shardTmpFolder, fileSystem, "true".equalsIgnoreCase(System.getProperty("chok.spool.zip.shards", "false")));
-                    }
-                    else {
+                    } else {
                         fileSystem.copyToLocalFile(path, new Path(shardTmpFolder.getAbsolutePath()));
                     }
                     shardTmpFolder.renameTo(localShardFolder);
-                }
-                finally {
+                } finally {
                     // Ensure that the tmp folder is deleted on an error
                     FileUtil.deleteFolder(shardTmpFolder);
                 }
@@ -133,11 +130,9 @@ public class ShardManager {
                     LOG.error("Loaded shard:" + shardPath);
                 }
                 return;
-            }
-            catch (final URISyntaxException e) {
+            } catch (final URISyntaxException e) {
                 throw new ChokException("Can not parse uri for path: " + shardPath, e);
-            }
-            catch (final Exception e) {
+            } catch (final Exception e) {
                 LOG.error(String.format("Error loading shard: %s (try %d of %d)", shardPath, i, maxTries), e);
                 if (i >= maxTries - 1) {
                     throw new ChokException("Can not load shard: " + shardPath, e);
@@ -193,6 +188,11 @@ public class ShardManager {
         }
 
         @Override
+        public void setWorkingDirectory(Path arg0) {
+            fileSystemDelegate.setWorkingDirectory(arg0);
+        }
+
+        @Override
         public FileStatus[] listStatus(Path arg0) throws IOException {
             return fileSystemDelegate.listStatus(arg0);
         }
@@ -211,11 +211,6 @@ public class ShardManager {
         @Override
         public boolean rename(Path arg0, Path arg1) throws IOException {
             return fileSystemDelegate.rename(arg0, arg1);
-        }
-
-        @Override
-        public void setWorkingDirectory(Path arg0) {
-            fileSystemDelegate.setWorkingDirectory(arg0);
         }
 
         @Override

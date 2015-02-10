@@ -24,17 +24,13 @@ import java.util.List;
 
 /**
  * An operation carried out by the master node.
- * <p/>
+ * <p>
  * If an {@link InterruptedException} is thrown during the operations
  * {@link #execute(MasterContext)} method (which can happen during master change
  * or zookeeper reconnect) the operation can either catch and handle or rethrow
  * it. Rethrowing it will lead to complete reexecution of the operation.
  */
 public interface MasterOperation extends Serializable {
-
-    static enum ExecutionInstruction {
-        EXECUTE, CANCEL, ADD_TO_QUEUE_TAIL
-    }
 
     /**
      * Called before {@link #execute(MasterContext, List)} to evaluate if this
@@ -51,7 +47,7 @@ public interface MasterOperation extends Serializable {
      * @param context
      * @param runningOperations currently running {@link MasterOperation}s
      * @return null or a list of operationId which have to be completed before
-     *         {@link #nodeOperationsComplete(MasterContext)} method is called.
+     * {@link #nodeOperationsComplete(MasterContext)} method is called.
      * @throws Exception
      */
     List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception;
@@ -66,5 +62,9 @@ public interface MasterOperation extends Serializable {
      * @param results
      */
     void nodeOperationsComplete(MasterContext context, List<OperationResult> results) throws Exception;
+
+    static enum ExecutionInstruction {
+        EXECUTE, CANCEL, ADD_TO_QUEUE_TAIL
+    }
 
 }

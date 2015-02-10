@@ -28,9 +28,9 @@ import java.io.IOException;
 
 public class ZkTestSystem extends ExternalResource {
 
+    public static final String ZK_ROOT_PATH = "/zk_testsystem";
     protected static final Logger LOG = Logger.getLogger(ZkTestSystem.class);
     private final static int PORT = 10001;
-    public static final String ZK_ROOT_PATH = "/zk_testsystem";
     private TemporaryFolder temporaryFolder;
     private ZkServer zkServer;
     private ZkConfiguration conf;
@@ -78,16 +78,14 @@ public class ZkTestSystem extends ExternalResource {
         try {
             LOG.info("cleanup zk namespace:" + zkRootPath);
             getZkClient().deleteRecursive(zkRootPath);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
 //            LOG.warn("Error while cleaning up ZooKeeper", e);
         }
 
         try {
             LOG.info("unsubscribing " + getZkClient().numberOfListeners() + " listeners");
             getZkClient().unsubscribeAll();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
 //            LOG.warn("Error while unsubscribing listeners from ZooKeeper", e);
         }
     }

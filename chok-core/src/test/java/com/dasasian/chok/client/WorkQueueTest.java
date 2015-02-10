@@ -34,6 +34,30 @@ public class WorkQueueTest extends AbstractTest {
     @SuppressWarnings("unused")
     private static final Logger LOG = Logger.getLogger(WorkQueueTest.class);
 
+    /**
+     * Returns an interaction factory that ignores all calls and does nothing.
+     */
+    public static <T> INodeInteractionFactory<T> nullFactory() {
+        return new INodeInteractionFactory<T>() {
+            public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results) {
+                return null;
+            }
+        };
+    }
+
+    protected static void sleep(long msec) {
+        long now = System.currentTimeMillis();
+        long stop = now + msec;
+        while (now < stop) {
+            try {
+                Thread.sleep(stop - now);
+            } catch (InterruptedException e) {
+                // proceed
+            }
+            now = System.currentTimeMillis();
+        }
+    }
+
     @Test
     public void testWorkQueue() throws Exception {
         TestShardManager sm = new TestShardManager();
@@ -201,11 +225,9 @@ public class WorkQueueTest extends AbstractTest {
                 }
                 if (innerNow >= stopTime) {
                     return 0;
-                }
-                else if (innerNow >= closeTime) {
+                } else if (innerNow >= closeTime) {
                     return stopTime - innerNow;
-                }
-                else {
+                } else {
                     return closeTime - innerNow;
                 }
             }
@@ -372,27 +394,9 @@ public class WorkQueueTest extends AbstractTest {
 
     public static class TestNodeInteractionFactory implements INodeInteractionFactory<Integer> {
 
-        public class Entry {
-            public String node;
-            public Method method;
-            public Object[] args;
-
-            public Entry(String node, Method method, Object[] args) {
-                this.node = node;
-                this.method = method;
-                this.args = args;
-            }
-
-            @Override
-            public String toString() {
-                return node + ":" + method.getName() + ":" + Arrays.asList(args).toString();
-            }
-        }
-
         public List<Entry> calls = new ArrayList<>();
         public int maxSleep;
         public long additionalSleepTime = 0; // TODO combine sleeps
-
         public TestNodeInteractionFactory(int maxSleep) {
             this.maxSleep = maxSleep;
         }
@@ -432,6 +436,23 @@ public class WorkQueueTest extends AbstractTest {
             return sb.toString();
         }
 
+        public class Entry {
+            public String node;
+            public Method method;
+            public Object[] args;
+
+            public Entry(String node, Method method, Object[] args) {
+                this.node = node;
+                this.method = method;
+                this.args = args;
+            }
+
+            @Override
+            public String toString() {
+                return node + ":" + method.getName() + ":" + Arrays.asList(args).toString();
+            }
+        }
+
     }
 
     private static class TestServer {
@@ -446,31 +467,6 @@ public class WorkQueueTest extends AbstractTest {
             long msec = rand.nextInt(maxSleep);
             sleep(msec);
             return n * 2;
-        }
-    }
-
-    /**
-     * Returns an interaction factory that ignores all calls and does nothing.
-     */
-    public static <T> INodeInteractionFactory<T> nullFactory() {
-        return new INodeInteractionFactory<T>() {
-            public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results) {
-                return null;
-            }
-        };
-    }
-
-    protected static void sleep(long msec) {
-        long now = System.currentTimeMillis();
-        long stop = now + msec;
-        while (now < stop) {
-            try {
-                Thread.sleep(stop - now);
-            }
-            catch (InterruptedException e) {
-                // proceed
-            }
-            now = System.currentTimeMillis();
         }
     }
 

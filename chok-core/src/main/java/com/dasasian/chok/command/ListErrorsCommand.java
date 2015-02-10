@@ -29,11 +29,11 @@ import java.util.Set;
  */
 public class ListErrorsCommand extends ProtocolCommand {
 
+    private String _indexName;
+
     public ListErrorsCommand() {
         super("listErrors", "<index name>", "Lists all deploy errors for a specified index");
     }
-
-    private String _indexName;
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {

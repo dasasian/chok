@@ -33,8 +33,8 @@ public class IndexMetaData implements Serializable {
 
     private final String name;
     private final String path;
-    private int replicationLevel;
     private final Set<Shard> shards = Sets.newHashSet();
+    private int replicationLevel;
     private IndexDeployError deployError;
 
     public IndexMetaData(String name, String path, int replicationLevel) {
@@ -47,12 +47,12 @@ public class IndexMetaData implements Serializable {
         return path;
     }
 
-    public void setReplicationLevel(int replicationLevel) {
-        this.replicationLevel = replicationLevel;
-    }
-
     public int getReplicationLevel() {
         return replicationLevel;
+    }
+
+    public void setReplicationLevel(int replicationLevel) {
+        this.replicationLevel = replicationLevel;
     }
 
     public String getName() {
@@ -81,12 +81,12 @@ public class IndexMetaData implements Serializable {
         return shardPath;
     }
 
-    public void setDeployError(IndexDeployError deployError) {
-        this.deployError = deployError;
-    }
-
     public IndexDeployError getDeployError() {
         return deployError;
+    }
+
+    public void setDeployError(IndexDeployError deployError) {
+        this.deployError = deployError;
     }
 
     public boolean hasDeployError() {
@@ -110,6 +110,15 @@ public class IndexMetaData implements Serializable {
             this.path = path;
         }
 
+        public static List<String> getShardNames(Collection<Shard> shards) {
+            return ImmutableList.copyOf(Iterables.transform(shards, new Function<Shard, String>() {
+                @Override
+                public String apply(Shard shard) {
+                    return shard.getName();
+                }
+            }));
+        }
+
         public String getName() {
             return name;
         }
@@ -125,15 +134,6 @@ public class IndexMetaData implements Serializable {
         @Override
         public String toString() {
             return getName();
-        }
-
-        public static List<String> getShardNames(Collection<Shard> shards) {
-            return ImmutableList.copyOf(Iterables.transform(shards, new Function<Shard, String>() {
-                @Override
-                public String apply(Shard shard) {
-                    return shard.getName();
-                }
-            }));
         }
 
     }

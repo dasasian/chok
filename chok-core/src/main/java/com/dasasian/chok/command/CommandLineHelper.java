@@ -63,16 +63,14 @@ public class CommandLineHelper {
                 if (deployFuture.getState() == IndexState.DEPLOYED) {
                     System.out.println("\ndeployed index '" + name + "' in " + duration + " ms");
                     break;
-                }
-                else if (deployFuture.getState() == IndexState.ERROR) {
+                } else if (deployFuture.getState() == IndexState.ERROR) {
                     System.err.println("\nfailed to deploy index '" + name + "' in " + duration + " ms");
                     break;
                 }
                 System.out.print(".");
                 deployFuture.joinDeployment(1000);
             }
-        }
-        catch (final InterruptedException e) {
+        } catch (final InterruptedException e) {
             printError("interrupted wait on index deployment");
         }
     }
@@ -97,8 +95,8 @@ public class CommandLineHelper {
 
     public static class Table {
 
-        private String[] header;
         private final List<String[]> rows = new ArrayList<>();
+        private String[] header;
         private boolean batchMode;
         private boolean skipColumnNames;
 
@@ -165,8 +163,7 @@ public class CommandLineHelper {
                     builder.append(column).append(getChar(columnSizes[i] - column.length(), " "));
                     if (!batchMode) {
                         leftPad = " | ";
-                    }
-                    else {
+                    } else {
                         leftPad = " ";
                     }
                 }
@@ -187,8 +184,7 @@ public class CommandLineHelper {
                     builder.append(getChar(columnSizes[i] - row[i].toString().length(), " "));
                     if (!batchMode) {
                         leftPad = " | ";
-                    }
-                    else {
+                    } else {
                         leftPad = " ";
                     }
                 }

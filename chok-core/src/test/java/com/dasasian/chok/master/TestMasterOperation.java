@@ -24,8 +24,8 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
-* Created by damith.chandrasekara on 1/25/15.
-*/
+ * Created by damith.chandrasekara on 1/25/15.
+ */
 public class TestMasterOperation implements MasterOperation, Serializable {
     private final SerializableCountDownLatchAnswer answer;
 
@@ -33,6 +33,7 @@ public class TestMasterOperation implements MasterOperation, Serializable {
 
         this.answer = answer;
     }
+
     @Override
     public ExecutionInstruction getExecutionInstruction(List<MasterOperation> runningOperations) throws Exception {
         return ExecutionInstruction.EXECUTE;

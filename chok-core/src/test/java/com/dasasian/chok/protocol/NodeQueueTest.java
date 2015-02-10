@@ -74,8 +74,7 @@ public class NodeQueueTest extends AbstractZkTest {
             queue.complete(result);
             verify(zkClientSpy).createEphemeral(endsWith(elementName));
             fail("should throw exception");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // expected
         }
 

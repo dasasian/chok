@@ -34,6 +34,10 @@ class UpgradeAction05_06 implements UpgradeAction {
 
     private static final Logger LOG = Logger.getLogger(UpgradeAction05_06.class);
 
+    protected static String getOldIndicesPath(ZkConfiguration zkConf) {
+        return zkConf.getRootPath() + "/" + "indexes";
+    }
+
     @SuppressWarnings("deprecation")
     @Override
     public void upgrade(InteractionProtocol protocol) {
@@ -64,10 +68,6 @@ class UpgradeAction05_06 implements UpgradeAction {
         LOG.info("upgrade done");
     }
 
-    protected static String getOldIndicesPath(ZkConfiguration zkConf) {
-        return zkConf.getRootPath() + "/" + "indexes";
-    }
-
     static class WriteableZkSerializer implements ZkSerializer {
 
         private final Class<? extends Writable> _writableClass;
@@ -85,8 +85,7 @@ class UpgradeAction05_06 implements UpgradeAction {
                 instance.readFields(buffer);
                 buffer.close();
                 return instance;
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new ZkMarshallingError(e);
             }
         }
@@ -97,11 +96,9 @@ class UpgradeAction05_06 implements UpgradeAction {
             try {
                 ((Writable) data).write(out);
                 return out.getData();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new ZkMarshallingError(e);
-            }
-            finally {
+            } finally {
                 IOUtils.closeStream(out);
             }
         }

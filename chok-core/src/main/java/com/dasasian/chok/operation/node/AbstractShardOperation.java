@@ -53,8 +53,7 @@ public abstract class AbstractShardOperation implements NodeOperation {
             try {
                 LOG.info(getOperationName() + " shard '" + shardName + "'");
                 execute(context, shardName, result);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 ExceptionUtil.rethrowInterruptedException(e);
                 LOG.error("failed to " + getOperationName() + " shard '" + shardName + "' on node '" + context.getNode().getName() + "'", e);
                 result.addShardException(shardName, e);

@@ -284,18 +284,15 @@ public class NodeInteractionTest extends AbstractTest {
         assertEquals("", nodeExecutor.toString());
     }
 
+    public interface ITestServer extends VersionedProtocol {
+        public String testMethod(String param, String[] shards);
+
+        public String testMethodNoShards(String param);
+
+        public String failingMethod(String param, String[] shards);
+    }
+
     protected static class TestNodeExecutor implements INodeExecutor {
-
-        protected class Call {
-            protected String node;
-            protected Map<String, List<String>> nodeShardMap;
-            protected int tryCount;
-
-            @Override
-            public String toString() {
-                return node + ":" + tryCount + ":" + nodeShardMap;
-            }
-        }
 
         protected List<Call> calls = new ArrayList<>();
 
@@ -318,14 +315,17 @@ public class NodeInteractionTest extends AbstractTest {
             }
             return sb.toString();
         }
-    }
 
-    public interface ITestServer extends VersionedProtocol {
-        public String testMethod(String param, String[] shards);
+        protected class Call {
+            protected String node;
+            protected Map<String, List<String>> nodeShardMap;
+            protected int tryCount;
 
-        public String testMethodNoShards(String param);
-
-        public String failingMethod(String param, String[] shards);
+            @Override
+            public String toString() {
+                return node + ":" + tryCount + ":" + nodeShardMap;
+            }
+        }
     }
 
     private static class TestServer implements ITestServer, InvocationHandler {
@@ -357,7 +357,7 @@ public class NodeInteractionTest extends AbstractTest {
         @Override
         public String toString() {
             List<String> shards = null;
-            if(_shards != null) {
+            if (_shards != null) {
                 shards = Arrays.asList(_shards);
                 Collections.sort(shards);
             }

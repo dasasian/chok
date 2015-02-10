@@ -24,7 +24,7 @@ import java.util.Comparator;
  * Implementation of an {@link Comparator} that compares two {@link Hit} objects
  * based on a given {@link Sort} specification. This comparator helps sorting a
  * result list by field terms rather then by sore.
- * <p/>
+ * <p>
  * This code leans on the lucene code from {@link FieldSortedHitQueue}
  */
 @SuppressWarnings("unchecked")
@@ -50,15 +50,13 @@ class FieldSortComparator implements Comparator<Hit> {
                 throw new UnsupportedOperationException("locale-sensitive field sort currently not supported");
                 // jz: therefore we could use java.text.Collator class (see lucenes
                 // FieldSortedHitQueue)
-            }
-            else if (sortFields[i].getType() == SortField.CUSTOM) {
+            } else if (sortFields[i].getType() == SortField.CUSTOM) {
                 throw new UnsupportedOperationException("custom field sort currently not supported");
             }
 
             if (_sortFields[i].getType() == SortField.SCORE) {
                 _fieldComparators[i] = REVERSED_COMPARABLE_COMPARATOR;
-            }
-            else {
+            } else {
                 _fieldComparators[i] = COMPARABLE_COMPARATOR;
             }
         }

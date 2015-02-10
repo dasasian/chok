@@ -48,19 +48,17 @@ import java.util.*;
 /**
  * Abstracts the interaction between master and nodes via zookeeper files and
  * folders.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * For inspecting and understanding the zookeeper structure see
  * {@link #explainStructure()} and {@link #showStructure(boolean)}.
  */
 public class InteractionProtocol {
 
     protected final static Logger LOG = Logger.getLogger(InteractionProtocol.class);
-
-    protected volatile boolean connected = true;
     protected final ZkClient zkClient;
     protected final ZkConfiguration zkConf;
-
+    protected volatile boolean connected = true;
     // we govern the various listener and ephemerals to remove burden from
     // listener-users to unregister/delete them
     protected One2ManyListMap<ConnectedComponent, ListenerAdapter> zkListenerByComponent = new One2ManyListMap<>();
@@ -116,11 +114,9 @@ public class InteractionProtocol {
         for (ListenerAdapter listener : listeners) {
             if (listener instanceof IZkChildListener) {
                 zkClient.unsubscribeChildChanges(listener.getPath(), (IZkChildListener) listener);
-            }
-            else if (listener instanceof IZkDataListener) {
+            } else if (listener instanceof IZkDataListener) {
                 zkClient.unsubscribeDataChanges(listener.getPath(), (IZkDataListener) listener);
-            }
-            else {
+            } else {
                 throw new IllegalStateException("could not handle lister of type " + listener.getClass().getName());
             }
         }
@@ -290,8 +286,7 @@ public class InteractionProtocol {
             final String shard2NodeRootPath = zkConf.getPath(PathDef.SHARD_TO_NODES, shard);
             if (zkClient.exists(shard2NodeRootPath)) {
                 shard2NodeNames.put(shard, zkClient.getChildren(shard2NodeRootPath));
-            }
-            else {
+            } else {
                 shard2NodeNames.put(shard, Collections.<String>emptyList());
             }
         }
@@ -340,8 +335,7 @@ public class InteractionProtocol {
             createEphemeral(master, zkMasterPath, new MasterMetaData(masterName, System.currentTimeMillis()));
             isMaster = true;
             LOG.info(masterName + " started as master");
-        }
-        catch (ZkNodeExistsException e) {
+        } catch (ZkNodeExistsException e) {
             registerDataListener(master, new IZkDataListener() {
                 @Override
                 public void handleDataDeleted(final String dataPath) throws ChokException {
@@ -365,8 +359,7 @@ public class InteractionProtocol {
                 zkClient.createPersistent(queuePath);
             }
             queue = new MasterQueue(zkClient, queuePath);
-        }
-        else {
+        } else {
             LOG.info("secondary master '" + master.getMasterName() + "' registered");
         }
 
@@ -391,8 +384,7 @@ public class InteractionProtocol {
         // write or update metadata
         if (zkClient.exists(nodeMetadataPath)) {
             zkClient.writeData(nodeMetadataPath, nodeMetaData);
-        }
-        else {
+        } else {
             zkClient.createPersistent(nodeMetadataPath, nodeMetaData);
         }
 
@@ -456,12 +448,10 @@ public class InteractionProtocol {
         String metricsPath = zkConf.getPath(PathDef.NODE_METRICS, nodeName);
         try {
             zkClient.writeData(metricsPath, metricsRecord);
-        }
-        catch (ZkNoNodeException e) {
+        } catch (ZkNoNodeException e) {
             // TODO put in ephemeral map ?
             zkClient.createEphemeral(metricsPath, new MetricsRecord(nodeName));
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // this only happens if zk is down
             LOG.debug("Can't write to zk", e);
         }
@@ -512,8 +502,7 @@ public class InteractionProtocol {
         final String string;
         if (all) {
             string = ZkPathUtil.toString(zkClient, zkConf.getRootPath(), PathFilter.ALL);
-        }
-        else {
+        } else {
             final Set<String> nonViPathes = new HashSet<>();
             for (PathDef pathDef : PathDef.values()) {
                 if (!pathDef.isVip()) {
@@ -537,6 +526,39 @@ public class InteractionProtocol {
         }
     }
 
+    public Version getVersion() {
+        return zkClient.readData(zkConf.getPath(PathDef.VERSION), true);
+    }
+
+    public void setVersion(Version version) {
+        String zkPath = zkConf.getPath(PathDef.VERSION);
+        try {
+            zkClient.writeData(zkPath, version);
+        } catch (ZkNoNodeException e) {
+            zkClient.createPersistent(zkPath, version);
+        }
+    }
+
+    public void setFlag(String name) {
+        zkClient.createEphemeral(zkConf.getPath(PathDef.FLAGS, name));
+    }
+
+    public boolean flagExists(String name) {
+        return zkClient.exists(zkConf.getPath(PathDef.FLAGS, name));
+    }
+
+    public void removeFlag(String name) {
+        zkClient.delete(zkConf.getPath(PathDef.FLAGS, name));
+    }
+
+    public ZkConfiguration getZkConfiguration() {
+        return zkConf;
+    }
+
+    public ZkClient getZkClient() {
+        return zkClient;
+    }
+
     static class ListenerAdapter {
         private final String _path;
 
@@ -557,12 +579,16 @@ public class InteractionProtocol {
 
     static class AddRemoveListenerAdapter extends ListenerAdapter implements IZkChildListener {
 
-        private List<String> _cachedChilds;
         private final IAddRemoveListener _listener;
+        private List<String> _cachedChilds;
 
         public AddRemoveListenerAdapter(String path, IAddRemoveListener listener) {
             super(path);
             _listener = listener;
+        }
+
+        public List<String> getCachedChilds() {
+            return _cachedChilds;
         }
 
         public void setCachedChilds(List<String> cachedChilds) {
@@ -570,10 +596,6 @@ public class InteractionProtocol {
             if (_cachedChilds == null) {
                 _cachedChilds = Collections.emptyList();
             }
-        }
-
-        public List<String> getCachedChilds() {
-            return _cachedChilds;
         }
 
         @Override
@@ -612,40 +634,6 @@ public class InteractionProtocol {
             _dataListener.handleDataDeleted(dataPath);
         }
 
-    }
-
-    public void setVersion(Version version) {
-        String zkPath = zkConf.getPath(PathDef.VERSION);
-        try {
-            zkClient.writeData(zkPath, version);
-        }
-        catch (ZkNoNodeException e) {
-            zkClient.createPersistent(zkPath, version);
-        }
-    }
-
-    public Version getVersion() {
-        return zkClient.readData(zkConf.getPath(PathDef.VERSION), true);
-    }
-
-    public void setFlag(String name) {
-        zkClient.createEphemeral(zkConf.getPath(PathDef.FLAGS, name));
-    }
-
-    public boolean flagExists(String name) {
-        return zkClient.exists(zkConf.getPath(PathDef.FLAGS, name));
-    }
-
-    public void removeFlag(String name) {
-        zkClient.delete(zkConf.getPath(PathDef.FLAGS, name));
-    }
-
-    public ZkConfiguration getZkConfiguration() {
-        return zkConf;
-    }
-
-    public ZkClient getZkClient() {
-        return zkClient;
     }
 
 }

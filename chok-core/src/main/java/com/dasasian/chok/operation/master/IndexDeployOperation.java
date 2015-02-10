@@ -40,15 +40,56 @@ public class IndexDeployOperation extends AbstractIndexOperation {
 
     private static final long serialVersionUID = 1L;
     private final static Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
-
-    protected IndexMetaData _indexMD;
     private final String _indexName;
     private final String _indexPath;
+    protected IndexMetaData _indexMD;
 
     public IndexDeployOperation(String indexName, String indexPath, int replicationLevel) {
         _indexMD = new IndexMetaData(indexName, indexPath, replicationLevel);
         _indexName = indexName;
         _indexPath = indexPath;
+    }
+
+    protected static List<Shard> readShardsFromFs(final String indexName, final String indexPathString) throws IndexDeployException {
+        // get shard folders from source
+        URI uri;
+        try {
+            uri = new URI(indexPathString);
+        } catch (final URISyntaxException e) {
+            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to parse index path uri '" + indexPathString + "', make sure it starts with file:// or hdfs:// ", e);
+        }
+        FileSystem fileSystem;
+        try {
+            fileSystem = HadoopUtil.getFileSystem(new Path(uri.toString()));
+        } catch (final IOException e) {
+            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to retrive file system for index path '" + indexPathString + "', make sure your path starts with hadoop support prefix like file:// or hdfs://", e);
+        }
+
+        List<Shard> shards = new ArrayList<>();
+        try {
+            final Path indexPath = new Path(indexPathString);
+            if (!fileSystem.exists(indexPath)) {
+                throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "index path '" + uri + "' does not exists");
+            }
+            final FileStatus[] listStatus = fileSystem.listStatus(indexPath, new PathFilter() {
+                public boolean accept(final Path aPath) {
+                    return !aPath.getName().startsWith(".");
+                }
+            });
+            for (final FileStatus fileStatus : listStatus) {
+                String shardPath = fileStatus.getPath().toString();
+                if (fileStatus.isDir() || shardPath.endsWith(".zip")) {
+                    shards.add(new Shard(createShardName(indexName, shardPath), shardPath));
+                }
+            }
+        } catch (final IOException e) {
+            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "could not access index path: " + indexPathString, e);
+        }
+
+        if (shards.size() == 0) {
+            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "index does not contain any shard");
+        }
+        return shards;
     }
 
     public String getIndexName() {
@@ -70,8 +111,7 @@ public class IndexDeployOperation extends AbstractIndexOperation {
             _indexMD.getShards().addAll(readShardsFromFs(_indexName, _indexPath));
             LOG.info("Found shards '" + _indexMD.getShards() + "' for index '" + _indexName + "'");
             return distributeIndexShards(context, _indexMD, protocol.getLiveNodes(), runningOperations);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ExceptionUtil.rethrowInterruptedException(e);
             LOG.error("failed to deploy index " + _indexName, e);
             // note: need to publishIndex before update can be done to the indexMD
@@ -100,51 +140,6 @@ public class IndexDeployOperation extends AbstractIndexOperation {
     @Override
     public String toString() {
         return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + _indexName;
-    }
-
-    protected static List<Shard> readShardsFromFs(final String indexName, final String indexPathString) throws IndexDeployException {
-        // get shard folders from source
-        URI uri;
-        try {
-            uri = new URI(indexPathString);
-        }
-        catch (final URISyntaxException e) {
-            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to parse index path uri '" + indexPathString + "', make sure it starts with file:// or hdfs:// ", e);
-        }
-        FileSystem fileSystem;
-        try {
-            fileSystem = HadoopUtil.getFileSystem(new Path(uri.toString()));
-        }
-        catch (final IOException e) {
-            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to retrive file system for index path '" + indexPathString + "', make sure your path starts with hadoop support prefix like file:// or hdfs://", e);
-        }
-
-        List<Shard> shards = new ArrayList<>();
-        try {
-            final Path indexPath = new Path(indexPathString);
-            if (!fileSystem.exists(indexPath)) {
-                throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "index path '" + uri + "' does not exists");
-            }
-            final FileStatus[] listStatus = fileSystem.listStatus(indexPath, new PathFilter() {
-                public boolean accept(final Path aPath) {
-                    return !aPath.getName().startsWith(".");
-                }
-            });
-            for (final FileStatus fileStatus : listStatus) {
-                String shardPath = fileStatus.getPath().toString();
-                if (fileStatus.isDir() || shardPath.endsWith(".zip")) {
-                    shards.add(new Shard(createShardName(indexName, shardPath), shardPath));
-                }
-            }
-        }
-        catch (final IOException e) {
-            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "could not access index path: " + indexPathString, e);
-        }
-
-        if (shards.size() == 0) {
-            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "index does not contain any shard");
-        }
-        return shards;
     }
 
 }

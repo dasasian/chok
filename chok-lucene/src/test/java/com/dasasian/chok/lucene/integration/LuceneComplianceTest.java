@@ -58,14 +58,50 @@ public class LuceneComplianceTest extends AbstractTest {
 
     // index related fields
     private static final String FIELD_NAME = "text";
+    @ClassRule
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
     private File chokIndex;
     private File luceneIndex;
     private List<Document> documents1;
     private List<Document> documents2;
     private ILuceneClient luceneClient;
 
-    @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
+    private static List<Document> createSimpleNumberDocuments(String textFieldName, int count) {
+        List<Document> documents = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            String fieldContent = i + " " + (count - i);
+            if (i % 2 == 0) {
+                fieldContent += " 2";
+            } else {
+                fieldContent += " 1";
+            }
+            Document document = new Document();
+            document.add(new Field(textFieldName, fieldContent, Store.NO, Index.ANALYZED));
+            documents.add(document);
+        }
+        return documents;
+    }
+
+    @SafeVarargs
+    private static List<Document> combineDocuments(List<Document>... documentLists) {
+        return Lists.newArrayList(Iterables.concat(documentLists));
+    }
+
+    private static void writeIndex(File file, List<Document> documents) throws IOException {
+        file.mkdirs();
+        assertTrue(file.exists());
+        IndexWriter indexWriter = new IndexWriter(FSDirectory.open(file), new StandardAnalyzer(Version.LUCENE_30), true, MaxFieldLength.UNLIMITED);
+        for (Document document : documents) {
+            indexWriter.addDocument(document);
+        }
+        indexWriter.close(true);
+
+    }
+
+    private static void deployIndexToChok(IDeployClient deployClient, File file, int replicationLevel) throws InterruptedException {
+        IndexState indexState = deployClient.addIndex(file.getName(), file.getAbsolutePath(), replicationLevel).joinDeployment();
+        assertEquals(IndexState.DEPLOYED, indexState);
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -147,8 +183,7 @@ public class LuceneComplianceTest extends AbstractTest {
         if (sort == null) {
             searchResultsLucene = indexSearcher.search(query, resultCount);
             searchResultsChok = luceneClient.search(query, new String[]{chokIndexName}, resultCount);
-        }
-        else {
+        } else {
             searchResultsLucene = indexSearcher.search(query, null, resultCount, sort);
             searchResultsChok = luceneClient.search(query, new String[]{chokIndexName}, resultCount, sort);
         }
@@ -161,8 +196,7 @@ public class LuceneComplianceTest extends AbstractTest {
             for (int i = 0; i < scoreDocs.length; i++) {
                 assertEquals(scoreDocs[i].score, hits.get(i).getScore(), 0.0);
             }
-        }
-        else {
+        } else {
             for (int i = 0; i < scoreDocs.length; i++) {
                 Object[] luceneFields = ((FieldDoc) scoreDocs[i]).fields;
                 WritableComparable[] chokFields = hits.get(i).getSortFields();
@@ -174,44 +208,6 @@ public class LuceneComplianceTest extends AbstractTest {
                 // Arrays.equals(scoreDocs, chokFields);
             }
         }
-    }
-
-    private static List<Document> createSimpleNumberDocuments(String textFieldName, int count) {
-        List<Document> documents = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            String fieldContent = i + " " + (count - i);
-            if (i % 2 == 0) {
-                fieldContent += " 2";
-            }
-            else {
-                fieldContent += " 1";
-            }
-            Document document = new Document();
-            document.add(new Field(textFieldName, fieldContent, Store.NO, Index.ANALYZED));
-            documents.add(document);
-        }
-        return documents;
-    }
-
-    @SafeVarargs
-    private static List<Document> combineDocuments(List<Document>... documentLists) {
-        return Lists.newArrayList(Iterables.concat(documentLists));
-    }
-
-    private static void writeIndex(File file, List<Document> documents) throws IOException {
-        file.mkdirs();
-        assertTrue(file.exists());
-        IndexWriter indexWriter = new IndexWriter(FSDirectory.open(file), new StandardAnalyzer(Version.LUCENE_30), true, MaxFieldLength.UNLIMITED);
-        for (Document document : documents) {
-            indexWriter.addDocument(document);
-        }
-        indexWriter.close(true);
-
-    }
-
-    private static void deployIndexToChok(IDeployClient deployClient, File file, int replicationLevel) throws InterruptedException {
-        IndexState indexState = deployClient.addIndex(file.getName(), file.getAbsolutePath(), replicationLevel).joinDeployment();
-        assertEquals(IndexState.DEPLOYED, indexState);
     }
 
 }

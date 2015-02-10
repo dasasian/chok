@@ -25,22 +25,16 @@ import java.util.List;
 public class IndexDeployError implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    public static enum ErrorType {
-        NO_NODES_AVAILIBLE, INDEX_NOT_ACCESSIBLE, SHARDS_NOT_DEPLOYABLE, UNKNOWN
-    }
-
     private final String indexName;
     private final ErrorType errorType;
     private final One2ManyListMap<String, Exception> shard2ExceptionsMap = new One2ManyListMap<>();
     private String errorMessage;
     private String errorTrace;
-//    private Exception _exception;
-
     public IndexDeployError(String indexName, ErrorType errorType) {
         this.indexName = indexName;
         this.errorType = errorType;
     }
+//    private Exception _exception;
 
     public String getIndexName() {
         return indexName;
@@ -53,20 +47,23 @@ public class IndexDeployError implements Serializable {
     public String getErrorMessage() {
         return errorMessage;
     }
-    public String getErrorTrace() { return errorTrace; }
+
+    public String getErrorTrace() {
+        return errorTrace;
+    }
 
     public void setException(Exception exception) {
         errorMessage = exception.getMessage();
         errorTrace = Throwables.getStackTraceAsString(exception);
     }
 
-//    public Exception getException() {
-//        return _exception;
-//    }
-
     public void addShardError(String shardName, Exception exception) {
         shard2ExceptionsMap.add(shardName, exception);
     }
+
+//    public Exception getException() {
+//        return _exception;
+//    }
 
     public List<Exception> getShardErrors(String shardName) {
         return shard2ExceptionsMap.getValues(shardName);
@@ -75,5 +72,9 @@ public class IndexDeployError implements Serializable {
     @Override
     public String toString() {
         return Objects.toStringHelper(this).addValue(indexName).addValue(errorType).addValue(errorMessage).toString();
+    }
+
+    public static enum ErrorType {
+        NO_NODES_AVAILIBLE, INDEX_NOT_ACCESSIBLE, SHARDS_NOT_DEPLOYABLE, UNKNOWN
     }
 }

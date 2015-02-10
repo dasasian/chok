@@ -97,8 +97,7 @@ public class NodeProxyManagerTest extends AbstractTest {
     private void reportNodeFailure(NodeProxyManager proxyManagerSpy, String nodeName, Exception exception) {
         try {
             proxyManagerSpy.reportNodeCommunicationFailure(nodeName, exception);
-        }
-        catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             assertThat(e).hasMessage("not a proxy instance");
         }
     }

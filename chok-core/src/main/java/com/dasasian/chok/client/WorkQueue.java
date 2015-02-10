@@ -39,18 +39,6 @@ class WorkQueue<T> implements INodeExecutor {
     private static final Logger LOG = Logger.getLogger(WorkQueue.class);
 
     private static int instanceCounter = 0;
-
-    public interface INodeInteractionFactory<T> {
-        public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results);
-    }
-
-    /**
-     * Used by unit tests to make toString() output repeatable.
-     */
-    public static void resetInstanceCounter() {
-        instanceCounter = 0;
-    }
-
     private final INodeInteractionFactory<T> interactionFactory;
     private final INodeProxyManager shardManager;
     private final Method method;
@@ -60,12 +48,11 @@ class WorkQueue<T> implements INodeExecutor {
     private final ClientResult<T> results;
     private final int instanceId = instanceCounter++;
     private int callCounter = 0;
-
     /**
      * Normal constructor. Jobs submitted by execute() will result in a
      * NodeInteraction instance being created and run(). The WorkQueue
      * is initially emtpy. Call execute() to add jobs.
-     * <p/>
+     * <p>
      * <b>DO NOT CHANGE THE ARGUMENTS WHILE THIS CALL IS RUNNING OR YOU WILL BE
      * SORRY.</b>
      *
@@ -85,8 +72,6 @@ class WorkQueue<T> implements INodeExecutor {
             }
         }, shardManager, allShards, method, shardArrayParamIndex, args);
     }
-
-
     /**
      * Used by unit tests. By providing an alternate factory, this class can be tested without creating
      * and NodeInteractions.
@@ -126,6 +111,13 @@ class WorkQueue<T> implements INodeExecutor {
     }
 
     /**
+     * Used by unit tests to make toString() output repeatable.
+     */
+    public static void resetInstanceCounter() {
+        instanceCounter = 0;
+    }
+
+    /**
      * Submit a job, which is a call to a server node via an RPC proxy using a NodeInteraction.
      * Ignored if called after shutdown(), or after result set is closed.
      *
@@ -143,17 +135,14 @@ class WorkQueue<T> implements INodeExecutor {
             if (interaction != null) {
                 try {
                     executor.execute(interaction);
-                }
-                catch (RejectedExecutionException e) {
+                } catch (RejectedExecutionException e) {
                     // This could happen, but should be rare.
                     LOG.warn(String.format("Failed to submit node interaction %s (id=%d)", interaction, instanceId));
                 }
-            }
-            else {
+            } else {
                 LOG.error("Null node interaction runnable for node " + node);
             }
-        }
-        else {
+        } else {
             if (LOG.isTraceEnabled()) {
                 LOG.trace(String.format("Not creating interaction with %s, shards=%s, tryCount=%d, executor=%s, result=%s (id=%d)", node, nodeShardMap.get(node), tryCount, executor.isShutdown() ? "shutdown" : "running", results, instanceId));
             }
@@ -191,7 +180,7 @@ class WorkQueue<T> implements INodeExecutor {
      * Wait up to timeout msec for the results to be complete (all shards
      * reporting) then return what we have so far. If shutdown is true, the result
      * will be closed and any remaining threads will be killed.
-     * <p/>
+     * <p>
      * If you want to do your own polling, pass in 0, true. If you want a simple
      * all-or-nothing result, pass in N, true, then check isOK() on the result. If
      * you want to wait for a while then decide for yourself what to do, pass in
@@ -231,15 +220,13 @@ class WorkQueue<T> implements INodeExecutor {
                     }
                     try {
                         results.wait(waitTime);
-                    }
-                    catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         LOG.debug("Interrupted", e);
                     }
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(String.format("Done waiting, results = %s (id=%d:%d)", results, instanceId, callId));
                     }
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -263,6 +250,10 @@ class WorkQueue<T> implements INodeExecutor {
         String argsStr = Arrays.asList(args).toString();
         argsStr = argsStr.substring(1, argsStr.length() - 1);
         return String.format("WorkQueue[%s.%s(%s) (id=%d)]", method.getDeclaringClass().getSimpleName(), method.getName(), argsStr, instanceId);
+    }
+
+    public interface INodeInteractionFactory<T> {
+        public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results);
     }
 
 }

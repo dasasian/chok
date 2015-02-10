@@ -26,7 +26,7 @@ import java.util.List;
  * moved to the end of list. <br/>
  * Also you could get the top of the list through getTop() and then move it to
  * end with moveToEnd() or to the middle of this list with moveToMid().
- * <p/>
+ * <p>
  * Note: This implementation is not synchronized.
  */
 public class CircularList<E> {

@@ -27,13 +27,12 @@ import java.util.Arrays;
  */
 public class RunClassCommand extends Command {
 
-    public RunClassCommand() {
-        super("runclass", "<className>", "runs a custom class");
-    }
-
     private Class<?> _clazz;
     private Method _method;
     private String[] _methodArgs;
+    public RunClassCommand() {
+        super("runclass", "<className>", "runs a custom class");
+    }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) throws Exception {

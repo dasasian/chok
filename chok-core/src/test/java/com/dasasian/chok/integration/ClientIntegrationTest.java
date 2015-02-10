@@ -39,7 +39,7 @@ import static org.mockito.Mockito.spy;
 public class ClientIntegrationTest extends AbstractTest {
 
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000,TestNodeConfigurationFactory.class);
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
 
     public TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 2);
 

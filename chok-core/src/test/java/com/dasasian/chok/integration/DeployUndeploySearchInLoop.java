@@ -45,8 +45,7 @@ public class DeployUndeploySearchInLoop {
                 String indexName = "index" + runThroughs;
                 LOG.info("deploying index '" + indexName + "'");
                 deployClient.addIndex(indexName, "/Users/jz/Documents/workspace/ms/katta/src/test/testIndexA", 1).joinDeployment();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logException("deploy", e);
             }
 
@@ -54,16 +53,14 @@ public class DeployUndeploySearchInLoop {
                 String indexName = "index" + (runThroughs - 1);
                 LOG.info("undeploying index '" + indexName + "'");
                 deployClient.removeIndex(indexName);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logException("undeploy", e);
             }
 
             try {
                 String result = testClient.testRequest("query", new String[]{"*"});
                 LOG.info(runThroughs + ": got result: " + result);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 logException("search", e);
             }
             Thread.sleep(5000);

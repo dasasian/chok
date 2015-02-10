@@ -36,11 +36,6 @@ import static org.junit.Assert.*;
  */
 public class MapFileServerTest extends AbstractTest {
 
-    @SuppressWarnings("unused")
-    private static Logger LOG = Logger.getLogger(MapFileServerTest.class);
-    private final NodeConfigurationFactory nodeConfigurationFactory = new TestNodeConfigurationFactory(temporaryFolder);
-
-
     private static final String NODE_NAME = "TestNode";
     private static final String SHARD_A_1 = "shard_A_1";
     private static final String SHARD_A_2 = "shard_A_2";
@@ -48,6 +43,9 @@ public class MapFileServerTest extends AbstractTest {
     private static final String SHARD_A_4 = "shard_A_4";
     private static final String SHARD_B_1 = "shard_B_1";
     private static final String SHARD_B_2 = "shard_B_2";
+    @SuppressWarnings("unused")
+    private static Logger LOG = Logger.getLogger(MapFileServerTest.class);
+    private final NodeConfigurationFactory nodeConfigurationFactory = new TestNodeConfigurationFactory(temporaryFolder);
 
     @Test
     public void testShardA1() throws Exception {
@@ -175,8 +173,7 @@ public class MapFileServerTest extends AbstractTest {
                         try {
                             assertEquals(entries.get(key), getOneResult(server, key, shards));
                             count.incrementAndGet();
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             System.err.println(e);
                             exceptions.add(e);
                             break;

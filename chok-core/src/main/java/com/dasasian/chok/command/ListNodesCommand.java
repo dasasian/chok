@@ -28,13 +28,12 @@ import java.util.List;
  */
 public class ListNodesCommand extends ProtocolCommand {
 
-    public ListNodesCommand() {
-        super("listNodes", "[-d] [-b] [-n] [-S]", "Lists all nodes. -b for batch mode, -n don't write column headers, -S for sorting the node names.");
-    }
-
     private boolean _batchMode;
     private boolean _skipColumnNames;
     private boolean _sorted;
+    public ListNodesCommand() {
+        super("listNodes", "[-d] [-b] [-n] [-S]", "Lists all nodes. -b for batch mode, -n don't write column headers, -S for sorting the node names.");
+    }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {

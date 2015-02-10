@@ -28,21 +28,18 @@ import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
 
-    private final static Logger LOG = Logger.getLogger(FileUtil.class);
-
-    private static final int BUFFER = 4096;
-
     public static final FilenameFilter VISIBLE_FILES_FILTER = new FilenameFilter() {
         public boolean accept(final File dir, final String name) {
             return !name.startsWith(".");
         }
     };
+    private final static Logger LOG = Logger.getLogger(FileUtil.class);
+    private static final int BUFFER = 4096;
 
     public static void deleteFolder(File folder) {
         try {
             org.apache.hadoop.fs.FileUtil.fullyDelete(folder);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("could not delete folder '" + folder + "'");
         }
     }
@@ -58,16 +55,13 @@ public class FileUtil {
             final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
             LOG.debug("Extracting zip file '" + sourceZip.getAbsolutePath() + "' to '" + targetFolder + "'");
             unzip(zis, targetFolder);
-        }
-        catch (final Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("unable to expand upgrade files for " + sourceZip + " to " + targetFolder, e);
-        }
-        finally {
+        } finally {
             if (fis != null) {
                 try {
                     fis.close();
-                }
-                catch (Exception ignore) {
+                } catch (Exception ignore) {
                     // ignore
                 }
             }
@@ -99,30 +93,25 @@ public class FileUtil {
                 try {
                     fileSystem.copyToLocalFile(sourceZip, new Path(shardZipLocal.getAbsolutePath()));
                     FileUtil.unzip(shardZipLocal, targetFolder);
-                }
-                finally {
+                } finally {
                     shardZipLocal.delete();
                 }
-            }
-            else {
+            } else {
                 FSDataInputStream fis = fileSystem.open(sourceZip);
                 try {
                     ZipInputStream zis = new ZipInputStream(fis);
                     unzip(zis, targetFolder);
-                }
-                finally {
+                } finally {
                     if (fis != null) {
                         try {
                             fis.close();
-                        }
-                        catch (Exception ignore) {
+                        } catch (Exception ignore) {
                             // ignore
                         }
                     }
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("unable to expand upgrade files for " + sourceZip + " to " + targetFolder, e);
         }
 
@@ -150,8 +139,7 @@ public class FileUtil {
             final File targetFile = new File(targetFolder, cleanUpPath);
             if (entry.isDirectory()) {
                 targetFile.mkdirs();
-            }
-            else {
+            } else {
                 if (!targetFile.getParentFile().exists()) {
                     targetFile.getParentFile().mkdirs(); // CHOK-130
                 }
@@ -183,8 +171,7 @@ public class FileUtil {
         for (final File file : listFiles) {
             if (file.isDirectory()) {
                 addFolderToZip(zipEnry, file, zip);
-            }
-            else {
+            } else {
                 addFileToZip(zipEnry, file, zip);
             }
         }
@@ -221,8 +208,7 @@ public class FileUtil {
                 LOG.info("Extracting: " + entry + " to " + path);
                 if (entry.isDirectory()) {
                     fileSystem.mkdirs(path);
-                }
-                else {
+                } else {
                     int count;
                     final byte data[] = new byte[4096];
                     FSDataOutputStream fsDataOutputStream = fileSystem.create(path);
@@ -234,8 +220,7 @@ public class FileUtil {
                 }
             }
             zipInputStream.close();
-        }
-        catch (final Exception e) {
+        } catch (final Exception e) {
             LOG.error("can not open zip file", e);
             throw new RuntimeException("unable to expand upgrade files", e);
         }

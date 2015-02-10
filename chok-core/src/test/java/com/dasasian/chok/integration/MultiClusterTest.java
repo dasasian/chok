@@ -48,14 +48,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class MultiClusterTest extends AbstractTest {
 
-    protected static final Logger LOG = Logger.getLogger(MultiClusterTest.class);
-
     public static final String INDEX1 = "pool1";
     public static final String INDEX2 = "pool2";
-
     public static final String ZK_ROOT_PATH1 = "/MultiClusterTest/pool1";
     public static final String ZK_ROOT_PATH2 = "/MultiClusterTest/pool2";
-
+    protected static final Logger LOG = Logger.getLogger(MultiClusterTest.class);
     private static final int POOL_SIZE_1 = 9;
     private static final int POOL_SIZE_2 = 7;
 
@@ -83,7 +80,7 @@ public class MultiClusterTest extends AbstractTest {
         cluster1.start(zk, ZK_ROOT_PATH1);
 
         // start cluster 1
-        cluster2 = new ChokMiniCluster(SleepServer.class, POOL_SIZE_2, 40000,TestNodeConfigurationFactory.class);
+        cluster2 = new ChokMiniCluster(SleepServer.class, POOL_SIZE_2, 40000, TestNodeConfigurationFactory.class);
         cluster2.start(zk, ZK_ROOT_PATH2);
 
         // Create lots of empty shards. SleepServer does not use the directory, but
@@ -183,8 +180,7 @@ public class MultiClusterTest extends AbstractTest {
                                 assertEquals(NUM_SHARDS_2, client2.sleep(rand2.nextInt(2), rand2.nextInt(2)));
                             }
                         }
-                    }
-                    catch (Throwable t) {
+                    } catch (Throwable t) {
                         LOG.error("Error! ", t);
                         throwables.add(t);
                     }

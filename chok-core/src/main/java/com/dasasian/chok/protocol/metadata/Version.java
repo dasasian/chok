@@ -87,8 +87,7 @@ public class Version implements Serializable {
                     return path.replaceAll("!.*$", "");
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
         return null;
@@ -98,8 +97,7 @@ public class Version implements Serializable {
         try {
             final JarFile jarFile = new JarFile(jar);
             return jarFile.getManifest();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("could not load manifest from jar " + jar);
         }
     }
@@ -141,14 +139,12 @@ public class Version implements Serializable {
         if (_number == null) {
             if (other._number != null)
                 return false;
-        }
-        else if (!_number.equals(other._number))
+        } else if (!_number.equals(other._number))
             return false;
         if (_revision == null) {
             if (other._revision != null)
                 return false;
-        }
-        else if (!_revision.equals(other._revision))
+        } else if (!_revision.equals(other._revision))
             return false;
         return true;
     }

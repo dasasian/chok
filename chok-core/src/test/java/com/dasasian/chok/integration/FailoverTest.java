@@ -44,7 +44,7 @@ import static org.junit.Assert.*;
 public class FailoverTest extends AbstractTest {
 
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 3, 20000,TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 3, 20000, TestNodeConfigurationFactory.class);
 
     public TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 3);
 

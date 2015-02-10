@@ -21,10 +21,8 @@ import java.util.List;
 
 public class MetricsRecord implements Serializable {
     private static final long serialVersionUID = 1832158671826263268L;
-
-    private List<Record> _records = new ArrayList<>();
-
     private final String _serverId;
+    private List<Record> _records = new ArrayList<>();
 
     public MetricsRecord(String serverId) {
         _serverId = serverId;
@@ -40,6 +38,11 @@ public class MetricsRecord implements Serializable {
 
     public List<Record> getRecords() {
         return _records;
+    }
+
+    @Override
+    public String toString() {
+        return _serverId + ": " + _records;
     }
 
     public class Record implements Serializable {
@@ -72,10 +75,5 @@ public class MetricsRecord implements Serializable {
         public String toString() {
             return _key + " " + _value + " " + _timeStamp;
         }
-    }
-
-    @Override
-    public String toString() {
-        return _serverId + ": " + _records;
     }
 }

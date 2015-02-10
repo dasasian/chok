@@ -58,8 +58,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
             public void run() {
                 try {
                     deployFuture.joinDeployment();
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     fail(e.getMessage());
                 }
             }

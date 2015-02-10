@@ -31,6 +31,7 @@ import java.util.Random;
  * Date: 7/2/13
  */
 public class TestIndex {
+    public static final String DATA_FILE_NAME = "data.txt";
     private final int shardCount;
     private File indexFile;
     private String indexName;
@@ -62,8 +63,7 @@ public class TestIndex {
             }
             shardFiles = builder.build();
             this.shardCount = shardFiles.size();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -94,8 +94,6 @@ public class TestIndex {
         return shardFiles;
     }
 
-    public static final String DATA_FILE_NAME = "data.txt";
-
     private void createIndex() {
         createIndex(new String[]{"a", "b", "c"}, 2, 3);
     }
@@ -119,8 +117,7 @@ public class TestIndex {
 
                     bufferedWriter.println(text);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 throw new RuntimeException("Unable to write index", e);
             }
         }

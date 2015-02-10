@@ -33,8 +33,7 @@ public class PropertyUtil {
         try {
             properties.load(inputStream);
             return properties;
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("unable to load " + path, e);
         }
     }
@@ -45,8 +44,7 @@ public class PropertyUtil {
             FileInputStream inStream = new FileInputStream(file);
             properties.load(inStream);
             return properties;
-        }
-        catch (final IOException e) {
+        } catch (final IOException e) {
             throw new RuntimeException("unable to load " + file.getAbsolutePath(), e);
         }
     }

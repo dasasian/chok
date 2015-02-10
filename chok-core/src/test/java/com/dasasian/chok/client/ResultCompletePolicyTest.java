@@ -198,12 +198,10 @@ public class ResultCompletePolicyTest extends AbstractTest {
                 r.addResult("foo", "s" + i);
                 if (i < 878) {
                     assertTrue(rc.waitTime(r) > 30000);
-                }
-                else {
+                } else {
                     assertTrue(rc.waitTime(r) == 0);
                 }
-            }
-            catch (Error e) {
+            } catch (Error e) {
                 System.err.println("i = " + i);
                 throw e;
             }
@@ -216,8 +214,7 @@ public class ResultCompletePolicyTest extends AbstractTest {
         while (now < stop) {
             try {
                 Thread.sleep(stop - now);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 // proceed
             }
             now = System.currentTimeMillis();

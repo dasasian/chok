@@ -33,12 +33,11 @@ import java.util.Map;
  */
 public class StartLuceneNodeCommand extends ProtocolCommand {
 
+    private NodeConfiguration nodeConfiguration;
+    private IContentServer server = null;
     public StartLuceneNodeCommand() {
         super("startNode", "[-p <port number>]", "Starts a local node");
     }
-
-    private NodeConfiguration nodeConfiguration;
-    private IContentServer server = null;
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, Map<String, String> optionMap) {
@@ -54,8 +53,7 @@ public class StartLuceneNodeCommand extends ProtocolCommand {
 
         try {
             nodeConfiguration = LuceneNodeConfigurationLoader.loadConfiguration(startPort, shardFolder);
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 

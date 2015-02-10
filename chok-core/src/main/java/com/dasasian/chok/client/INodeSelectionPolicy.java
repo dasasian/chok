@@ -22,7 +22,7 @@ import java.util.Map;
 /**
  * Returns a Map with Nodes and shards within those nodes that have to be
  * searched by the client.
- * <p/>
+ * <p>
  * Since shards can be replicated over different nodes and nodes can be
  * distributed in different network sections (same switch or rack, same data
  * center etc.) we allow custom selection policies to implement the logic to

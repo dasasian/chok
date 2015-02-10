@@ -92,8 +92,7 @@ public class TestUtil {
             MockitoAssertionError exception = null;
             try {
                 runnable.run();
-            }
-            catch (MockitoAssertionError e) {
+            } catch (MockitoAssertionError e) {
                 exception = e;
             }
             if (exception == null) {
@@ -113,8 +112,7 @@ public class TestUtil {
             RuntimeException exception = null;
             try {
                 runnable.run();
-            }
-            catch (RuntimeException e) {
+            } catch (RuntimeException e) {
                 exception = e;
             }
             if (exception == null) {
@@ -130,7 +128,7 @@ public class TestUtil {
     /**
      * Creates a Mockito answer object that can be used for asynchronously
      * stubbing. For example:
-     * <p/>
+     * <p>
      * <pre>
      * final CountDownLatch countDownLatch = new CountDownLatch(1);
      * Mockito.doAnswer(TestUtil.createCountDownAnswer(countDownLatch)).when(listener).announceNode(nodeName);
@@ -200,8 +198,7 @@ public class TestUtil {
                 for (Shard shard : shards) {
                     try {
                         nodeCount += protocol.getShardNodes(shard.getName()).size();
-                    }
-                    catch (ZkNoNodeException e) {
+                    } catch (ZkNoNodeException e) {
                         // deleted already
                     }
                 }
@@ -256,7 +253,7 @@ public class TestUtil {
     }
 
     public static void waitUntilClientHasIndex(Client client, String indexName) throws InterruptedException {
-        while(!client.hasIndex(indexName)) {
+        while (!client.hasIndex(indexName)) {
             Thread.sleep(10);
         }
     }

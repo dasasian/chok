@@ -24,11 +24,11 @@ import com.dasasian.chok.util.ZkConfiguration;
  */
 public class RemoveIndexCommand extends ProtocolCommand {
 
+    private String _indexName;
+
     public RemoveIndexCommand() {
         super("removeIndex", "<index name>", "Remove a index from Chok");
     }
-
-    private String _indexName;
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {

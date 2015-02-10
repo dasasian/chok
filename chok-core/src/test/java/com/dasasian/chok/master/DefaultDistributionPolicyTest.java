@@ -25,9 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 public class DefaultDistributionPolicyTest extends AbstractTest {
 
-    private DefaultDistributionPolicy _distributionPolicy = new DefaultDistributionPolicy();
     Map<String, List<String>> _currentShard2NodesMap = new HashMap<>();
     Map<String, List<String>> _currentNode2ShardsMap = new HashMap<>();
+    private DefaultDistributionPolicy _distributionPolicy = new DefaultDistributionPolicy();
 
     @Test
     public void testInitialDistribution() throws Exception {

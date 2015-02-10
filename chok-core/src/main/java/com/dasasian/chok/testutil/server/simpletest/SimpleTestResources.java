@@ -22,6 +22,16 @@ import java.io.File;
 
 public class SimpleTestResources {
 
+    public final static File INVALID_INDEX = getInvalidIndex();
+    /**
+     * The shards will be created at run time.
+     */
+    public final static File EMPTY1_INDEX = Files.createTempDir();
+    /**
+     * The shards will be created at run time.
+     */
+    public final static File EMPTY2_INDEX = Files.createTempDir();
+
     private static File getInvalidIndex() {
         File index = Files.createTempDir();
         FileUtil.deleteFolder(index);
@@ -36,16 +46,5 @@ public class SimpleTestResources {
         }
         return index;
     }
-
-    public final static File INVALID_INDEX = getInvalidIndex();
-
-    /**
-     * The shards will be created at run time.
-     */
-    public final static File EMPTY1_INDEX = Files.createTempDir();
-    /**
-     * The shards will be created at run time.
-     */
-    public final static File EMPTY2_INDEX = Files.createTempDir();
 
 }

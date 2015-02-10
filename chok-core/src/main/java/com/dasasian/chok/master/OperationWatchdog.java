@@ -36,14 +36,13 @@ import java.util.List;
  */
 public class OperationWatchdog implements ConnectedComponent, Serializable {
 
-    private static final long serialVersionUID = 1L;
     protected final static Logger LOG = Logger.getLogger(OperationWatchdog.class);
-
+    private static final long serialVersionUID = 1L;
     private final String queueElementId;
     private final List<OperationId> openOperationIds;
     private final List<OperationId> operationIds;
-    private MasterContext context;
     private final MasterOperation masterOperation;
+    private MasterContext context;
 
     public OperationWatchdog(String queueElementId, MasterOperation masterOperation, List<OperationId> operationIds) {
         this.queueElementId = queueElementId;
@@ -106,8 +105,7 @@ public class OperationWatchdog implements ConnectedComponent, Serializable {
         }
         if (isDone()) {
             finishWatchdog();
-        }
-        else {
+        } else {
             LOG.info("still " + getOpenOperationCount() + " open deploy operations");
         }
     }
@@ -126,13 +124,12 @@ public class OperationWatchdog implements ConnectedComponent, Serializable {
                 OperationResult operationResult = protocol.getNodeOperationResult(operationId, true);
                 if (operationResult != null && operationResult.getUnhandledError() != null) {
                     // TODO jz: do we need to inform the master operation ?
-                    LOG.error("received unhandled error from node " + operationId.getNodeName() +":"+operationResult.getUnhandledError());
+                    LOG.error("received unhandled error from node " + operationId.getNodeName() + ":" + operationResult.getUnhandledError());
                 }
                 operationResults.add(operationResult);// we add null ones
             }
             masterOperation.nodeOperationsComplete(context, operationResults);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOG.info("operation complete action of " + masterOperation + " failed", e);
         }
         LOG.info("watch for " + masterOperation + " finished");

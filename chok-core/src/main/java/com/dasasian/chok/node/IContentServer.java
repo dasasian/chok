@@ -27,13 +27,21 @@ import java.util.Map;
  * Chok server instance it is managing. The Node class talks to Zookeeper, and
  * manages the shards on disk. It tells the server when to start and stop using
  * the shards, and when to shut down.
- * <p/>
+ * <p>
  * The RPC calls from the client will not go through the Node. The Hadoop
  * RPC.Server uses a separate interface for those calls.
- * <p/>
+ * <p>
  * Implementations need to have a default constructor.
  */
 public interface IContentServer extends VersionedProtocol {
+
+    /**
+     * The key fetched from getShardMetadata() which in order to report the size
+     * of the shard in the listIndexes command. The value must be parsable as an
+     * integer. The units depend on the type of data in the shard. Reporting the
+     * shard size is optional.
+     */
+    public static final String SHARD_SIZE_KEY = "shard-size";
 
     /**
      * Initializes the content-server after the instance has been created. Passes
@@ -72,14 +80,6 @@ public interface IContentServer extends VersionedProtocol {
      * @return all included shards
      */
     public Collection<String> getShards();
-
-    /**
-     * The key fetched from getShardMetadata() which in order to report the size
-     * of the shard in the listIndexes command. The value must be parsable as an
-     * integer. The units depend on the type of data in the shard. Reporting the
-     * shard size is optional.
-     */
-    public static final String SHARD_SIZE_KEY = "shard-size";
 
     /**
      * Returns data about a shard. Currently the only standard key is

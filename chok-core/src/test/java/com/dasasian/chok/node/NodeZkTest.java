@@ -100,24 +100,6 @@ public class NodeZkTest extends AbstractZkTest {
         node.shutdown();
     }
 
-    private static class InterruptSwallowingOperation implements NodeOperation {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public OperationResult execute(NodeContext context) throws InterruptedException {
-            try {
-                System.out.println("NodeZkTest.InterruptSwallowingOperation.execute()- entering sleep");
-                Thread.sleep(Long.MAX_VALUE);
-            }
-            catch (InterruptedException e) {
-                System.out.println("NodeZkTest.InterruptSwallowingOperation.execute()- leaving sleep");
-            }
-            return null;
-        }
-
-    }
-
     @Test(timeout = 10000)
     public void testNodeOperationException() throws Exception {
         Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer());
@@ -138,6 +120,23 @@ public class NodeZkTest extends AbstractZkTest {
         answer.getCountDownLatch().await();
 
         node.shutdown();
+    }
+
+    private static class InterruptSwallowingOperation implements NodeOperation {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public OperationResult execute(NodeContext context) throws InterruptedException {
+            try {
+                System.out.println("NodeZkTest.InterruptSwallowingOperation.execute()- entering sleep");
+                Thread.sleep(Long.MAX_VALUE);
+            } catch (InterruptedException e) {
+                System.out.println("NodeZkTest.InterruptSwallowingOperation.execute()- leaving sleep");
+            }
+            return null;
+        }
+
     }
 
 }

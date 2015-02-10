@@ -33,11 +33,6 @@ public class IndexMetaData implements Writable {
     private IndexState _state;
     private Text _errorMessage = new Text();
 
-    @Deprecated
-    public enum IndexState {
-        ANNOUNCED, DEPLOYED, ERROR, DEPLOYING, REPLICATING
-    }
-
     public IndexMetaData(String path, String analyzerName, int replicationLevel, IndexState state) {
         this._path.set(path);
         this._analyzerClassName.set(analyzerName);
@@ -102,5 +97,10 @@ public class IndexMetaData implements Writable {
         out.writeByte(this._state.ordinal());
         if (this._state == IndexState.ERROR)
             this._errorMessage.write(out);
+    }
+
+    @Deprecated
+    public enum IndexState {
+        ANNOUNCED, DEPLOYED, ERROR, DEPLOYING, REPLICATING
     }
 }

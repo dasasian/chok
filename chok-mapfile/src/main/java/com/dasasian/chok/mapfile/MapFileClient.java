@@ -37,7 +37,15 @@ public class MapFileClient implements IMapFileClient {
     @SuppressWarnings("unused")
     private static final Logger LOG = Logger.getLogger(MapFileClient.class);
     private static final long TIMEOUT = 12000;
-
+    private static final Method GET_METHOD;
+    private static final int GET_METHOD_SHARD_ARG_IDX = 1;
+    static {
+        try {
+            GET_METHOD = IMapFileServer.class.getMethod("get", new Class[]{Text.class, String[].class});
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Could not find method get() in IMapFileServer!");
+        }
+    }
     private Client chokClient;
 
     public MapFileClient(final INodeSelectionPolicy nodeSelectionPolicy) {
@@ -48,31 +56,18 @@ public class MapFileClient implements IMapFileClient {
         chokClient = new Client(IMapFileServer.class);
     }
 
+
+    //  public List<Writable> get(WritableComparable<?> key, String[] shards) throws IOException {
+
     public MapFileClient(final ZkConfiguration zkConfig) {
         chokClient = new Client(IMapFileServer.class, zkConfig);
     }
-
     public MapFileClient(final INodeSelectionPolicy policy, final ZkConfiguration czkCnfig) {
         chokClient = new Client(IMapFileServer.class, policy, czkCnfig);
     }
 
     public MapFileClient(final INodeSelectionPolicy policy, final ZkConfiguration zkConfig, ClientConfiguration clientConfiguration) {
         chokClient = new Client(IMapFileServer.class, policy, zkConfig, clientConfiguration);
-    }
-
-
-    //  public List<Writable> get(WritableComparable<?> key, String[] shards) throws IOException {
-
-    private static final Method GET_METHOD;
-    private static final int GET_METHOD_SHARD_ARG_IDX = 1;
-
-    static {
-        try {
-            GET_METHOD = IMapFileServer.class.getMethod("get", new Class[]{Text.class, String[].class});
-        }
-        catch (NoSuchMethodException e) {
-            throw new RuntimeException("Could not find method get() in IMapFileServer!");
-        }
     }
 
     public List<String> get(final String key, final String[] indexNames) throws ChokException {

@@ -84,8 +84,7 @@ public class MasterQueueTest extends AbstractZkTest {
             queue.moveOperationToWatching(masterOperation, operationIds);
             verify(zkClientSpy).delete(endsWith(elementName));
             fail("should throw exception");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             // expected
         }
 

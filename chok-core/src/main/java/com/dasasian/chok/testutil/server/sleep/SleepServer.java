@@ -27,9 +27,9 @@ import java.util.*;
  */
 public class SleepServer implements IContentServer, ISleepServer {
 
-    private Random rand = new Random();
     protected final Set<String> _shards = Collections.synchronizedSet(new HashSet<>());
     protected String _nodeName;
+    private Random rand = new Random();
 
     public long getProtocolVersion(final String protocol, final long clientVersion) {
         return 0L;
@@ -82,8 +82,7 @@ public class SleepServer implements IContentServer, ISleepServer {
         if (msec > 0) {
             try {
                 Thread.sleep(msec);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }

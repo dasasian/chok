@@ -63,12 +63,10 @@ import static org.junit.Assert.*;
  */
 public class LuceneClientTest extends AbstractTest {
 
-    private static Logger LOG = Logger.getLogger(LuceneClientTest.class);
-
     private static final String INDEX1 = "index1";
     private static final String INDEX2 = "index2";
     private static final String INDEX3 = "index3";
-
+    private static Logger LOG = Logger.getLogger(LuceneClientTest.class);
     @Rule
     public ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
 
@@ -408,8 +406,7 @@ public class LuceneClientTest extends AbstractTest {
         try {
             client.search(query, new String[]{"doesNotExist"});
             fail("Should have failed.");
-        }
-        catch (ChokException e) {
+        } catch (ChokException e) {
             assertEquals("Index [pattern(s)] '[doesNotExist]' do not match to any deployed index: []", e.getMessage());
         }
         client.close();

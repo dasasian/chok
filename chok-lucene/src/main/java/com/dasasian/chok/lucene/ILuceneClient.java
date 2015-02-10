@@ -25,14 +25,14 @@ import java.util.List;
 
 /**
  * Client for searching document indices deployed on a chok cluster.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * You provide a {@link Query} and the name of the deployed indices, and get
  * back {@link Hits} which contains multiple {@link Hit} objects as the results.
  * <br>
  * See {@link #search(Query, String[], int)}.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * The details of a hit-document can be retrieved through the
  * {@link #getDetails(Hit, String[])} method.
  *
@@ -46,7 +46,7 @@ public interface ILuceneClient extends AutoCloseable {
     /**
      * Searches with a given query in the supplied indexes for an almost unlimited
      * ({@link Integer#MAX_VALUE}) amount of results.
-     * <p/>
+     * <p>
      * If this method might has poor performance try to limit results with
      * {@link #search(IQuery, String[], int)}.
      *
@@ -111,7 +111,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @param hit    The {@link Hit} from that all fields should be returned.
      * @param fields The names of the fields from that the value should be returned.
      * @return The supplied field to a {@link Hit} as field name and field value
-     *         pair.
+     * pair.
      * @throws com.dasasian.chok.util.ChokException If indexes can't be searched.
      */
     public MapWritable getDetails(Hit hit, String[] fields) throws ChokException;
@@ -123,8 +123,8 @@ public interface ILuceneClient extends AutoCloseable {
      *
      * @param hits The list of hits from that all fields should be returned.
      * @return The list of details for given hits.
-     * @throws com.dasasian.chok.util.ChokException       If indexes can't be searched.
-     * @throws InterruptedException If the current thread got interrupted.
+     * @throws com.dasasian.chok.util.ChokException If indexes can't be searched.
+     * @throws InterruptedException                 If the current thread got interrupted.
      */
     public List<MapWritable> getDetails(List<Hit> hits) throws ChokException, InterruptedException;
 
@@ -136,8 +136,8 @@ public interface ILuceneClient extends AutoCloseable {
      * @param hits   The list of hits from that all fields should be returned.
      * @param fields The field names of which the value should be returned.
      * @return The list of details for given hits.
-     * @throws com.dasasian.chok.util.ChokException       If indexes can't be searched.
-     * @throws InterruptedException If the current thread got interrupted.
+     * @throws com.dasasian.chok.util.ChokException If indexes can't be searched.
+     * @throws InterruptedException                 If the current thread got interrupted.
      */
     public List<MapWritable> getDetails(List<Hit> hits, final String[] fields) throws ChokException, InterruptedException;
 

@@ -55,8 +55,7 @@ public class DefaultNameSpaceImpl implements IDefaultNameSpace {
             }
 
             zkClient.createPersistent(path);
-        }
-        catch (ZkNodeExistsException e) {
+        } catch (ZkNodeExistsException e) {
             // Ignore if the node already exists.
         }
     }

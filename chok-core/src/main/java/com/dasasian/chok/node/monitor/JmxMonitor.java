@@ -51,8 +51,7 @@ public class JmxMonitor implements IMonitor {
         _thread.interrupt();
         try {
             _thread.join();
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             ExceptionUtil.retainInterruptFlag(e);
         }
     }
@@ -68,8 +67,7 @@ public class JmxMonitor implements IMonitor {
                     _protocol.setMetric(_serverId, metrics);
                     sleep(1000);
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 ExceptionUtil.retainInterruptFlag(e);
             }
             LOG.info("jmx monitor stopped");
@@ -129,8 +127,7 @@ public class JmxMonitor implements IMonitor {
                 // can only use one not multiple disks for the shards. So lets fix
                 // this as soon we fix this other problem :/
 
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 LOG.error("Unable to retrieve metrics values:", e);
             }
         }

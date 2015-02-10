@@ -35,8 +35,7 @@ public class ClassUtil {
                 throw new IllegalStateException("Class " + className + " does not implement " + instanceOfClass.getName());
             }
             return (Class<T>) loadedClass;
-        }
-        catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             throw ExceptionUtil.convertToRuntimeException(e);
         }
     }
@@ -49,8 +48,7 @@ public class ClassUtil {
     public static <T> T newInstance(Class<T> clazz) {
         try {
             return clazz.newInstance();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException("could not instantiate class " + clazz.getName(), e);
         }
     }
@@ -59,7 +57,7 @@ public class ClassUtil {
      * @param object
      * @param fieldName
      * @return the value of the (private) field of the given object with the given
-     *         name
+     * name
      */
     public static Object getPrivateFieldValue(Object object, String fieldName) {
         return getPrivateFieldValue(object.getClass(), object, fieldName);
@@ -70,15 +68,14 @@ public class ClassUtil {
      * @param object
      * @param fieldName
      * @return the value of the (private) field of the given object declared in
-     *         the given class with the given name
+     * the given class with the given name
      */
     public static Object getPrivateFieldValue(Class<?> clazz, Object object, String fieldName) {
         Field field = null;
         do {
             try {
                 field = clazz.getDeclaredField(fieldName);
-            }
-            catch (NoSuchFieldException e) {
+            } catch (NoSuchFieldException e) {
                 // proceed with superclass
             }
             clazz = clazz.getSuperclass();
@@ -89,8 +86,7 @@ public class ClassUtil {
             }
             field.setAccessible(true);
             return field.get(object);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw ExceptionUtil.convertToRuntimeException(e);
         }
     }

@@ -25,9 +25,9 @@ import static org.junit.Assert.assertTrue;
 
 public class LowestShardCountDistributionPolicyTest extends AbstractTest {
 
-    private LowestShardCountDistributionPolicy _distributionPolicy = new LowestShardCountDistributionPolicy();
     Map<String, List<String>> _currentShard2NodesMap = new HashMap<>();
     Map<String, List<String>> _currentNode2ShardsMap = new HashMap<>();
+    private LowestShardCountDistributionPolicy _distributionPolicy = new LowestShardCountDistributionPolicy();
 
     @Test
     public void testInitialDistribution() throws Exception {

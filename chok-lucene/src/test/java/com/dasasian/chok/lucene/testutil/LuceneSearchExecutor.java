@@ -29,8 +29,8 @@ import org.apache.lucene.util.Version;
 public class LuceneSearchExecutor extends AbstractQueryExecutor {
 
     private final int count;
-    private ILuceneClient client;
     private final ZkConfiguration zkConfOfTargetCluster;
+    private ILuceneClient client;
 
     public LuceneSearchExecutor(String[] indices, String[] queries, ZkConfiguration zkConfOfTargetCluster, int count) {
         super(indices, queries);

@@ -31,21 +31,18 @@ import org.apache.log4j.Logger;
 public class StartMasterCommand extends Command {
 
     protected static final Logger LOG = Logger.getLogger(StartMasterCommand.class);
+    private boolean _embeddedMode;
 
     public StartMasterCommand() {
         super("startMaster", "[-e] [-ne]", "Starts a local master. -e & -ne for embedded and non-embedded zk-server (overriding configuration)");
     }
 
-    private boolean _embeddedMode;
-
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) throws Exception {
         if (optionMap.containsKey("-e")) {
             _embeddedMode = true;
-        }
-        else if (optionMap.containsKey("-ne")) {
+        } else if (optionMap.containsKey("-ne")) {
             _embeddedMode = false;
-        }
-        else {
+        } else {
             _embeddedMode = zkConf.isEmbedded();
         }
     }
@@ -57,8 +54,7 @@ public class StartMasterCommand extends Command {
             LOG.info("starting embedded zookeeper server...");
             ZkServer zkServer = ZkChokUtil.startZkServer(zkConf);
             master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkServer.getZkClient(), zkConf), zkServer, false);
-        }
-        else {
+        } else {
             ZkClient zkClient = ZkChokUtil.startZkClient(zkConf, 30000);
             master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkClient, zkConf), true);
         }

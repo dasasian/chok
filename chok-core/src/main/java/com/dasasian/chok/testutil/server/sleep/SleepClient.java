@@ -33,7 +33,15 @@ import java.util.Arrays;
 public class SleepClient implements ISleepClient {
 
     protected final static Logger LOG = Logger.getLogger(SleepClient.class);
-
+    private static final Method SLEEP_METHOD;
+    private static final int SLEEP_METHOD_SHARD_ARG_IDX = 2;
+    static {
+        try {
+            SLEEP_METHOD = ISleepServer.class.getMethod("sleep", new Class[]{Long.TYPE, Integer.TYPE, String[].class});
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Could not find method sleep() in ISleepServer!");
+        }
+    }
     private Client client;
 
     public SleepClient(final INodeSelectionPolicy nodeSelectionPolicy) {
@@ -47,25 +55,12 @@ public class SleepClient implements ISleepClient {
     public SleepClient(final ZkConfiguration config) {
         client = new Client(ISleepServer.class, config);
     }
-
     public SleepClient(final INodeSelectionPolicy policy, final ZkConfiguration config) {
         client = new Client(ISleepServer.class, policy, config);
     }
 
     public SleepClient(final INodeSelectionPolicy policy, final ZkConfiguration config, final ClientConfiguration clientConfiguration) {
         client = new Client(ISleepServer.class, policy, config, clientConfiguration);
-    }
-
-    private static final Method SLEEP_METHOD;
-    private static final int SLEEP_METHOD_SHARD_ARG_IDX = 2;
-
-    static {
-        try {
-            SLEEP_METHOD = ISleepServer.class.getMethod("sleep", new Class[]{Long.TYPE, Integer.TYPE, String[].class});
-        }
-        catch (NoSuchMethodException e) {
-            throw new RuntimeException("Could not find method sleep() in ISleepServer!");
-        }
     }
 
     public int sleep(final long msec) throws ChokException {

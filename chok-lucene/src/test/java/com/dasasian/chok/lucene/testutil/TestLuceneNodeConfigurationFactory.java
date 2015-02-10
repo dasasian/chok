@@ -56,8 +56,7 @@ public class TestLuceneNodeConfigurationFactory implements NodeConfigurationFact
     public LuceneNodeConfiguration getConfiguration(int startPort, Class<? extends ISearcherFactory> searcherFactoryClass, float timeoutPercentage) {
         try {
             return LuceneNodeConfigurationLoader.createConfiguration(temporaryFolder.newFolder(), startPort, searcherFactoryClass, timeoutPercentage);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

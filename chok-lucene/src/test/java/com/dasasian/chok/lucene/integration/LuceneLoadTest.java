@@ -41,14 +41,20 @@ import static org.junit.Assert.assertThat;
 
 public class LuceneLoadTest extends AbstractZkTest {
 
-    private static final int NODE_COUNT_LOAD_TEST = 3;
-    private static final int NODE_COUNT_LUCENE = 5;
-    protected static final Logger LOG = Logger.getLogger(LuceneLoadTest.class);
     public static final String LUCENE_ZK_ROOT_PATH = "/LuceneLoadIntegrationTest/luceneCluster";
     public static final String LOAD_TEST_ZK_ROOT_PATH = "/LuceneLoadIntegrationTest/loadTestCluster";
-
+    protected static final Logger LOG = Logger.getLogger(LuceneLoadTest.class);
+    private static final int NODE_COUNT_LOAD_TEST = 3;
+    private static final int NODE_COUNT_LUCENE = 5;
     private ChokMiniCluster luceneCluster;
     private ChokMiniCluster loadTestCluster;
+
+    private static void deployIndex(InteractionProtocol protocol, String indexName, File index) throws InterruptedException {
+        DeployClient deployClient1 = new DeployClient(protocol);
+        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, index.getAbsolutePath(), 1);
+        LOG.info("Joining deployment on " + deployment.getClass().getName());
+        deployment.joinDeployment();
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -80,13 +86,6 @@ public class LuceneLoadTest extends AbstractZkTest {
         zk.cleanupZk();
     }
 
-    private static void deployIndex(InteractionProtocol protocol, String indexName, File index) throws InterruptedException {
-        DeployClient deployClient1 = new DeployClient(protocol);
-        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, index.getAbsolutePath(), 1);
-        LOG.info("Joining deployment on " + deployment.getClass().getName());
-        deployment.joinDeployment();
-    }
-
     @Test
     public void testLuceneLoadTest() throws Exception {
         File resultDir = temporaryFolder.newFolder("results");
@@ -107,8 +106,7 @@ public class LuceneLoadTest extends AbstractZkTest {
         if (listFiles[0].getName().contains("-results-")) {
             resultFile = listFiles[0];
             logFile = listFiles[1];
-        }
-        else {
+        } else {
             resultFile = listFiles[1];
             logFile = listFiles[0];
         }

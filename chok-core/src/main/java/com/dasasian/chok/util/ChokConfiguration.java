@@ -25,11 +25,10 @@ import java.util.Set;
 
 public class ChokConfiguration implements Serializable {
 
+    public static final String CHOK_CONFIGURATION_HOME = "chok.configuration.home";
     @SuppressWarnings("unused")
     private final static Logger LOG = Logger.getLogger(ChokConfiguration.class);
     private static final long serialVersionUID = 1L;
-
-    public static final String CHOK_CONFIGURATION_HOME = "chok.configuration.home";
     protected Properties properties;
 
     public ChokConfiguration(final String path) {
@@ -54,8 +53,7 @@ public class ChokConfiguration implements Serializable {
         if (value == null) {
             if (defaultValue.isPresent()) {
                 value = defaultValue.get();
-            }
-            else {
+            } else {
                 throw new IllegalStateException("no property with key '" + key + "' found");
             }
         }

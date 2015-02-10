@@ -37,8 +37,7 @@ public class IndexReinitializeOperation extends IndexDeployOperation {
         try {
             _indexMD.getShards().addAll(readShardsFromFs(_indexMD.getName(), _indexMD.getPath()));
             protocol.updateIndexMD(_indexMD);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             ExceptionUtil.rethrowInterruptedException(e);
             handleMasterDeployException(protocol, _indexMD, e);
         }

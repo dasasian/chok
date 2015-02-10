@@ -32,13 +32,12 @@ import org.apache.lucene.util.Version;
  */
 public class SearchCommand extends ProtocolCommand {
 
-    public SearchCommand() {
-        super("search", "<index name>[,<index name>,...] \"<query>\" [count]", "Search in supplied indices. The query should be in \". If you supply a result count hit details will be printed. To search in all indices write \"*\". This uses the client type LuceneClient.");
-    }
-
     private String[] _indexNames;
     private String _query;
     private int _count;
+    public SearchCommand() {
+        super("search", "<index name>[,<index name>,...] \"<query>\" [count]", "Search in supplied indices. The query should be in \". If you supply a result count hit details will be printed. To search in all indices write \"*\". This uses the client type LuceneClient.");
+    }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
@@ -54,8 +53,7 @@ public class SearchCommand extends ProtocolCommand {
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
         if (_count > 0) {
             search(_indexNames, _query, _count);
-        }
-        else {
+        } else {
             search(_indexNames, _query);
         }
     }

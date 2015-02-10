@@ -40,8 +40,7 @@ public class DocumentFrequencyWritable implements Writable {
         _frequenciesLock.writeLock().lock();
         try {
             add(new TermWritable(field, term), frequency);
-        }
-        finally {
+        } finally {
             _frequenciesLock.writeLock().unlock();
         }
     }
@@ -68,8 +67,7 @@ public class DocumentFrequencyWritable implements Writable {
             for (final TermWritable key : keySet) {
                 add(key, frequencyMap.get(key));
             }
-        }
-        finally {
+        } finally {
             _frequenciesLock.writeLock().unlock();
         }
     }
@@ -90,8 +88,7 @@ public class DocumentFrequencyWritable implements Writable {
         _frequenciesLock.readLock().lock();
         try {
             return _frequencies.get(key);
-        }
-        finally {
+        } finally {
             _frequenciesLock.readLock().unlock();
         }
     }
@@ -111,8 +108,7 @@ public class DocumentFrequencyWritable implements Writable {
                 _frequencies.put(term, frequency);
             }
             _numDocs.set(in.readLong());
-        }
-        finally {
+        } finally {
             _frequenciesLock.writeLock().unlock();
         }
     }
@@ -127,8 +123,7 @@ public class DocumentFrequencyWritable implements Writable {
                 out.writeInt(frequency);
             }
             out.writeLong(_numDocs.get());
-        }
-        finally {
+        } finally {
             _frequenciesLock.readLock().unlock();
         }
     }

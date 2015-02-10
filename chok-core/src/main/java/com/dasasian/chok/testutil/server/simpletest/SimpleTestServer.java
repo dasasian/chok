@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * The back end server which searches a set of Lucene indices. Each shard is a
  * Lucene index directory.
- * <p/>
+ * <p>
  * Normal usage is to first call getDocFreqs() to get the global term
  * frequencies, then pass that back in to search(). This way you get uniform
  * scoring across all the nodes / instances of LuceneServer.

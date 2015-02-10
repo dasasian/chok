@@ -26,11 +26,11 @@ import java.util.*;
  * - initial shard distribution<br>
  * - shard distribution when under replicated<br>
  * - shard removal when over-replicated <br>
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * Missing feature:<br>
  * - shard/node rebalancing<br>
- * <p/>
+ * <p>
  * TODO jz: node load rebalancing
  */
 public class DefaultDistributionPolicy implements IDeployPolicy {
@@ -55,8 +55,7 @@ public class DefaultDistributionPolicy implements IDeployPolicy {
 
             if (neededDeployments > 0) {
                 LOG.warn("cannot replicate shard '" + shard + "' " + replicationLevel + " times, cause only " + roundRobinNodes.size() + " nodes connected");
-            }
-            else if (neededDeployments < 0) {
+            } else if (neededDeployments < 0) {
                 LOG.info("found shard '" + shard + "' over-replicated");
                 // TODO jz: maybe we should add a configurable threshold tha e.g. 10%
                 // over replication is ok ?

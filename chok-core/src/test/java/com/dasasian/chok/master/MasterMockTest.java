@@ -145,8 +145,7 @@ public class MasterMockTest extends AbstractTest {
         final Master master;
         if (zkServer != null) {
             master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, zkServer, false);
-        }
-        else {
+        } else {
             master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, shutdownClient);
         }
 

@@ -33,6 +33,31 @@ public class Chok {
 
     protected static final Logger LOG = Logger.getLogger(CommandLineHelper.class);
     private final static List<com.dasasian.chok.command.Command> COMMANDS = new ArrayList<>();
+    protected static com.dasasian.chok.command.Command START_NODE_COMMAND = new StartMapFileNodeCommand();
+    static {
+        COMMANDS.add(new StartZkCommand());
+        COMMANDS.add(new StartMasterCommand());
+        COMMANDS.add(START_NODE_COMMAND);
+        COMMANDS.add(new ListIndicesCommand());
+        COMMANDS.add(new ListNodesCommand());
+        COMMANDS.add(new ListErrorsCommand());
+        COMMANDS.add(new AddIndexCommand());
+        COMMANDS.add(new RemoveIndexCommand());
+        COMMANDS.add(new RedeployIndexCommand());
+        COMMANDS.add(new CheckCommand());
+        COMMANDS.add(new VersionCommand());
+        COMMANDS.add(new ShowStructureCommand());
+        COMMANDS.add(new StartGuiCommand());
+        COMMANDS.add(new LogMetricsCommand());
+        COMMANDS.add(new RunClassCommand());
+
+        Set<String> commandStrings = new HashSet<>();
+        for (com.dasasian.chok.command.Command command : COMMANDS) {
+            if (!commandStrings.add(command.getCommand())) {
+                throw new IllegalStateException("duplicated command sting " + command.getCommand());
+            }
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
@@ -47,8 +72,7 @@ public class Chok {
             command = getCommand(args[0]);
             command.parseArguments(args);
             command.execute();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             printError(e.getMessage());
             if (showStackTrace) {
                 e.printStackTrace();
@@ -137,16 +161,14 @@ public class Chok {
                 if (deployFuture.getState() == IndexState.DEPLOYED) {
                     System.out.println("\ndeployed index '" + name + "' in " + duration + " ms");
                     break;
-                }
-                else if (deployFuture.getState() == IndexState.ERROR) {
+                } else if (deployFuture.getState() == IndexState.ERROR) {
                     System.err.println("\nfailed to deploy index '" + name + "' in " + duration + " ms");
                     break;
                 }
                 System.out.print(".");
                 deployFuture.joinDeployment(1000);
             }
-        }
-        catch (final InterruptedException e) {
+        } catch (final InterruptedException e) {
             printError("interrupted wait on index deployment");
         }
     }
@@ -167,33 +189,6 @@ public class Chok {
 
     private static void printError(String errorMsg) {
         System.err.println("ERROR: " + errorMsg);
-    }
-
-    protected static com.dasasian.chok.command.Command START_NODE_COMMAND = new StartMapFileNodeCommand();
-
-    static {
-        COMMANDS.add(new StartZkCommand());
-        COMMANDS.add(new StartMasterCommand());
-        COMMANDS.add(START_NODE_COMMAND);
-        COMMANDS.add(new ListIndicesCommand());
-        COMMANDS.add(new ListNodesCommand());
-        COMMANDS.add(new ListErrorsCommand());
-        COMMANDS.add(new AddIndexCommand());
-        COMMANDS.add(new RemoveIndexCommand());
-        COMMANDS.add(new RedeployIndexCommand());
-        COMMANDS.add(new CheckCommand());
-        COMMANDS.add(new VersionCommand());
-        COMMANDS.add(new ShowStructureCommand());
-        COMMANDS.add(new StartGuiCommand());
-        COMMANDS.add(new LogMetricsCommand());
-        COMMANDS.add(new RunClassCommand());
-
-        Set<String> commandStrings = new HashSet<>();
-        for (com.dasasian.chok.command.Command command : COMMANDS) {
-            if (!commandStrings.add(command.getCommand())) {
-                throw new IllegalStateException("duplicated command sting " + command.getCommand());
-            }
-        }
     }
 
 

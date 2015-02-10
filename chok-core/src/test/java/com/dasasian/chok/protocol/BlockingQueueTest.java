@@ -41,8 +41,7 @@ public class BlockingQueueTest extends AbstractZkTest {
                     queue.remove();
                     poppedElements.add(queue.peek());
                     queue.remove();
-                }
-                catch (InterruptedException e) {
+                } catch (InterruptedException e) {
                     fail(e.getMessage());
                 }
             }

@@ -36,14 +36,13 @@ import java.util.Set;
  */
 public class ListIndicesCommand extends ProtocolCommand {
 
-    public ListIndicesCommand() {
-        super("listIndices", "[-d] [-b] [-n] [-S]", "Lists all indices. -d for detailed view, -b for batch mode, -n don't write column headers, -S for sorting the shard names.");
-    }
-
     private boolean detailedView;
     private boolean batchMode;
     private boolean skipColumnNames;
     private boolean sorted;
+    public ListIndicesCommand() {
+        super("listIndices", "[-d] [-b] [-n] [-S]", "Lists all indices. -d for detailed view, -b for batch mode, -n don't write column headers, -S for sorting the shard names.");
+    }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
@@ -58,8 +57,7 @@ public class ListIndicesCommand extends ProtocolCommand {
         final CommandLineHelper.Table table;
         if (!detailedView) {
             table = new CommandLineHelper.Table("Name", "Status", "Replication State", "Path", "Shards", "Entries", "Disk Usage");
-        }
-        else {
+        } else {
             table = new CommandLineHelper.Table("Name", "Status", "Replication State", "Path", "Shards", "Entries", "Disk Usage", "Replication Count");
         }
         table.setBatchMode(batchMode);
@@ -82,21 +80,18 @@ public class ListIndicesCommand extends ProtocolCommand {
             if (indexMD.hasDeployError()) {
                 state = "ERROR";
                 replicationState = "-";
-            }
-            else {
+            } else {
                 ReplicationReport report = protocol.getReplicationReport(indexMD);
                 if (report.isUnderreplicated()) {
                     replicationState = "UNDERREPLICATED";
-                }
-                else if (report.isOverreplicated()) {
+                } else if (report.isOverreplicated()) {
                     replicationState = "OVERREPLICATED";
                 }
 
             }
             if (!detailedView) {
                 table.addRow(index, state, replicationState, indexMD.getPath(), shards.size(), entries, indexBytes);
-            }
-            else {
+            } else {
                 table.addRow(index, state, replicationState, indexMD.getPath(), shards.size(), entries, indexBytes, indexMD.getReplicationLevel());
             }
         }
@@ -116,8 +111,7 @@ public class ListIndicesCommand extends ProtocolCommand {
             if (metaData != null) {
                 try {
                     docCount += Integer.parseInt(metaData.get(IContentServer.SHARD_SIZE_KEY));
-                }
-                catch (NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     // ignore
                 }
             }
@@ -134,8 +128,7 @@ public class ListIndicesCommand extends ProtocolCommand {
                 return -1;
             }
             return fileSystem.getContentSummary(indexPath).getLength();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return -1;
         }
     }

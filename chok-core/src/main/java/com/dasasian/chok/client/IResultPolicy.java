@@ -27,9 +27,9 @@ public interface IResultPolicy<T> {
      *
      * @param result The results we have so far.
      * @return if > 0, sleep at most that many msec, or until a new result
-     *         arrives, whichever comes first. Then call this method again.
-     *         If 0, return the result immediately.
-     *         if < 0, shutdown the WorkQueue, close the result, and return it immediately.
+     * arrives, whichever comes first. Then call this method again.
+     * If 0, return the result immediately.
+     * if < 0, shutdown the WorkQueue, close the result, and return it immediately.
      */
     public long waitTime(ClientResult<T> result);
 

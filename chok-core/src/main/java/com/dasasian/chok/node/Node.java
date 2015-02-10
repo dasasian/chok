@@ -72,17 +72,14 @@ public class Node implements ConnectedComponent {
             try {
                 rpcServer = RPC.getServer(nodeManaged, "0.0.0.0", serverPort, handlerCount, false, new Configuration());
                 LOG.info(nodeManaged.getClass().getSimpleName() + " server started on : " + hostName + ":" + serverPort);
-            }
-            catch (final BindException e) {
+            } catch (final BindException e) {
                 if (serverPort - startPort < tryCount) {
                     serverPort++;
                     // try again
-                }
-                else {
+                } else {
                     throw new RuntimeException("tried " + tryCount + " ports and no one is free...");
                 }
-            }
-            catch (final IOException e) {
+            } catch (final IOException e) {
                 throw new RuntimeException("unable to create rpc server", e);
             }
         }
@@ -112,8 +109,7 @@ public class Node implements ConnectedComponent {
         if (throttleInKbPerSec > 0) {
             LOG.info("throttling of shard deployment to " + throttleInKbPerSec + " kilo-bytes per second");
             shardManager = new ShardManager(shardsFolder, new ThrottleSemaphore(throttleInKbPerSec * 1024));
-        }
-        else {
+        } else {
             shardManager = new ShardManager(shardsFolder);
         }
         context = new NodeContext(protocol, this, shardManager, contentServer);
@@ -153,8 +149,7 @@ public class Node implements ConnectedComponent {
                 nodeOperatorThread.interrupt();
                 nodeOperatorThread.join(2500);
             } while (nodeOperatorThread.isAlive());
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.interrupted();
         }
         // we keep serving the shards
@@ -165,8 +160,7 @@ public class Node implements ConnectedComponent {
         ShardRedeployOperation redeployOperation = new ShardRedeployOperation(installedShards);
         try {
             redeployOperation.execute(context);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             ExceptionUtil.convertToRuntimeException(e);
         }
     }
@@ -179,8 +173,7 @@ public class Node implements ConnectedComponent {
             Class<? extends IMonitor> monitorClass = conf.getMonitorClass();
             monitor = monitorClass.newInstance();
             monitor.startMonitoring(nodeName, protocol);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOG.error("Unable to start node monitor:", e);
         }
     }
@@ -198,8 +191,7 @@ public class Node implements ConnectedComponent {
         nodeOperatorThread.interrupt();
         try {
             nodeOperatorThread.join();
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.interrupted();// proceed
         }
 
@@ -207,8 +199,7 @@ public class Node implements ConnectedComponent {
         rpcServer.stop();
         try {
             context.getContentServer().shutdown();
-        }
-        catch (Throwable t) {
+        } catch (Throwable t) {
             LOG.error("Error shutting down server", t);
         }
         LOG.info("shutdown " + nodeName + " finished");
@@ -254,6 +245,10 @@ public class Node implements ConnectedComponent {
         return protocol;
     }
 
+    public NodeConfiguration getNodeConfiguration() {
+        return nodeConfiguration;
+    }
+
     protected static class NodeOperationProcessor implements Runnable {
 
         private final NodeQueue _queue;
@@ -274,30 +269,22 @@ public class Node implements ConnectedComponent {
                         try {
                             LOG.info("executing " + operation);
                             operationResult = operation.execute(_nodeContext);
-                        }
-                        catch (Exception e) {
+                        } catch (Exception e) {
                             LOG.error(_nodeContext.getNode().getName() + ": failed to execute " + operation, e);
                             operationResult = new OperationResult(_nodeContext.getNode().getName(), e);
                             ExceptionUtil.rethrowInterruptedException(e);
-                        }
-                        finally {
+                        } finally {
                             _queue.complete(operationResult);// only remove after finish
                         }
-                    }
-                    catch (Throwable e) {
+                    } catch (Throwable e) {
                         ExceptionUtil.rethrowInterruptedException(e);
                         LOG.fatal(_nodeContext.getNode().getName() + ": operation failure ", e);
                     }
                 }
-            }
-            catch (InterruptedException | ZkInterruptedException e) {
+            } catch (InterruptedException | ZkInterruptedException e) {
                 Thread.interrupted();
             }
             LOG.info("node operation processor for " + _nodeContext.getNode().getName() + " stopped");
         }
-    }
-
-    public NodeConfiguration getNodeConfiguration() {
-        return nodeConfiguration;
     }
 }

@@ -76,15 +76,13 @@ public class TermWritable implements Writable {
         if (_term == null) {
             if (other._term != null)
                 return false;
-        }
-        else if (!_term.equals(other._term))
+        } else if (!_term.equals(other._term))
             return false;
 
         if (_field == null) {
             if (other._field != null)
                 return false;
-        }
-        else if (!_field.equals(other._field))
+        } else if (!_field.equals(other._field))
             return false;
 
         return true;
