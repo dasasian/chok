@@ -25,14 +25,12 @@ import java.util.List;
 
 /**
  * Client for searching document indices deployed on a chok cluster.
- * <p>
- * <p>
+ * <br>
  * You provide a {@link Query} and the name of the deployed indices, and get
  * back {@link Hits} which contains multiple {@link Hit} objects as the results.
  * <br>
  * See {@link #search(Query, String[], int)}.
- * <p>
- * <p>
+ * <br>
  * The details of a hit-document can be retrieved through the
  * {@link #getDetails(Hit, String[])} method.
  *
@@ -48,12 +46,12 @@ public interface ILuceneClient extends AutoCloseable {
      * ({@link Integer#MAX_VALUE}) amount of results.
      * <p>
      * If this method might has poor performance try to limit results with
-     * {@link #search(IQuery, String[], int)}.
+     * {@link #search(Query, String[], int)}.
      *
      * @param query      The query to search with.
      * @param indexNames A list of index names to search in.
      * @return A object that capsulates all results.
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
     public Hits search(Query query, String[] indexNames) throws ChokException;
 
@@ -65,7 +63,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @param indexNames A list of index names to search in.
      * @param count      The count of results that should be returned.
      * @return A object that capsulates all results.
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
     public Hits search(Query query, String[] indexNames, int count) throws ChokException;
 
@@ -78,7 +76,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @param count      The count of results that should be returned.
      * @param sort       Sort criteria for returned hits
      * @return A object that capsulates all results.
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
     public Hits search(Query query, String[] indexNames, int count, Sort sort) throws ChokException;
 
@@ -92,7 +90,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @param sort       Sort criteria for returned hits
      * @param filter     A query filter
      * @return A object that capsulates all results.
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
     public Hits search(Query query, String[] indexNames, int count, Sort sort, Filter filter) throws ChokException;
 
@@ -154,7 +152,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @param query      The query to search with.
      * @param indexNames A list of index names to search in.
      * @return A number that represents the overall result count to a query.
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
     public int count(Query query, String[] indexNames) throws ChokException;
 
@@ -165,7 +163,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @param filter     A filter for restricting query results.
      * @param indexNames A list of index names to search in.
      * @return A number that represents the overall result count to a query.
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
     public int count(Query query, Filter filter, String[] indexNames) throws ChokException;
 

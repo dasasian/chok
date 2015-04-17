@@ -47,6 +47,8 @@ public class FileUtil {
     /**
      * Simply unzips the content from the source zip to the target folder. The
      * first level folder of the zip content is removed.
+     * @param sourceZip the source zip
+     * @param targetFolder the target folder
      */
     public static void unzip(final File sourceZip, final File targetFolder) {
         FileInputStream fis = null;
@@ -118,7 +120,7 @@ public class FileUtil {
     }
 
     /**
-     * Unpack a zip stream to a directory usually called by {@link #unzip(File, File)} or {@link #unzip(Path, File, FileSystem, boolean).
+     * Unpack a zip stream to a directory usually called by {@link #unzip(File, File)} or {@link #unzip(Path, File, FileSystem, boolean)}.
      *
      * @param zis          Zip data strip to unpack
      * @param targetFolder The folder to unpack to. This directory and path is created if needed.

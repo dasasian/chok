@@ -21,9 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * CircularList where added elements are always on top. <br/>
+ * CircularList where added elements are always on top. <br>
  * You can cycle through the list with getNext(), whereat the returned object is
- * moved to the end of list. <br/>
+ * moved to the end of list. <br>
  * Also you could get the top of the list through getTop() and then move it to
  * end with moveToEnd() or to the middle of this list with moveToMid().
  * <p>
@@ -38,7 +38,7 @@ public class CircularList<E> {
     /**
      * Constructs an empty list with the given initial capacity.
      *
-     * @param initialCapacity
+     * @param initialCapacity initial capacity of the list
      */
     public CircularList(int initialCapacity) {
         this(new ArrayList<E>(initialCapacity));
@@ -62,7 +62,7 @@ public class CircularList<E> {
     /**
      * Adds the element at top of this list
      *
-     * @param element
+     * @param element the element to add
      */
     public void add(E element) {
         elements.add(currentPos, element);
@@ -137,7 +137,7 @@ public class CircularList<E> {
     }
 
     /**
-     * @param element
+     * @param element the element to remove
      * @return true if list contained this element
      */
     public boolean remove(E element) {

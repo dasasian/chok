@@ -20,14 +20,14 @@ import com.dasasian.chok.node.NodeContext;
 import java.io.Serializable;
 
 /**
- * An operation executed by an {@link Node}.
+ * An operation executed by an {@link com.dasasian.chok.node.Node}.
  */
 public interface NodeOperation extends Serializable {
 
     /**
-     * @param context
+     * @param context the node context
      * @return null or an {@link OperationResult}
-     * @throws InterruptedException
+     * @throws InterruptedException when interrupted
      */
     OperationResult execute(NodeContext context) throws InterruptedException;
 }

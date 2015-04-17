@@ -31,7 +31,7 @@ public interface INodeProxyManager {
      * sent via RPC to the server and executed there.
      *
      * @param node                The node name to look up.
-     * @param establishIfNoExists
+     * @param establishIfNoExists ???
      * @return a dynamic proxy standing in for the node.
      */
     public VersionedProtocol getProxy(String node, boolean establishIfNoExists);
@@ -46,8 +46,7 @@ public interface INodeProxyManager {
 
     /**
      * Notifies the proxy-manager that a a proxy invocation succeeded.
-     *
-     * @param node
+     * @param node the name of the node
      */
     public void reportNodeCommunicationSuccess(String node);
 

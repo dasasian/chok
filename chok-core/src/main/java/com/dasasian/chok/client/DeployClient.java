@@ -31,6 +31,8 @@ public class DeployClient implements IDeployClient {
 
     /**
      * @deprecated use {@link #DeployClient(InteractionProtocol)} instead
+     * @param zkClient the zk client
+     * @param configuration the configuration
      */
     public DeployClient(ZkClient zkClient, ZkConfiguration configuration) {
         this(new InteractionProtocol(zkClient, configuration));

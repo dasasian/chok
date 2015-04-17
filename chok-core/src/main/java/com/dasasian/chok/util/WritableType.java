@@ -18,7 +18,7 @@ package com.dasasian.chok.util;
 import org.apache.hadoop.io.*;
 
 /**
- * Helper class for dealing with hadoop writable <-> java primitive wrapper
+ * Helper class for dealing with hadoop writable to java primitive wrapper
  * conversion.
  *
  * @see Writable
@@ -82,6 +82,8 @@ public enum WritableType {
     /**
      * Convert a java primitive type wrapper (like String, Integer, Float, etc...)
      * to the corresponding hadoop {@link WritableComparable}.
+     * @param object the object to convert
+     * @return the writable comparable
      */
     public WritableComparable convertComparable(Object object) {
         switch (this) {

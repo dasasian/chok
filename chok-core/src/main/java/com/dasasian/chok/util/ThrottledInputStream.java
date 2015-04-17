@@ -25,16 +25,14 @@ import java.io.InterruptedIOException;
 /**
  * An {@link InputStream} which throttles the amount of bytes which is read from
  * the underlying {@link InputStream} in a given time frame.
- * <p>
- * <p>
+ * <br>
  * Usage Example: <br>
  * <i>//creates an throttled input stream which reads 1024 bytes/sec from the
  * underlying input stream at the most </i> <br>
  * <code>
  * ThrottledInputStream throttledInputStream = new ThrottledInputStream(otherIputStream, new ThrottleSemaphore(1024));
  * </code><br>
- * <p>
- * <p>
+ * <br>
  * Usage over multiple {@link InputStream}s: <br>
  * <i>//throttle the read of multiple input streams at the rate of 1024
  * bytes/sec </i> <br>
@@ -106,12 +104,10 @@ public class ThrottledInputStream extends InputStream implements PositionedReada
      * This semaphore maintains the permitted bytes in a given timeframe. Each
      * {@link #aquireBytes(int)} blocks if necessary until at least one byte can
      * be acquired.
-     * <p>
-     * <p>
+     * <br>
      * The time unit is bytes/second whereas the window of one second is splitted
      * into smaller windows to allow more steadied operations.
-     * <p>
-     * <p>
+     * <br>
      * This class is thread safe and one instance can be used by multiple threads/
      * {@link ThrottledInputStream}s. (But it might not be fair to the different
      * treads)

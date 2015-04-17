@@ -227,6 +227,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
      * Broadcast a method call to all indices. Return all the results in a
      * Collection.
      *
+     * @param <T> the class for the result
      * @param timeout              timeout value
      * @param shutdown             ??
      * @param method               The server's method to call.

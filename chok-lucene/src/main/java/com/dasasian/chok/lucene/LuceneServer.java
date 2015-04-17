@@ -143,7 +143,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
      *
      * @param shardName the name of the shard
      * @param shardDir  the shard directory
-     * @throws IOException
+     * @throws IOException when an error occurs
      */
     @Override
     public void addShard(final String shardName, final File shardDir) throws IOException {
@@ -182,7 +182,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     /**
      * Returns the number of documents a shard has.
      *
-     * @param shardName
+     * @param shardName name of the shard
      * @return the number of documents in the shard.
      */
     protected int shardSize(String shardName) {
@@ -206,7 +206,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
      * @param shardName The name of the shard to measure. This was the name provided in
      *                  addShard().
      * @return a map of key/value pairs which describe the shard.
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     @Override
     public Map<String, String> getShardMetaData(String shardName) throws Exception {
@@ -368,14 +368,18 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     /**
      * Search in the given shards and return max hits for given query
      *
-     * @param query
-     * @param freqs
-     * @param shards
-     * @param result
-     * @param max
-     * @throws IOException
+     * @param query the query
+     * @param freqs document frequency writer
+     * @param shards the shards
+     * @param result the writable for the result
+     * @param max max results
+     * @param sort the sort order
+     * @param timeout timeout value
+     * @param filter filter to apply
+     * @throws IOException when an error occurs
      */
-    protected final void search(final Query query, final DocumentFrequencyWritable freqs, final String[] shards, final HitsMapWritable result, final int max, Sort sort, long timeout, Filter filter) throws IOException {
+    protected final void search(final Query query, final DocumentFrequencyWritable freqs, final String[] shards,
+                                final HitsMapWritable result, final int max, Sort sort, long timeout, Filter filter) throws IOException {
         timeout = getCollectorTimeout(timeout);
         final Query rewrittenQuery = rewrite(query, shards);
         final int numDocs = freqs.getNumDocsAsInteger();
@@ -469,12 +473,11 @@ public class LuceneServer implements IContentServer, ILuceneServer {
      * Returns a specified lucene document from a given shard where all or only
      * the given fields are loaded from the index.
      *
-     * @param shardName
-     * @param docId
-     * @param fieldNames
-     * @return
-     * @throws CorruptIndexException
-     * @throws IOException
+     * @param shardName the name of the shard
+     * @param docId the document id
+     * @param fieldNames the names of the fields
+     * @return the document
+     * @throws IOException when an error occurs
      */
     protected Document doc(final String shardName, final int docId, final String[] fieldNames) throws IOException {
         final Searchable searchable = getSearcherByShard(shardName);
@@ -488,10 +491,10 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     /**
      * Rewrites a query for the given shards
      *
-     * @param original
-     * @param shardNames
-     * @return
-     * @throws IOException
+     * @param original the original query
+     * @param shardNames the names of the shards
+     * @return the rewritten query
+     * @throws IOException when an error occurs
      */
     protected Query rewrite(final Query original, final String[] shardNames) throws IOException {
         final Query[] queries = new Query[shardNames.length];

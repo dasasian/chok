@@ -45,6 +45,8 @@ public abstract class Ec2Service {
 
     /**
      * Lists all running clusters
+     * @return the running clusters
+     * @throws java.io.IOException if an error occurs
      */
     public Set<String> list() throws IOException {
         HashSet<String> set = new HashSet<>();
@@ -70,8 +72,9 @@ public abstract class Ec2Service {
 
     /**
      * launches a cluster
-     *
-     * @param conductorHostName
+     * @param groupName the name of the group
+     * @param numOfSlaves number of slaves
+     * @throws java.io.IOException is an error occurs
      */
     public void launchCluster(String groupName, int numOfSlaves) throws IOException {
         Ec2Instance master = launchMaster(groupName);

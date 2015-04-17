@@ -53,6 +53,11 @@ public class Hit implements Writable, Comparable<Hit> {
 
     /**
      * Construct a hit object with information about the types of the sort fields.
+     * @param shard the shard name
+     * @param node the node name
+     * @param score the score
+     * @param id the id
+     * @param sortFieldTypes the sort filed types
      */
     public Hit(final String shard, final String node, final float score, final int id, WritableType[] sortFieldTypes) {
         _shard = new Text(shard);

@@ -31,6 +31,8 @@ public class GenerateMapFiles {
      * into 4 shards, the second into 2 shards. We do not provide such a tool yet.
      * The results are checked in, so you should not need to run this. Is is provided
      * as a reference.
+     * @param args the arguments
+     * @throws java.lang.Exception when and error occurs
      */
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();

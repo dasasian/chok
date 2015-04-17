@@ -48,8 +48,7 @@ import java.util.*;
 /**
  * Abstracts the interaction between master and nodes via zookeeper files and
  * folders.
- * <p>
- * <p>
+ * <br>
  * For inspecting and understanding the zookeeper structure see
  * {@link #explainStructure()} and {@link #showStructure(boolean)}.
  */

@@ -22,9 +22,9 @@ import java.lang.reflect.Field;
 public class ClassUtil {
 
     /**
-     * @param <T>
-     * @param className
-     * @param instanceOfClass
+     * @param <T> the generic class
+     * @param className the name of the class
+     * @param instanceOfClass the instanceOfClass
      * @return the class object for a given class name
      */
     @SuppressWarnings("unchecked")
@@ -41,8 +41,8 @@ public class ClassUtil {
     }
 
     /**
-     * @param <T>
-     * @param clazz
+     * @param <T> the generic class
+     * @param clazz the class
      * @return a new instance of the given class
      */
     public static <T> T newInstance(Class<T> clazz) {
@@ -54,8 +54,8 @@ public class ClassUtil {
     }
 
     /**
-     * @param object
-     * @param fieldName
+     * @param object the object
+     * @param fieldName the field name
      * @return the value of the (private) field of the given object with the given
      * name
      */
@@ -64,11 +64,11 @@ public class ClassUtil {
     }
 
     /**
-     * @param clazz
-     * @param object
-     * @param fieldName
      * @return the value of the (private) field of the given object declared in
      * the given class with the given name
+     * @param clazz the class
+     * @param object the object
+     * @param fieldName  the name of the field
      */
     public static Object getPrivateFieldValue(Class<?> clazz, Object object, String fieldName) {
         Field field = null;

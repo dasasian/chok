@@ -36,13 +36,13 @@ public interface INodeSelectionPolicy {
      * During startup or as soon the client get a notification about any change in
      * the grid the client calls this method with an shard-to-nodes mapping. <br>
      *
-     * @param shard
+     * @param shard name of the shard
      * @param nodes all the nodes which serve the shard
      */
     void update(String shard, Iterable<String> nodes);
 
     /**
-     * @param shard
+     * @param shard name of the shard
      * @return all nodes which serves the given shard
      */
     Collection<String> getShardNodes(String shard);
@@ -50,7 +50,7 @@ public interface INodeSelectionPolicy {
     /**
      * If an index is undeployed, this method is called for each of it shards.
      *
-     * @param shard
+     * @param shard name of the shard
      * @return all nodes which served the shard
      */
     List<String> remove(String shard);
@@ -58,7 +58,7 @@ public interface INodeSelectionPolicy {
     /**
      * If a node becomes not reachable, this method is called.
      *
-     * @param node
+     * @param node the name of the node
      */
     void removeNode(String node);
 
@@ -68,6 +68,8 @@ public interface INodeSelectionPolicy {
      * latency to the client and alternate between nodes to load balance high
      * traffic.
      *
+     * @param shards the shard names
+     * @return the node to shards map
      * @throws ShardAccessException if one of the shards could not be accessed
      */
     Map<String, List<String>> createNode2ShardsMap(Iterable<String> shards) throws ShardAccessException;

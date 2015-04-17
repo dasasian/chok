@@ -30,7 +30,7 @@ public interface IMapFileClient {
      * @param key        The entry(s) to look up.
      * @param indexNames The MapFiles to search.
      * @return All the entries with the given key.
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws com.dasasian.chok.util.ChokException if an error occurs
      */
     public List<String> get(String key, final String[] indexNames) throws ChokException;
 

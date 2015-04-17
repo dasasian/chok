@@ -60,8 +60,9 @@ public class MapFileServer implements IContentServer, IMapFileServer {
      * Adds an shard index search for given name to the list of shards
      * MultiSearcher search in.
      *
-     * @param shardName
-     * @throws IOException
+     * @param shardName the shard name
+     * @param shardDir the shard dir
+     * @throws IOException when an error occurs
      */
     public void addShard(final String shardName, final File shardDir) throws IOException {
         LOG.debug("LuceneServer " + nodeName + " got shard " + shardName);
@@ -117,7 +118,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
      * @param shardName The name of the shard to measure. This was the name provided in
      *                  addShard().
      * @return a map of key/value pairs which describe the shard.
-     * @throws Exception
+     * @throws Exception when and error occurs
      */
     public Map<String, String> getShardMetaData(String shardName) throws Exception {
         final MapFile.Reader reader = readerByShard.get(shardName);

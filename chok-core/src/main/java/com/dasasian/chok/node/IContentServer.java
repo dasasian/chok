@@ -62,7 +62,7 @@ public interface IContentServer extends VersionedProtocol {
      * @param shardName The name of the shard. Will be used in removeShard(). May also be
      *                  used in requests.
      * @param shardDir  The directory where the shard data is.
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     public void addShard(String shardName, File shardDir) throws Exception;
 
@@ -72,7 +72,7 @@ public interface IContentServer extends VersionedProtocol {
      *
      * @param shardName Which shard to stop using. This was the name provided in
      *                  addShard().
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     public void removeShard(String shardName) throws Exception;
 
@@ -90,14 +90,14 @@ public interface IContentServer extends VersionedProtocol {
      * @param shardName The name of the shard to measure. This was the name provided in
      *                  addShard().
      * @return a map of key/value pairs which describe the shard.
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     public Map<String, String> getShardMetaData(String shardName) throws Exception;
 
     /**
      * Release all resources. No further calls will happen after this call.
      *
-     * @throws Exception
+     * @throws Exception when an error occurs
      */
     public void shutdown() throws Exception;
 

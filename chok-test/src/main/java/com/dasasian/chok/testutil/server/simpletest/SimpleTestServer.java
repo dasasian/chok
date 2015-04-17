@@ -63,9 +63,9 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
      * Adds an shard index search for given name to the list of shards
      * MultiSearcher search in.
      *
-     * @param shardName
-     * @param shardDir
-     * @throws java.io.IOException
+     * @param shardName the shard name
+     * @param shardDir the shard directory
+     * @throws java.io.IOException if and error occurs
      */
     @Override
     public void addShard(final String shardName, final File shardDir) throws IOException {
@@ -78,6 +78,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
 
     /**
      * Removes a search by given shardName from the list of searchers.
+     * @param shardName the shard name
      */
     @Override
     public void removeShard(final String shardName) {
@@ -92,7 +93,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
     /**
      * Returns the number of documents a shard has.
      *
-     * @param shardName
+     * @param shardName the shard name
      * @return the number of documents in the shard.
      */
     protected int shardSize(String shardName) {
@@ -108,7 +109,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
      * @param shardName The name of the shard to measure. This was the name provided in
      *                  addShard().
      * @return a map of key/value pairs which describe the shard.
-     * @throws Exception
+     * @throws Exception if an error occurs
      */
     @Override
     public Map<String, String> getShardMetaData(String shardName) throws Exception {

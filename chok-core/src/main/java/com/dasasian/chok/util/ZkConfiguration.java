@@ -84,6 +84,7 @@ public class ZkConfiguration implements Serializable {
 
     /**
      * Comma separated list of host ports
+     * @return the servers
      */
     public String getServers() {
         return servers;
@@ -121,9 +122,6 @@ public class ZkConfiguration implements Serializable {
         return buildPath(getRootPath(), WORK, node + "-queue");
     }
 
-    /**
-     * @return ${chok.root}/pathDef/name1/name2/...
-     */
     public String getPath(PathDef pathDef, String... names) {
         if (names.length == 0) {
             return buildPath(getRootPath(), pathDef.getPath(PATH_SEPARATOR));

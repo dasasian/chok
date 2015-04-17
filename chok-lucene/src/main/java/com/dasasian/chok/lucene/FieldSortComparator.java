@@ -22,7 +22,7 @@ import java.util.Comparator;
 
 /**
  * Implementation of an {@link Comparator} that compares two {@link Hit} objects
- * based on a given {@link Sort} specification. This comparator helps sorting a
+ * based on a given {@link org.apache.lucene.search.Sort} specification. This comparator helps sorting a
  * result list by field terms rather then by sore.
  * <p>
  * This code leans on the lucene code from {@link FieldSortedHitQueue}

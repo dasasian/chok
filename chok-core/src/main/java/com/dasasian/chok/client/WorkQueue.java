@@ -76,7 +76,6 @@ class WorkQueue<T> implements INodeExecutor {
      * Used by unit tests. By providing an alternate factory, this class can be tested without creating
      * and NodeInteractions.
      *
-     * @param interactionFactory
      * @param shardManager         The class that maintains the node/shard maps, the node selection
      *                             policy, and the node proxies.
      * @param allShards            The entire set of shards for this request. When all these shards

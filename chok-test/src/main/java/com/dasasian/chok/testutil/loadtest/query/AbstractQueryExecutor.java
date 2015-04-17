@@ -42,9 +42,8 @@ public abstract class AbstractQueryExecutor implements Serializable {
      * Called from the loadtest node before calling
      * {@link #execute(NodeContext, String)} method.
      *
-     * @param nodeContext
-     * @param zkConf      the configuration of the target cluster
-     * @throws Exception
+     * @param nodeContext the nodeContext to use
+     * @throws Exception is an error occurs
      */
     public abstract void init(NodeContext nodeContext) throws Exception;
 
@@ -52,8 +51,8 @@ public abstract class AbstractQueryExecutor implements Serializable {
      * Called from the loadtest node after calling
      * {@link #execute(NodeContext, String)} method the last time.
      *
-     * @param nodeContext
-     * @throws Exception
+     * @param nodeContext the nodeContext to use
+     * @throws Exception is an error occurs
      */
     public abstract void close(NodeContext nodeContext) throws Exception;
 
@@ -61,9 +60,9 @@ public abstract class AbstractQueryExecutor implements Serializable {
      * Might called multiple times from the loadtest node, depending on query
      * rate.
      *
-     * @param nodeContext
-     * @param query
-     * @throws Exception
+     * @param nodeContext the nodeContext to use
+     * @param query the query to execute
+     * @throws Exception is an error occurs
      */
     public abstract void execute(NodeContext nodeContext, String query) throws Exception;
 

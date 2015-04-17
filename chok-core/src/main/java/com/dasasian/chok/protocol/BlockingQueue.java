@@ -43,7 +43,7 @@ public class BlockingQueue<T extends Serializable> {
     }
 
     /**
-     * @param element
+     * @param element the element to add
      * @return the id of the element in the queue
      */
     public String add(T element) {

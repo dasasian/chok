@@ -156,6 +156,8 @@ public class HitsMapWritable implements Writable {
 
     /**
      * @deprecated use {@link #addHit(Hit)} instead
+     * @param shard the shard name
+     * @param hit the hit
      */
     public void addHitToShard(final String shard, final Hit hit) {
         addHit(hit);
@@ -163,6 +165,7 @@ public class HitsMapWritable implements Writable {
 
     /**
      * @deprecated use {@link #getNodeName()} instead
+     * @return the server name
      */
     public String getServerName() {
         return getNodeName();
@@ -178,6 +181,7 @@ public class HitsMapWritable implements Writable {
 
     /**
      * @deprecated use {@link #getHitList()} instead
+     * @return the hits
      */
     public Hits getHits() {
         final Hits result = new Hits();

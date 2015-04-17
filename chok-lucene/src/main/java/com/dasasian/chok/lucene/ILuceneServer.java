@@ -117,7 +117,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @param docId  The document that is desired.
      * @param fields The fields to return.
      * @return details of the document
-     * @throws IOException
+     * @throws IOException when and error occurs
      */
     public MapWritable getDetails(String[] shards, int docId, String[] fields) throws IOException;
 
@@ -130,7 +130,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @param shards The shards to ask for the document.
      * @param docId  The document that is desired.
      * @return details of the document
-     * @throws IOException
+     * @throws IOException when and error occurs
      */
     public MapWritable getDetails(String[] shards, int docId) throws IOException;
 
@@ -139,11 +139,11 @@ public interface ILuceneServer extends VersionedProtocol {
      * fastest way in case you just need the number of documents. Note that the
      * number of matching documents is also included in HitsMapWritable.
      *
-     * @param query
-     * @param shards
+     * @param query the query
+     * @param shards the shards
      * @param timeout How long the query is allowed to run before getting interrupted
      * @return number of documents
-     * @throws IOException
+     * @throws IOException when and error occurs
      */
     public int getResultCount(QueryWritable query, String[] shards, long timeout) throws IOException;
 
@@ -152,12 +152,12 @@ public interface ILuceneServer extends VersionedProtocol {
      * fastest way in case you just need the number of documents. Note that the
      * number of matching documents is also included in HitsMapWritable.
      *
-     * @param query
-     * @param shards
-     * @param filter
+     * @param query the query
+     * @param filter the filter
+     * @param shards the shards
      * @param timeout How long the query is allowed to run before getting interrupted
      * @return number of documents
-     * @throws IOException
+     * @throws IOException when and error occurs
      */
     public int getResultCount(QueryWritable query, FilterWritable filter, String[] shards, long timeout) throws IOException;
 }

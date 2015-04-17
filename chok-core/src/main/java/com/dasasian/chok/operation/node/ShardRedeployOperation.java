@@ -22,7 +22,7 @@ import java.io.File;
 import java.util.Collection;
 
 /**
- * Redploys shards which are already installed in {@link ShardManager}.
+ * Redeploys shards which are already installed in {@link com.dasasian.chok.node.ShardManager}.
  */
 public class ShardRedeployOperation extends AbstractShardOperation {
 

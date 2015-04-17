@@ -21,16 +21,15 @@ import org.apache.log4j.Logger;
 import java.util.*;
 
 /**
- * Simple deploy policy which distributes the shards in round robin style.<b>
+ * Simple deploy policy which distributes the shards in round robin style.<br>
  * Following features are supported:<br>
  * - initial shard distribution<br>
  * - shard distribution when under replicated<br>
  * - shard removal when over-replicated <br>
- * <p>
- * <p>
+ * <br>
  * Missing feature:<br>
  * - shard/node rebalancing<br>
- * <p>
+ * <br>
  * TODO jz: node load rebalancing
  */
 public class DefaultDistributionPolicy implements IDeployPolicy {

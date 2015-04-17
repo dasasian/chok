@@ -23,6 +23,9 @@ public class StringUtil {
      * Usage:<br>
      * String callingMethod =
      * StringUtil.getCallingMethod(Thread.currentThread().getStackTrace());
+     *
+     * @param stackTrace the strackTrace
+     * @return the calling method
      */
     public static String getCallingMethod(StackTraceElement[] stackTrace) {
         int indexOfCallingMethod = 2;
@@ -56,8 +59,8 @@ public class StringUtil {
     }
 
     /**
-     * @param string
-     * @param length
+     * @param string the string to fill with white space
+     * @param length the length to fill with white space
      * @return the given path + as many whitespace that the given string reaches
      * the given length
      */

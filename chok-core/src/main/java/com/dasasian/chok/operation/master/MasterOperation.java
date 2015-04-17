@@ -26,7 +26,7 @@ import java.util.List;
  * An operation carried out by the master node.
  * <p>
  * If an {@link InterruptedException} is thrown during the operations
- * {@link #execute(MasterContext)} method (which can happen during master change
+ * {@link #execute(MasterContext, java.util.List)} method (which can happen during master change
  * or zookeeper reconnect) the operation can either catch and handle or rethrow
  * it. Rethrowing it will lead to complete reexecution of the operation.
  */
@@ -37,29 +37,30 @@ public interface MasterOperation extends Serializable {
      * operation is blocked, delayed, etc by another running
      * {@link MasterOperation}.
      *
-     * @param runningOperations
+     * @param runningOperations the running operations
      * @return instruction
-     * @throws Exception
+     * @throws java.lang.Exception when an error occurs
      */
     ExecutionInstruction getExecutionInstruction(List<MasterOperation> runningOperations) throws Exception;
 
     /**
-     * @param context
      * @param runningOperations currently running {@link MasterOperation}s
      * @return null or a list of operationId which have to be completed before
-     * {@link #nodeOperationsComplete(MasterContext)} method is called.
-     * @throws Exception
+     * {@link #nodeOperationsComplete(MasterContext, java.util.List)} method is called.
+     * @param context the context
+     * @param runningOperations the running operations
+     * @throws java.lang.Exception when an error occurs
      */
     List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception;
 
     /**
      * Called when all operations are complete or the nodes of the incomplete
      * operations went down. This method is NOT called if
-     * {@link #execute(MasterContext)} returns null or an emptu list of
+     * {@link #execute(MasterContext, java.util.List)} returns null or an empty list of
      * {@link OperationId}s.
-     *
-     * @param context
-     * @param results
+     * @param context the context
+     * @param results the operation results
+     * @throws java.lang.Exception when an error occurs
      */
     void nodeOperationsComplete(MasterContext context, List<OperationResult> results) throws Exception;
 

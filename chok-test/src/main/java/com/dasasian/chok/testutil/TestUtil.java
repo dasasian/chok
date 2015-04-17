@@ -57,7 +57,7 @@ public class TestUtil {
      * @param timeout       The timeout.
      * @return the return value of the latest {@link Callable} execution.
      * @throws Exception
-     * @throws InterruptedException
+     * @throws InterruptedException when interrupted
      */
     public static <T> T waitUntil(T expectedValue, Callable<T> callable, TimeUnit timeUnit, long timeout) throws Exception {
         long startTime = System.currentTimeMillis();
@@ -83,7 +83,7 @@ public class TestUtil {
      * @param runnable The runnable containing the mockito verification.
      * @param timeUnit The timeout timeunit.
      * @param timeout  The timeout.
-     * @throws InterruptedException
+     * @throws InterruptedException when interrupted
      */
     public static void waitUntilVerified(Runnable runnable, TimeUnit timeUnit, int timeout) throws InterruptedException {
         LOG.debug("Waiting for " + timeout + " " + timeUnit + " until verified.");
@@ -128,7 +128,7 @@ public class TestUtil {
     /**
      * Creates a Mockito answer object that can be used for asynchronously
      * stubbing. For example:
-     * <p>
+     * <br>
      * <pre>
      * final CountDownLatch countDownLatch = new CountDownLatch(1);
      * Mockito.doAnswer(TestUtil.createCountDownAnswer(countDownLatch)).when(listener).announceNode(nodeName);
@@ -136,6 +136,8 @@ public class TestUtil {
      * countDownLatch.await(10, TimeUnit.SECONDS);
      * Assert.assertEquals(&quot;expecting invocation within 10 seconds&quot;, 0, countDownLatch.getCount());
      * </pre>
+     * @param countDownLatch the countdown latch
+     * @return the stubber
      */
 
     public static Stubber createCountDownAnswer(final CountDownLatch countDownLatch) {

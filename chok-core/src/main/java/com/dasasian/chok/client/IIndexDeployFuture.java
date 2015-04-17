@@ -18,19 +18,24 @@ package com.dasasian.chok.client;
 /**
  * Future for an index deployment.
  *
- * @see Future for concept of a future
+ * @see java.util.concurrent.Future for concept of a future
  */
 public interface IIndexDeployFuture {
 
     /**
      * This method blocks until the index has been successfully deployed or the
      * deployment failed.
+     * @return the index state
+     * @throws java.lang.InterruptedException when interrupted
      */
     IndexState joinDeployment() throws InterruptedException;
 
     /**
      * This method blocks until the index has been successfully deployed or the
      * deployment failed or maxWaitMillis has exceeded.
+     * @param maxWaitMillis maximum time to wait.
+     * @return the index state
+     * @throws java.lang.InterruptedException when interrupted
      */
     IndexState joinDeployment(long maxWaitMillis) throws InterruptedException;
 

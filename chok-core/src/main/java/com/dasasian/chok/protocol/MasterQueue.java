@@ -51,10 +51,10 @@ public class MasterQueue extends BlockingQueue<MasterOperation> {
     /**
      * Moves the top of the queue to the watching state.
      *
-     * @param masterOperation
-     * @param nodeOperationIds
-     * @return
-     * @throws InterruptedException
+     * @param masterOperation  the master operation
+     * @param nodeOperationIds  the node operation ids
+     * @throws InterruptedException when interrupted
+     * @return the operation watchdog class
      */
     public OperationWatchdog moveOperationToWatching(MasterOperation masterOperation, List<OperationId> nodeOperationIds) throws InterruptedException {
         Element<MasterOperation> element = getFirstElement();

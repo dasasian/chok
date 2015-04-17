@@ -31,10 +31,12 @@ public interface IDeployPolicy {
      * @param currentShard2NodesMap all current deployments of the shards of the one index to
      *                              distribute/replicate
      * @param currentNode2ShardsMap all nodes and their shards
-     * @param aliveNodes
-     * @param replicationLevel
-     * @return
+     * @param aliveNodes the nodes that are alive
+     * @param replicationLevel number of replicas
+     * @return the plan
      */
-    Map<String, List<String>> createDistributionPlan(Map<String, List<String>> currentShard2NodesMap, Map<String, List<String>> currentNode2ShardsMap, List<String> aliveNodes, int replicationLevel);
+    Map<String, List<String>> createDistributionPlan(Map<String, List<String>> currentShard2NodesMap,
+                                                     Map<String, List<String>> currentNode2ShardsMap,
+                                                     List<String> aliveNodes, int replicationLevel);
 
 }

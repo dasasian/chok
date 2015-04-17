@@ -59,8 +59,9 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
      * whichever comes first. Then, if shutDown is true, close the result which
      * shuts down the call.
      *
-     * @param timeout
-     * @param shutDown
+     * @param timeout the timeout value
+     * @param shutDown shutdown after
+     *
      */
     public ResultCompletePolicy(long timeout, boolean shutDown) {
         this(timeout, 0, 1.0, shutDown);
@@ -70,7 +71,7 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
      * Wait for the results to complete (all shards reporting a result or error),
      * the results to be closed, or completeWait msec, whichever comes first. Then
      * if not complete and not closed, wait for the results to be closed, shard
-     * coverage to be >= coverage, or coverageWait msec, whichever comes first. If
+     * coverage to be &gt;= coverage, or coverageWait msec, whichever comes first. If
      * shutDown is set, close the result which terminates the call.
      *
      * @param completeWait How long (msec) to wait for complete results.
@@ -101,10 +102,10 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
      * WorkQueue be shut down, and the ClientResult closed?
      *
      * @param result The results we have so far.
-     * @return if > 0, sleep at most that many msec, or until a new result
+     * @return if &gt; 0, sleep at most that many msec, or until a new result
      * arrives, or the result is closed, whichever comes first. Then call
      * this method again. If 0, stop waiting and return the result
-     * immediately. if < 0, shutdown the WorkQueue, close the result, and
+     * immediately. if &lt; 0, shutdown the WorkQueue, close the result, and
      * return it immediately.
      */
     public long waitTime(ClientResult<T> result) {

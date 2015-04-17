@@ -79,7 +79,7 @@ class NodeInteraction<T> implements Runnable {
      *                        on node failures.
      * @param workQueue       Use this if we need to resubmit a retry job. Will result in a new
      *                        NodeInteraction.
-     * @result The destination to write to. If we get a result from the node we
+     * @param result The destination to write to. If we get a result from the node we
      * add it. If we get an error and submit retries we do not use it (the
      * retry jobs will write to it for us). If we get an error and do not
      * retry we write the error to it.

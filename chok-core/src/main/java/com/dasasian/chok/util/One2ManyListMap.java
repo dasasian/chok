@@ -62,7 +62,7 @@ public class One2ManyListMap<K, V> implements Serializable {
     }
 
     /**
-     * @param key
+     * @param key the key
      * @return the list to the given key or an empty list
      */
     public List<V> getValues(K key) {
@@ -76,8 +76,8 @@ public class One2ManyListMap<K, V> implements Serializable {
     /**
      * Removes the value from the given key list.
      *
-     * @param key
-     * @param value
+     * @param key the key
+     * @param value the value
      * @return if value has exists or not
      */
     public boolean removeValue(K key, V value) {
@@ -95,7 +95,7 @@ public class One2ManyListMap<K, V> implements Serializable {
     }
 
     /**
-     * @param key
+     * @param key the key
      * @return a list with all values belonging to the given key
      */
     public List<V> removeKey(K key) {
@@ -105,7 +105,7 @@ public class One2ManyListMap<K, V> implements Serializable {
     }
 
     /**
-     * @param key
+     * @param key the key
      * @return true if map contains the key
      */
     public boolean containsKey(K key) {
@@ -113,7 +113,7 @@ public class One2ManyListMap<K, V> implements Serializable {
     }
 
     /**
-     * @param value
+     * @param value the value
      * @return true if map contains the value
      */
     public boolean containsValue(V value) {

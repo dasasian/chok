@@ -25,15 +25,13 @@ import java.util.*;
  * A multithreaded destination for results and/or errors. Results are produced
  * by nodes and we pass lists of shards to nodes. But due to replication and
  * retries, we associate sets of shards with the results, not nodes.
- * <p>
+ * <br>
  * Multiple NodeInteractions will be writing to this object at the same time. If
  * not closed, expect the contents to change. For example isComplete() might
  * return false and then a call to getResults() might return a complete set (in
  * which case another call to isComplete() would return true). If you need
  * complex state information, rather than making multiple calls, you should use
- * <p>
- * <p>
- * <p>
+ * <br>
  * You can get these results from a WorkQueue by polling or blocking. Once you
  * have an ClientResult instance you may poll it or block on it. Whenever
  * resutls or errors are added notifyAll() is called. The ClientResult can
