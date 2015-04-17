@@ -40,14 +40,14 @@ public class IndexDeployOperation extends AbstractIndexOperation {
 
     private static final long serialVersionUID = 1L;
     private final static Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
-    private final String _indexName;
-    private final String _indexPath;
-    protected IndexMetaData _indexMD;
+    private final String indexName;
+    private final String indexPath;
+    protected IndexMetaData indexMetaData;
 
     public IndexDeployOperation(String indexName, String indexPath, int replicationLevel) {
-        _indexMD = new IndexMetaData(indexName, indexPath, replicationLevel);
-        _indexName = indexName;
-        _indexPath = indexPath;
+        indexMetaData = new IndexMetaData(indexName, indexPath, replicationLevel);
+        this.indexName = indexName;
+        this.indexPath = indexPath;
     }
 
     protected static List<Shard> readShardsFromFs(final String indexName, final String indexPathString) throws IndexDeployException {
@@ -93,44 +93,44 @@ public class IndexDeployOperation extends AbstractIndexOperation {
     }
 
     public String getIndexName() {
-        return _indexName;
+        return indexName;
     }
 
     public String getIndexPath() {
-        return _indexPath;
+        return indexPath;
     }
 
     public int getReplicationLevel() {
-        return _indexMD.getReplicationLevel();
+        return indexMetaData.getReplicationLevel();
     }
 
     @Override
     public List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception {
         InteractionProtocol protocol = context.getProtocol();
         try {
-            _indexMD.getShards().addAll(readShardsFromFs(_indexName, _indexPath));
-            LOG.info("Found shards '" + _indexMD.getShards() + "' for index '" + _indexName + "'");
-            return distributeIndexShards(context, _indexMD, protocol.getLiveNodes(), runningOperations);
+            indexMetaData.getShards().addAll(readShardsFromFs(indexName, indexPath));
+            LOG.info("Found shards '" + indexMetaData.getShards() + "' for index '" + indexName + "'");
+            return distributeIndexShards(context, indexMetaData, protocol.getLiveNodes(), runningOperations);
         } catch (Exception e) {
             ExceptionUtil.rethrowInterruptedException(e);
-            LOG.error("failed to deploy index " + _indexName, e);
+            LOG.error("failed to deploy index " + indexName, e);
             // note: need to publishIndex before update can be done to the indexMD
-            protocol.publishIndex(_indexMD);
-            handleMasterDeployException(protocol, _indexMD, e);
+            protocol.publishIndex(indexMetaData);
+            handleMasterDeployException(protocol, indexMetaData, e);
             return null;
         }
     }
 
     @Override
     public void nodeOperationsComplete(MasterContext context, List<OperationResult> results) throws Exception {
-        LOG.info("deployment of index " + _indexName + " complete");
-        handleDeploymentComplete(context, results, _indexMD, true);
+        LOG.info("deployment of index " + indexName + " complete");
+        handleDeploymentComplete(context, results, indexMetaData, true);
     }
 
     @Override
     public ExecutionInstruction getExecutionInstruction(List<MasterOperation> runningOperations) throws Exception {
         for (MasterOperation operation : runningOperations) {
-            if (operation instanceof IndexDeployOperation && ((IndexDeployOperation) operation)._indexName.equals(_indexName)) {
+            if (operation instanceof IndexDeployOperation && ((IndexDeployOperation) operation).indexName.equals(indexName)) {
                 return ExecutionInstruction.CANCEL;
             }
         }
@@ -139,7 +139,7 @@ public class IndexDeployOperation extends AbstractIndexOperation {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + _indexName;
+        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + indexName;
     }
 
 }

@@ -28,7 +28,7 @@
     <parent>
         <groupId>com.dasasian.chok</groupId>
         <artifactId>chok</artifactId>
-        <version>1.0</version>
+        <version>1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>chok-test</artifactId>

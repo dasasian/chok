@@ -35,11 +35,11 @@ public class IndexReinitializeOperation extends IndexDeployOperation {
     public List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception {
         InteractionProtocol protocol = context.getProtocol();
         try {
-            _indexMD.getShards().addAll(readShardsFromFs(_indexMD.getName(), _indexMD.getPath()));
-            protocol.updateIndexMD(_indexMD);
+            indexMetaData.getShards().addAll(readShardsFromFs(indexMetaData.getName(), indexMetaData.getPath()));
+            protocol.updateIndexMD(indexMetaData);
         } catch (Exception e) {
             ExceptionUtil.rethrowInterruptedException(e);
-            handleMasterDeployException(protocol, _indexMD, e);
+            handleMasterDeployException(protocol, indexMetaData, e);
         }
         return null;
     }
