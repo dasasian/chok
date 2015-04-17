@@ -16,6 +16,7 @@
 package com.dasasian.chok.protocol.metadata;
 
 import com.dasasian.chok.util.One2ManyListMap;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
@@ -71,7 +72,7 @@ public class IndexDeployError implements Serializable {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).addValue(indexName).addValue(errorType).addValue(errorMessage).toString();
+        return MoreObjects.toStringHelper(this).addValue(indexName).addValue(errorType).addValue(errorMessage).toString();
     }
 
     public static enum ErrorType {

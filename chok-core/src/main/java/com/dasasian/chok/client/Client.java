@@ -236,7 +236,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
      *                             disable.
      * @param args                 The arguments to pass to the method when run on the server.
      * @return the results
-     * @throws com.dasasian.chok.util.ChokException
+     * @throws ChokException on exception
      */
     public <T> ClientResult<T> broadcastToAll(long timeout, boolean shutdown, Method method, int shardArrayParamIndex, Object... args) throws ChokException {
         return broadcastToAll(new ResultCompletePolicy<T>(timeout, shutdown), method, shardArrayParamIndex, args);

@@ -40,7 +40,7 @@ public interface IResultReceiver<T> {
      * Report an error thrown by the node when we tried to access the specified
      * shards. Silently fails if result is closed.
      *
-     * @param result The result to add.
+     * @param error the error to add
      * @param shards The shards that were called to produce the result.
      */
     public void addError(Throwable error, Collection<String> shards);
