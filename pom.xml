@@ -16,7 +16,9 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <name>Chok</name>
@@ -26,7 +28,7 @@
 
     <groupId>com.dasasian.chok</groupId>
     <artifactId>chok</artifactId>
-    <version>1.0</version>
+    <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <licenses>
@@ -52,8 +54,7 @@
         <connection>scm:git:git@github.com:dasasian/chok.git</connection>
         <url>https://github.com/dasasian/chok</url>
         <developerConnection>scm:git:git@github.com:dasasian/chok.git</developerConnection>
-      <tag>chok-1.0</tag>
-  </scm>
+    </scm>
 
     <issueManagement>
         <url>https://github.com/dasasian/chok/issues</url>
