@@ -28,18 +28,18 @@ import java.util.List;
  */
 public class ListNodesCommand extends ProtocolCommand {
 
-    private boolean _batchMode;
-    private boolean _skipColumnNames;
-    private boolean _sorted;
+    private boolean batchMode;
+    private boolean skipColumnNames;
+    private boolean sorted;
     public ListNodesCommand() {
         super("listNodes", "[-d] [-b] [-n] [-S]", "Lists all nodes. -b for batch mode, -n don't write column headers, -S for sorting the node names.");
     }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
-        _batchMode = optionMap.containsKey("-b");
-        _skipColumnNames = optionMap.containsKey("-n");
-        _sorted = optionMap.containsKey("-S");
+        batchMode = optionMap.containsKey("-b");
+        skipColumnNames = optionMap.containsKey("-n");
+        sorted = optionMap.containsKey("-S");
     }
 
     @Override
@@ -47,9 +47,9 @@ public class ListNodesCommand extends ProtocolCommand {
         final List<String> knownNodes = protocol.getKnownNodes();
         final List<String> liveNodes = protocol.getLiveNodes();
         final CommandLineHelper.Table table = new CommandLineHelper.Table();
-        table.setBatchMode(_batchMode);
-        table.setSkipColumnNames(_skipColumnNames);
-        if (_sorted) {
+        table.setBatchMode(batchMode);
+        table.setSkipColumnNames(skipColumnNames);
+        if (sorted) {
             Collections.sort(knownNodes);
         }
         for (final String node : knownNodes) {

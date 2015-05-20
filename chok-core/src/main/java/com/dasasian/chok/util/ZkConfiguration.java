@@ -33,8 +33,10 @@ public class ZkConfiguration implements Serializable {
     private final String dataDir;
     private final String logDataDir;
     private final String rootPath;
+    private int snapRetainCount;
+    private int purgeInterval;
 
-    public ZkConfiguration(boolean embedded, String servers, int timeOut, int tickTime, int initLimit, int syncLimit, String dataDir, String logDataDir, String rootPath) {
+    public ZkConfiguration(boolean embedded, String servers, int timeOut, int tickTime, int initLimit, int syncLimit, String dataDir, String logDataDir, String rootPath, int snapRetainCount, int purgeInterval) {
         this.embedded = embedded;
         this.servers = servers;
         this.timeOut = timeOut;
@@ -44,6 +46,8 @@ public class ZkConfiguration implements Serializable {
         this.dataDir = dataDir;
         this.logDataDir = logDataDir;
         this.rootPath = rootPath;
+        this.snapRetainCount = snapRetainCount;
+        this.purgeInterval = purgeInterval;
     }
 
     public static String buildPath(String... folders) {
@@ -131,7 +135,15 @@ public class ZkConfiguration implements Serializable {
     }
 
     public ZkConfiguration rootPath(String zkRootPath) {
-        return new ZkConfiguration(embedded, servers, timeOut, tickTime, initLimit, syncLimit, dataDir, logDataDir, zkRootPath);
+        return new ZkConfiguration(embedded, servers, timeOut, tickTime, initLimit, syncLimit, dataDir, logDataDir, zkRootPath, snapRetainCount, purgeInterval);
+    }
+
+    public int getSnapRetainCount() {
+        return snapRetainCount;
+    }
+
+    public int getPurgeInterval() {
+        return purgeInterval;
     }
 
     public enum PathDef {

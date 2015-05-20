@@ -27,6 +27,7 @@ import com.dasasian.chok.protocol.metadata.IndexDeployError.ErrorType;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
 import com.dasasian.chok.testutil.Mocks;
+import com.google.common.collect.Iterables;
 import org.junit.Test;
 
 import java.util.*;

@@ -55,6 +55,9 @@ import java.util.*;
 public class InteractionProtocol {
 
     protected final static Logger LOG = Logger.getLogger(InteractionProtocol.class);
+
+    public static final String DISABLE_INDEX_AUTO_REPAIR_FLAG = "disable-index-auto-repair";
+
     protected final ZkClient zkClient;
     protected final ZkConfiguration zkConf;
     protected volatile boolean connected = true;
@@ -91,6 +94,12 @@ public class InteractionProtocol {
         @Override
         public void handleNewSession() throws Exception {
             // should be covered by handleStateChanged()
+        }
+
+        @Override
+        public void handleSessionEstablishmentError(Throwable error) throws Exception {
+            throw new Exception("count not establish session", error);
+
         }
     };
 
@@ -556,6 +565,18 @@ public class InteractionProtocol {
 
     public ZkClient getZkClient() {
         return zkClient;
+    }
+
+    public void disableIndexAutoRepair() {
+        setFlag(DISABLE_INDEX_AUTO_REPAIR_FLAG);
+    }
+
+    public void enableIndexAutoRepair() {
+        removeFlag(DISABLE_INDEX_AUTO_REPAIR_FLAG);
+    }
+
+    public boolean isIndexAutoRepairEnabled() {
+        return !flagExists(DISABLE_INDEX_AUTO_REPAIR_FLAG);
     }
 
     static class ListenerAdapter {

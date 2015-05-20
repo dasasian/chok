@@ -47,6 +47,7 @@ public class CommandLineInterface {
         addCommand(new StartGuiCommand());
         addCommand(new LogMetricsCommand());
         addCommand(new RunClassCommand());
+        addCommand(new IndexAutoRepairCommand());
     }
 
     protected static void addCommand(Command command) {

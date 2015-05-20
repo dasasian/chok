@@ -29,13 +29,11 @@ public class IndexDeployError implements Serializable {
     private final String indexName;
     private final ErrorType errorType;
     private final One2ManyListMap<String, Exception> shard2ExceptionsMap = new One2ManyListMap<>();
-    private String errorMessage;
-    private String errorTrace;
     public IndexDeployError(String indexName, ErrorType errorType) {
         this.indexName = indexName;
         this.errorType = errorType;
     }
-//    private Exception _exception;
+    private Exception exception;
 
     public String getIndexName() {
         return indexName;
@@ -46,16 +44,15 @@ public class IndexDeployError implements Serializable {
     }
 
     public String getErrorMessage() {
-        return errorMessage;
+        return exception.getMessage();
     }
 
     public String getErrorTrace() {
-        return errorTrace;
+        return Throwables.getStackTraceAsString(exception);
     }
 
     public void setException(Exception exception) {
-        errorMessage = exception.getMessage();
-        errorTrace = Throwables.getStackTraceAsString(exception);
+        this.exception = exception;
     }
 
     public void addShardError(String shardName, Exception exception) {
@@ -72,7 +69,7 @@ public class IndexDeployError implements Serializable {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this).addValue(indexName).addValue(errorType).addValue(errorMessage).toString();
+        return MoreObjects.toStringHelper(this).addValue(indexName).addValue(errorType).addValue(getErrorMessage()).toString();
     }
 
     public static enum ErrorType {

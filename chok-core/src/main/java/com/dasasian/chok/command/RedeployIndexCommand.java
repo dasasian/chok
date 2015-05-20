@@ -25,7 +25,7 @@ import com.dasasian.chok.util.ZkConfiguration;
  */
 public class RedeployIndexCommand extends ProtocolCommand {
 
-    private String _indexName;
+    private String indexName;
 
     public RedeployIndexCommand() {
         super("redeployIndex", "<index name>", "Undeploys and deploys an index");
@@ -34,17 +34,17 @@ public class RedeployIndexCommand extends ProtocolCommand {
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
         CommandLineHelper.validateMinArguments(args, 2);
-        _indexName = args[1];
+        indexName = args[1];
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        IndexMetaData indexMD = protocol.getIndexMD(_indexName);
+        IndexMetaData indexMD = protocol.getIndexMD(indexName);
         if (indexMD == null) {
-            throw new IllegalArgumentException("index '" + _indexName + "' does not exist");
+            throw new IllegalArgumentException("index '" + indexName + "' does not exist");
         }
-        CommandLineHelper.removeIndex(protocol, _indexName);
+        CommandLineHelper.removeIndex(protocol, indexName);
         Thread.sleep(5000);
-        CommandLineHelper.addIndex(protocol, _indexName, indexMD.getPath(), indexMD.getReplicationLevel());
+        CommandLineHelper.addIndex(protocol, indexName, indexMD.getPath(), indexMD.getReplicationLevel());
     }
 }

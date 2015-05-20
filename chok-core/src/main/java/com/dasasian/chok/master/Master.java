@@ -145,7 +145,7 @@ public class Master implements ConnectedComponent {
             @Override
             public void removed(String name) {
                 synchronized (Master.this) {
-                    if (!isInSafeMode()) {
+                    if (!isInSafeMode() && protocol.isIndexAutoRepairEnabled()) {
                         protocol.addMasterOperation(new CheckIndicesOperation());
                     }
                 }
@@ -158,7 +158,7 @@ public class Master implements ConnectedComponent {
                         return;
                     }
                     protocol.addMasterOperation(new RemoveObsoleteShardsOperation(name));
-                    if (!isInSafeMode()) {
+                    if (!isInSafeMode() && protocol.isIndexAutoRepairEnabled()) {
                         protocol.addMasterOperation(new CheckIndicesOperation());
                     }
                 }

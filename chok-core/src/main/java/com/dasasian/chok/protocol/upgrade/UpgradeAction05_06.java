@@ -18,6 +18,7 @@ package com.dasasian.chok.protocol.upgrade;
 import com.dasasian.chok.operation.master.IndexReinitializeOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
+import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.exception.ZkMarshallingError;
@@ -43,19 +44,19 @@ class UpgradeAction05_06 implements UpgradeAction {
     public void upgrade(InteractionProtocol protocol) {
         ZkClient zkClient = protocol.getZkClient();
         ZkConfiguration zkConf = protocol.getZkConfiguration();
-        ZkClient zkClientForWriables = new ZkClient(zkConf.getServers(), 5000, 5000, new WriteableZkSerializer(com.dasasian.chok.index.IndexMetaData.class));
+        ZkClient zkClientForWritables = ZkChokUtil.startZkClient(zkConf.getServers(), 5000, 5000, new WriteableZkSerializer(com.dasasian.chok.index.IndexMetaData.class));
         LOG.info("restoring indices meta data...");
         String oldIndicesPath = getOldIndicesPath(zkConf);
         List<String> indices = zkClient.getChildren(oldIndicesPath);
         LOG.info("found " + indices.size() + " old indices");
         for (String indexName : indices) {
-            com.dasasian.chok.index.IndexMetaData oldIndexMD = zkClientForWriables.readData(oldIndicesPath + "/" + indexName);
+            com.dasasian.chok.index.IndexMetaData oldIndexMD = zkClientForWritables.readData(oldIndicesPath + "/" + indexName);
             IndexMetaData newIndexMD = new IndexMetaData(indexName, oldIndexMD.getPath(), oldIndexMD.getReplicationLevel());
             IndexReinitializeOperation deployOperation = new IndexReinitializeOperation(newIndexMD);
             protocol.addMasterOperation(deployOperation);
             protocol.publishIndex(newIndexMD);
         }
-        zkClientForWriables.close();
+        zkClientForWritables.close();
 
         LOG.info("deleting obsolete folders...");
         zkClient.deleteRecursive(zkConf.getRootPath() + "/" + "indexes");

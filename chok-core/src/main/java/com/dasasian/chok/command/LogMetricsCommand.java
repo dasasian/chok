@@ -27,7 +27,7 @@ import java.util.Arrays;
  */
 public class LogMetricsCommand extends ProtocolCommand {
 
-    private MetricLogger.OutputType _outputType;
+    private MetricLogger.OutputType outputType;
 
     public LogMetricsCommand() {
         super("logMetrics", "[sysout|log4j]", "Subscribes to the Metrics updates and logs them to log file or console");
@@ -41,13 +41,13 @@ public class LogMetricsCommand extends ProtocolCommand {
         if (parseType(args[1]) == null) {
             throw new IllegalArgumentException("need to specify one of " + Arrays.asList(MetricLogger.OutputType.values()) + " as output type");
         }
-        _outputType = parseType(args[1]);
+        outputType = parseType(args[1]);
 
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        new MetricLogger(_outputType, protocol).join();
+        new MetricLogger(outputType, protocol).join();
     }
 
     private MetricLogger.OutputType parseType(String typeString) {

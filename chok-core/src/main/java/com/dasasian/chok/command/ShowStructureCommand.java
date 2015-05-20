@@ -24,7 +24,7 @@ import com.dasasian.chok.util.ZkConfiguration;
  */
 public class ShowStructureCommand extends ProtocolCommand {
 
-    private boolean _detailedView;
+    private boolean detailedView;
 
     public ShowStructureCommand() {
         super("showStructure", "[-d]", "Shows the structure of a Chok installation. -d for detailed view.");
@@ -32,11 +32,11 @@ public class ShowStructureCommand extends ProtocolCommand {
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
-        _detailedView = optionMap.containsKey("-d");
+        detailedView = optionMap.containsKey("-d");
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        protocol.showStructure(_detailedView);
+        protocol.showStructure(detailedView);
     }
 }

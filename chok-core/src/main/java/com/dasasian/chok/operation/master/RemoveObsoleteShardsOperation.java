@@ -32,24 +32,24 @@ public class RemoveObsoleteShardsOperation implements MasterOperation {
     private final static Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
 
     private static final long serialVersionUID = 1L;
-    private final String _nodeName;
+    private final String nodeName;
 
     public RemoveObsoleteShardsOperation(String nodeName) {
-        _nodeName = nodeName;
+        this.nodeName = nodeName;
     }
 
     public String getNodeName() {
-        return _nodeName;
+        return nodeName;
     }
 
     @Override
     public List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception {
         InteractionProtocol protocol = context.getProtocol();
-        Collection<String> nodeShards = protocol.getNodeShards(_nodeName);
+        Collection<String> nodeShards = protocol.getNodeShards(nodeName);
         List<String> obsoleteShards = collectObsoleteShards(protocol, nodeShards, runningOperations);
         if (!obsoleteShards.isEmpty()) {
-            LOG.info("found following shards obsolete on node " + _nodeName + ": " + obsoleteShards);
-            protocol.addNodeOperation(_nodeName, new ShardUndeployOperation(obsoleteShards));
+            LOG.info("found following shards obsolete on node " + nodeName + ": " + obsoleteShards);
+            protocol.addNodeOperation(nodeName, new ShardUndeployOperation(obsoleteShards));
         }
 
         return null;
@@ -94,7 +94,7 @@ public class RemoveObsoleteShardsOperation implements MasterOperation {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + _nodeName;
+        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + nodeName;
     }
 
 }

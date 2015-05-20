@@ -29,6 +29,7 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.Mocks;
 import com.dasasian.chok.testutil.ZkTestSystem;
 import com.dasasian.chok.testutil.mockito.WaitingAnswer;
+import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.Gateway;
 import org.I0Itec.zkclient.IZkDataListener;
@@ -70,7 +71,7 @@ public class InteractionProtocolTest extends AbstractTest {
         int GATEWAY_PORT = 2190;
         Gateway gateway = new Gateway(GATEWAY_PORT, zk.getServerPort());
         gateway.start();
-        ZkClient zkClient = new ZkClient("localhost:" + GATEWAY_PORT);
+        ZkClient zkClient = ZkChokUtil.startZkClient("localhost:" + GATEWAY_PORT);
 
         InteractionProtocol protocol = new InteractionProtocol(zkClient, zk.getZkConfiguration());
         final AtomicInteger connectCount = new AtomicInteger();

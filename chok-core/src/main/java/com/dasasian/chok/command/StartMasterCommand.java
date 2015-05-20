@@ -23,6 +23,7 @@ import com.dasasian.chok.util.ZkConfiguration;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkServer;
 import org.apache.log4j.Logger;
+import org.apache.zookeeper.server.DatadirCleanupManager;
 
 /**
  * User: damith.chandrasekara
@@ -31,7 +32,7 @@ import org.apache.log4j.Logger;
 public class StartMasterCommand extends Command {
 
     protected static final Logger LOG = Logger.getLogger(StartMasterCommand.class);
-    private boolean _embeddedMode;
+    private boolean embeddedMode;
 
     public StartMasterCommand() {
         super("startMaster", "[-e] [-ne]", "Starts a local master. -e & -ne for embedded and non-embedded zk-server (overriding configuration)");
@@ -39,22 +40,31 @@ public class StartMasterCommand extends Command {
 
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) throws Exception {
         if (optionMap.containsKey("-e")) {
-            _embeddedMode = true;
+            embeddedMode = true;
         } else if (optionMap.containsKey("-ne")) {
-            _embeddedMode = false;
+            embeddedMode = false;
         } else {
-            _embeddedMode = zkConf.isEmbedded();
+            embeddedMode = zkConf.isEmbedded();
         }
     }
 
     @Override
     public void execute(ZkConfiguration zkConf) throws Exception {
         final Master master;
-        if (_embeddedMode) {
+        final DatadirCleanupManager datadirCleanupManager;
+        if (embeddedMode) {
             LOG.info("starting embedded zookeeper server...");
             ZkServer zkServer = ZkChokUtil.startZkServer(zkConf);
             master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkServer.getZkClient(), zkConf), zkServer, false);
+            if(zkConf.getPurgeInterval()>0) {
+                datadirCleanupManager = new DatadirCleanupManager(zkConf.getDataDir(), zkConf.getLogDataDir(), zkConf.getSnapRetainCount(), zkConf.getPurgeInterval());
+                datadirCleanupManager.start();
+            }
+            else {
+                datadirCleanupManager = null;
+            }
         } else {
+            datadirCleanupManager = null;
             ZkClient zkClient = ZkChokUtil.startZkClient(zkConf, 30000);
             master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkClient, zkConf), true);
         }
@@ -64,6 +74,9 @@ public class StartMasterCommand extends Command {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
                     synchronized (master) {
+                        if(datadirCleanupManager!=null) {
+                            datadirCleanupManager.shutdown();
+                        }
                         master.shutdown();
                         master.notifyAll();
                     }

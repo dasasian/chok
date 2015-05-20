@@ -15,6 +15,8 @@
  */
 package com.dasasian.chok.command;
 
+import com.dasasian.chok.master.Master;
+import com.dasasian.chok.operation.master.CheckIndicesOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.ZkConfiguration;
 
@@ -22,24 +24,39 @@ import com.dasasian.chok.util.ZkConfiguration;
  * User: damith.chandrasekara
  * Date: 7/7/13
  */
-public class RemoveIndexCommand extends ProtocolCommand {
+public class IndexAutoRepairCommand extends ProtocolCommand {
 
-    private String indexName;
+    private boolean enable;
 
-    public RemoveIndexCommand() {
-        super("removeIndex", "<index name>", "Remove a index from Chok");
+    public IndexAutoRepairCommand() {
+        super("indexAutoRepair", "enable/disable", "Enable or Disable index auto repair");
     }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
         CommandLineHelper.validateMinArguments(args, 2);
-        indexName = args[1];
+        String enableDisable = args[1];
+        if ("enable".equalsIgnoreCase(enableDisable)) {
+            enable = true;
+        } else if ("disable".equalsIgnoreCase(enableDisable)) {
+            enable = false;
+        }
+        throw new RuntimeException("Invalid value for enable/disable:" + enableDisable);
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        CommandLineHelper.removeIndex(protocol, indexName);
-        System.out.println("undeployed index '" + indexName + "'");
+        if(enable) {
+            protocol.disableIndexAutoRepair();
+            System.out.println("Enabled index auto repair");
+            // add check indices operation
+            System.out.println("Checking indexes");
+            protocol.addMasterOperation(new CheckIndicesOperation());
+        }
+        else {
+            protocol.enableIndexAutoRepair();
+            System.out.println("Disabled index auto repair");
+        }
     }
 
 }

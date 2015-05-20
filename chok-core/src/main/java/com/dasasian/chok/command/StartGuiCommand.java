@@ -29,8 +29,9 @@ import java.util.Map;
  */
 public class StartGuiCommand extends Command {
 
-    private int _port = 8080;
-    private File _war;
+    private int port = 8080;
+    private File war;
+
     public StartGuiCommand() {
         super("startGui", "[-war <pathToWar>] [-port <port>]", "Starts the web based chok.gui");
     }
@@ -38,24 +39,24 @@ public class StartGuiCommand extends Command {
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, Map<String, String> optionMap) {
         if (optionMap.containsKey("-war")) {
-            _war = new File(optionMap.get("-war"));
+            war = new File(optionMap.get("-war"));
         }
         if (optionMap.containsKey("-port")) {
-            _port = Integer.parseInt(optionMap.get("-port"));
+            port = Integer.parseInt(optionMap.get("-port"));
         }
     }
 
     @Override
     public void execute(ZkConfiguration zkConf) throws Exception {
         List<String> paths = new ArrayList<>();
-        if (_war != null) {
-            paths.add(_war.getAbsolutePath());
+        if (war != null) {
+            paths.add(war.getAbsolutePath());
         } else {
             paths.add(".");
             paths.add("./extras/chok.gui");
         }
 
-        WebApp app = new WebApp(paths.toArray(new String[paths.size()]), _port);
+        WebApp app = new WebApp(paths.toArray(new String[paths.size()]), port);
         app.startWebServer();
     }
 }

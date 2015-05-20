@@ -16,6 +16,7 @@
 package com.dasasian.chok.command;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
+import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.I0Itec.zkclient.ZkClient;
 
@@ -31,7 +32,7 @@ public abstract class ProtocolCommand extends Command {
 
     @Override
     public final void execute(ZkConfiguration zkConf) throws Exception {
-        ZkClient zkClient = new ZkClient(zkConf.getServers());
+        ZkClient zkClient = ZkChokUtil.startZkClient(zkConf.getServers());
         InteractionProtocol protocol = new InteractionProtocol(zkClient, zkConf);
         execute(zkConf, protocol);
         protocol.disconnect();

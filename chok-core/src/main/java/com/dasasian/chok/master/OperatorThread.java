@@ -33,32 +33,32 @@ class OperatorThread extends Thread {
 
     protected final static Logger LOG = Logger.getLogger(OperatorThread.class);
 
-    private final MasterContext _context;
-    private final MasterQueue _queue;
-    private final OperationRegistry _registry;
-    private final long _safeModeMaxTime;
+    private final MasterContext masterContext;
+    private final MasterQueue masterQueue;
+    private final OperationRegistry operationRegistry;
+    private final long safeModeMaxTime;
 
-    private boolean _safeMode = true;
+    private boolean safeMode = true;
 
     public OperatorThread(final MasterContext context, final long safeModeMaxTime) {
-        _context = context;
-        _queue = context.getMasterQueue();
-        _registry = new OperationRegistry(context);
+        masterContext = context;
+        masterQueue = context.getMasterQueue();
+        operationRegistry = new OperationRegistry(context);
         setDaemon(true);
         setName(getClass().getSimpleName());
-        _safeModeMaxTime = safeModeMaxTime;
+        this.safeModeMaxTime = safeModeMaxTime;
     }
 
     public boolean isInSafeMode() {
-        return _safeMode;
+        return safeMode;
     }
 
     public OperationRegistry getOperationRegistry() {
-        return _registry;
+        return operationRegistry;
     }
 
     public MasterContext getContext() {
-        return _context;
+        return masterContext;
     }
 
     @Override
@@ -72,10 +72,10 @@ class OperatorThread extends Thread {
                 try {
                     // TODO jz: poll only for a certain amount of time and then execute a
                     // global check operation ?
-                    MasterOperation operation = _queue.peek();
+                    MasterOperation operation = masterQueue.peek();
                     List<OperationId> nodeOperationIds = null;
                     try {
-                        List<MasterOperation> runningOperations = _registry.getRunningOperations();
+                        List<MasterOperation> runningOperations = operationRegistry.getRunningOperations();
                         ExecutionInstruction instruction = operation.getExecutionInstruction(runningOperations);
                         nodeOperationIds = executeOperation(operation, instruction, runningOperations);
                     } catch (Exception e) {
@@ -83,10 +83,10 @@ class OperatorThread extends Thread {
                         LOG.error("failed to execute " + operation, e);
                     }
                     if (nodeOperationIds != null && !nodeOperationIds.isEmpty()) {
-                        OperationWatchdog watchdog = _queue.moveOperationToWatching(operation, nodeOperationIds);
-                        _registry.watchFor(watchdog);
+                        OperationWatchdog watchdog = masterQueue.moveOperationToWatching(operation, nodeOperationIds);
+                        operationRegistry.watchFor(watchdog);
                     } else {
-                        _queue.remove();
+                        masterQueue.remove();
                     }
                 } catch (Throwable e) {
                     ExceptionUtil.rethrowInterruptedException(e);
@@ -97,18 +97,18 @@ class OperatorThread extends Thread {
             Thread.interrupted();
             // let go the thread
         }
-        _registry.shutdown();
+        operationRegistry.shutdown();
         LOG.info("operator thread stopped");
     }
 
     private void recreateWatchdogs() {
-        List<OperationWatchdog> watchdogs = _context.getMasterQueue().getWatchdogs();
+        List<OperationWatchdog> watchdogs = masterContext.getMasterQueue().getWatchdogs();
         for (OperationWatchdog watchdog : watchdogs) {
             if (watchdog.isDone()) {
                 LOG.info("release done watchdog " + watchdog);
-                _queue.removeWatchdog(watchdog);
+                masterQueue.removeWatchdog(watchdog);
             } else {
-                _registry.watchFor(watchdog);
+                operationRegistry.watchFor(watchdog);
             }
         }
     }
@@ -118,7 +118,7 @@ class OperatorThread extends Thread {
         switch (instruction) {
             case EXECUTE:
                 LOG.info("executing operation '" + operation + "'");
-                operationIds = operation.execute(_context, runningOperations);
+                operationIds = operation.execute(masterContext, runningOperations);
                 break;
             case CANCEL:
                 // just do nothing
@@ -126,7 +126,7 @@ class OperatorThread extends Thread {
                 break;
             case ADD_TO_QUEUE_TAIL:
                 LOG.info("adding operation '" + operation + "' to end of queue");
-                _queue.add(operation);
+                masterQueue.add(operation);
                 break;
             default:
                 throw new IllegalStateException("execution instruction " + instruction + " not handled");
@@ -135,17 +135,17 @@ class OperatorThread extends Thread {
     }
 
     private void runInSafeMode() throws InterruptedException {
-        _safeMode = true;
+        safeMode = true;
         // List<String> knownNodes = protocol.getKnownNodes(); //TODO jz: use known
         // nodes ?
-        List<String> previousLiveNodes = _context.getProtocol().getLiveNodes();
+        List<String> previousLiveNodes = masterContext.getProtocol().getLiveNodes();
         long lastChange = System.currentTimeMillis();
         try {
-            while (previousLiveNodes.isEmpty() || lastChange + _safeModeMaxTime > System.currentTimeMillis()) {
-                LOG.trace("SAFE MODE: No nodes available or state unstable within the last " + _safeModeMaxTime + " ms.");
-                Thread.sleep(_safeModeMaxTime / 4);// TODO jz: listen on life nodes ?
+            while (previousLiveNodes.isEmpty() || lastChange + safeModeMaxTime > System.currentTimeMillis()) {
+                LOG.trace("SAFE MODE: No nodes available or state unstable within the last " + safeModeMaxTime + " ms.");
+                Thread.sleep(safeModeMaxTime / 4);// TODO jz: listen on life nodes ?
 
-                List<String> currentLiveNodes = _context.getProtocol().getLiveNodes();
+                List<String> currentLiveNodes = masterContext.getProtocol().getLiveNodes();
                 if (currentLiveNodes.size() != previousLiveNodes.size()) {
                     lastChange = System.currentTimeMillis();
                     previousLiveNodes = currentLiveNodes;
@@ -153,7 +153,7 @@ class OperatorThread extends Thread {
             }
             LOG.info("SAFE MODE: leaving safe mode with " + previousLiveNodes.size() + " connected nodes");
         } finally {
-            _safeMode = false;
+            safeMode = false;
         }
     }
 

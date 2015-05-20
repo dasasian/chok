@@ -27,9 +27,10 @@ import java.util.Arrays;
  */
 public class RunClassCommand extends Command {
 
-    private Class<?> _clazz;
-    private Method _method;
-    private String[] _methodArgs;
+    private Class<?> clazz;
+    private Method method;
+    private String[] methodArgs;
+
     public RunClassCommand() {
         super("runclass", "<className>", "runs a custom class");
     }
@@ -37,17 +38,17 @@ public class RunClassCommand extends Command {
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) throws Exception {
         CommandLineHelper.validateMinArguments(args, 2);
-        _clazz = ClassUtil.forName(args[1], Object.class);
-        _method = _clazz.getMethod("main", args.getClass());
-        if (_method == null) {
-            throw new IllegalArgumentException("class " + _clazz.getName() + " doesn't have a main method");
+        clazz = ClassUtil.forName(args[1], Object.class);
+        method = clazz.getMethod("main", args.getClass());
+        if (method == null) {
+            throw new IllegalArgumentException("class " + clazz.getName() + " doesn't have a main method");
         }
-        _methodArgs = Arrays.copyOfRange(args, 2, args.length);
+        methodArgs = Arrays.copyOfRange(args, 2, args.length);
     }
 
     @Override
     public void execute(ZkConfiguration zkConf) throws Exception {
-        _method.invoke(null, new Object[]{_methodArgs});
+        method.invoke(null, new Object[]{methodArgs});
     }
 
 }

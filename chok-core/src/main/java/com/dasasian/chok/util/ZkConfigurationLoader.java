@@ -29,6 +29,8 @@ public class ZkConfigurationLoader {
     public static final String ZOOKEEPER_SYNC_LIMIT = "zookeeper.sync-limit";
     public static final String ZOOKEEPER_DATA_DIR = "zookeeper.data-dir";
     public static final String ZOOKEEPER_LOG_DATA_DIR = "zookeeper.log-data-dir";
+    public static final String ZOOKEEPER_SNAPSHOT_RETAIN_COUNT = "zookeeper.snapshot-retain-count";
+    public static final String ZOOKEEPER_PURGE_INTERVAL = "zookeeper.purge-interval";
 
     public static final String ZOOKEEPER_ROOT_PATH = "zookeeper.root-path";
 
@@ -57,15 +59,15 @@ public class ZkConfigurationLoader {
 
         String rootPath = overrideRootPath.isPresent() ? overrideRootPath.get() : chokConfiguration.getProperty(ZOOKEEPER_ROOT_PATH, "/chok");
 
-        return new ZkConfiguration(embedded, servers, timeOut, tickTime, initLimit, syncLimit, dataDir, dataLogDir, rootPath);
+        int snapshotRetainCount = chokConfiguration.getInt(ZOOKEEPER_SNAPSHOT_RETAIN_COUNT, 3);
+
+        int purgeInterval = chokConfiguration.getInt(ZOOKEEPER_PURGE_INTERVAL, 0);
+
+        return new ZkConfiguration(embedded, servers, timeOut, tickTime, initLimit, syncLimit, dataDir, dataLogDir, rootPath, snapshotRetainCount, purgeInterval);
     }
 
     public static ZkConfiguration createConfiguration(int port, String zkRootPath, File zkDataDir, File zkLogDataDir) {
-        return new ZkConfiguration(true, "localhost:" + port, 1000, 2000, 5, 2, zkDataDir.getAbsolutePath(), zkLogDataDir.getAbsolutePath(), zkRootPath);
-    }
-
-    public static ZkConfiguration createConfiguration(String servers, String zkRootPath, File zkDataDir, File zkLogDataDir) {
-        return new ZkConfiguration(true, servers, 1000, 2000, 5, 2, zkDataDir.getAbsolutePath(), zkLogDataDir.getAbsolutePath(), zkRootPath);
+        return new ZkConfiguration(true, "localhost:" + port, 1000, 2000, 5, 2, zkDataDir.getAbsolutePath(), zkLogDataDir.getAbsolutePath(), zkRootPath, 3, 0);
     }
 
 }

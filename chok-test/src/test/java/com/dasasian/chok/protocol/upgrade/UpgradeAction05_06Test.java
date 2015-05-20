@@ -21,6 +21,7 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.upgrade.UpgradeAction05_06.WriteableZkSerializer;
 import com.dasasian.chok.testutil.AbstractZkTest;
 import com.dasasian.chok.testutil.Mocks;
+import com.dasasian.chok.util.ZkChokUtil;
 import org.I0Itec.zkclient.ZkClient;
 import org.junit.Test;
 
@@ -33,13 +34,13 @@ public class UpgradeAction05_06Test extends AbstractZkTest {
     @Test
     @SuppressWarnings("deprecation")
     public void testPreserveIndices() throws Exception {
-        ZkClient zkClientForWriables = new ZkClient(zk.getZkConfiguration().getServers(), 5000, 5000, new WriteableZkSerializer(com.dasasian.chok.index.IndexMetaData.class));
+        ZkClient zkClientForWritables = ZkChokUtil.startZkClient(zk.getZkConfiguration().getServers(), 5000, 5000, new WriteableZkSerializer(com.dasasian.chok.index.IndexMetaData.class));
         String indexName = "index1";
         com.dasasian.chok.index.IndexMetaData oldIndexMD = new com.dasasian.chok.index.IndexMetaData("indexPath", "analyzer", 2, com.dasasian.chok.index.IndexMetaData.IndexState.DEPLOYED);
         String oldIndicesPath = UpgradeAction05_06.getOldIndicesPath(zk.getZkConfiguration());
-        zkClientForWriables.createPersistent(oldIndicesPath);
-        zkClientForWriables.createPersistent(oldIndicesPath + "/" + indexName, oldIndexMD);
-        zkClientForWriables.close();
+        zkClientForWritables.createPersistent(oldIndicesPath);
+        zkClientForWritables.createPersistent(oldIndicesPath + "/" + indexName, oldIndexMD);
+        zkClientForWritables.close();
 
         UpgradeAction05_06 upgradeAction = new UpgradeAction05_06();
         upgradeAction.upgrade(protocol);

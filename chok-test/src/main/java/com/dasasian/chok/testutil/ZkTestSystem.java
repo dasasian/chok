@@ -15,6 +15,7 @@
  */
 package com.dasasian.chok.testutil;
 
+import com.dasasian.chok.protocol.ChokZkSerializer;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
@@ -113,7 +114,9 @@ public class ZkTestSystem extends ExternalResource {
     }
 
     public ZkClient createZkClient() {
-        return new ZkClient("localhost:" + PORT);
+        final ZkClient zkClient = ZkChokUtil.startZkClient("localhost:" + PORT);
+        zkClient.setZkSerializer(new ChokZkSerializer());
+        return zkClient;
     }
 
 //    public void showStructure() {

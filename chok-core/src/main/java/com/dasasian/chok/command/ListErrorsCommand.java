@@ -29,7 +29,7 @@ import java.util.Set;
  */
 public class ListErrorsCommand extends ProtocolCommand {
 
-    private String _indexName;
+    private String indexName;
 
     public ListErrorsCommand() {
         super("listErrors", "<index name>", "Lists all deploy errors for a specified index");
@@ -38,17 +38,17 @@ public class ListErrorsCommand extends ProtocolCommand {
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
         CommandLineHelper.validateMinArguments(args, 2);
-        _indexName = args[1];
+        indexName = args[1];
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        IndexMetaData indexMD = protocol.getIndexMD(_indexName);
+        IndexMetaData indexMD = protocol.getIndexMD(indexName);
         if (indexMD == null) {
-            throw new IllegalArgumentException("index '" + _indexName + "' does not exist");
+            throw new IllegalArgumentException("index '" + indexName + "' does not exist");
         }
         if (!indexMD.hasDeployError()) {
-            System.out.println("No error for index '" + _indexName + "'");
+            System.out.println("No error for index '" + indexName + "'");
             return;
         }
         IndexDeployError deployError = indexMD.getDeployError();

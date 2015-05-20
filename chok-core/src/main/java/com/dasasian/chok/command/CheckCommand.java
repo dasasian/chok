@@ -29,18 +29,18 @@ import java.util.*;
  */
 public class CheckCommand extends ProtocolCommand {
 
-    private boolean _batchMode;
-    private boolean _skipColumnNames;
-    private boolean _sorted;
+    private boolean batchMode;
+    private boolean skipColumnNames;
+    private boolean sorted;
     public CheckCommand() {
         super("check", "[-b] [-n] [-S]", "Analyze index/shard/node status. -b for batch mode, -n don't write column names, -S for sorting the index/shard/node names.");
     }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
-        _batchMode = optionMap.containsKey("-b");
-        _skipColumnNames = optionMap.containsKey("-n");
-        _sorted = optionMap.containsKey("-S");
+        batchMode = optionMap.containsKey("-b");
+        skipColumnNames = optionMap.containsKey("-n");
+        sorted = optionMap.containsKey("-S");
     }
 
     @Override
@@ -49,7 +49,7 @@ public class CheckCommand extends ProtocolCommand {
         System.out.println("            Index Analysis");
         System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         List<String> indices = protocol.getIndices();
-        if (_sorted) {
+        if (sorted) {
             Collections.sort(indices);
         }
         CommandLineHelper.CounterMap<IndexState> indexStateCounterMap = new CommandLineHelper.CounterMap<>();
@@ -62,10 +62,10 @@ public class CheckCommand extends ProtocolCommand {
             }
         }
         CommandLineHelper.Table tableIndexStates = new CommandLineHelper.Table("Index State", "Count");
-        tableIndexStates.setBatchMode(_batchMode);
-        tableIndexStates.setSkipColumnNames(_skipColumnNames);
+        tableIndexStates.setBatchMode(batchMode);
+        tableIndexStates.setSkipColumnNames(skipColumnNames);
         List<IndexState> keySet = new ArrayList<>(indexStateCounterMap.keySet());
-        if (_sorted) {
+        if (sorted) {
             Collections.sort(keySet);
         }
         for (IndexState indexState : keySet) {
@@ -100,9 +100,9 @@ public class CheckCommand extends ProtocolCommand {
         List<String> knownNodes = protocol.getKnownNodes();
         List<String> connectedNodes = protocol.getLiveNodes();
         CommandLineHelper.Table tableNodeLoad = new CommandLineHelper.Table("Node", "Connected", "Shard Status");
-        tableNodeLoad.setBatchMode(_batchMode);
-        tableNodeLoad.setSkipColumnNames(_skipColumnNames);
-        if (_sorted) {
+        tableNodeLoad.setBatchMode(batchMode);
+        tableNodeLoad.setSkipColumnNames(skipColumnNames);
+        if (sorted) {
             Collections.sort(knownNodes);
         }
         int publishedShards = 0;

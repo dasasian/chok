@@ -21,11 +21,12 @@ import org.apache.hadoop.io.Writable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.Serializable;
 
 @Deprecated
 public class IndexMetaData implements Writable {
 
-    private static final long serialVersionUID = 1L;
+//    private static final long serialVersionUID = 1L;
 
     private Text _path = new Text();
     private Text _analyzerClassName = new Text();
