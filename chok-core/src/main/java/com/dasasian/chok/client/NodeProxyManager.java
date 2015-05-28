@@ -20,7 +20,8 @@ import com.google.common.collect.Multiset;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.VersionedProtocol;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -34,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class NodeProxyManager implements INodeProxyManager {
 
-    private final static Logger LOG = Logger.getLogger(NodeProxyManager.class);
+    private final static Logger LOG = LoggerFactory.getLogger(NodeProxyManager.class);
     private final Class<? extends VersionedProtocol> serverClass;
     private final Configuration hadoopConf;
     private final Map<String, VersionedProtocol> node2ProxyMap = new ConcurrentHashMap<>();

@@ -33,7 +33,7 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -50,6 +50,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
 import org.junit.Rule;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.List;
@@ -66,7 +67,7 @@ public class LuceneClientTest extends AbstractTest {
     private static final String INDEX1 = "index1";
     private static final String INDEX2 = "index2";
     private static final String INDEX3 = "index3";
-    private static Logger LOG = Logger.getLogger(LuceneClientTest.class);
+    private static Logger LOG = LoggerFactory.getLogger(LuceneClientTest.class);
     @Rule
     public ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
 

@@ -20,14 +20,15 @@ import com.dasasian.chok.protocol.IAddRemoveListener;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.IZkDataListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class MetricLogger implements IZkDataListener, ConnectedComponent {
 
-    private final static Logger LOG = Logger.getLogger(MetricLogger.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MetricLogger.class);
     protected final InteractionProtocol protocol;
     private final OutputType outputType;
     private final ReentrantLock lock;
@@ -73,7 +74,7 @@ public class MetricLogger implements IZkDataListener, ConnectedComponent {
     protected void logMetric(MetricsRecord metrics) {
         switch (outputType) {
             case Log4J:
-                LOG.info(metrics);
+                LOG.info(metrics.toString());
                 break;
             case SysOut:
                 System.out.println(metrics.toString());

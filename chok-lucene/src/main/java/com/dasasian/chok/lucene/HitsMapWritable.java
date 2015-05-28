@@ -18,7 +18,8 @@ package com.dasasian.chok.lucene;
 import com.dasasian.chok.util.WritableType;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -27,7 +28,7 @@ import java.util.*;
 
 public class HitsMapWritable implements Writable {
 
-    private final static Logger LOG = Logger.getLogger(HitsMapWritable.class);
+    private final static Logger LOG = LoggerFactory.getLogger(HitsMapWritable.class);
 
     private String _nodeName;
     private int _totalHits;

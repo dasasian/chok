@@ -29,7 +29,8 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
 import com.dasasian.chok.util.CollectionUtil;
 import com.dasasian.chok.util.One2ManyListMap;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -38,7 +39,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
 
     public static final char INDEX_SHARD_NAME_SEPARATOR = '#';
     private static final long serialVersionUID = 1L;
-    private static final Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
     private Map<String, List<String>> _newShardsByNodeMap = new HashMap<>();
 
     public static String createShardName(String indexName, String shardPath) {

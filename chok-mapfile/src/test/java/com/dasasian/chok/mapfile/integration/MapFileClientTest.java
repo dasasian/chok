@@ -25,11 +25,12 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.util.ChokException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,7 +50,7 @@ public class MapFileClientTest extends AbstractTest {
     @ClassRule
     public static ChokMiniCluster miniCluster = new ChokMiniCluster(MapFileServer.class, 2, 20000, TestNodeConfigurationFactory.class);
     @SuppressWarnings("unused")
-    private static Logger LOG = Logger.getLogger(MapFileClientTest.class);
+    private static Logger LOG = LoggerFactory.getLogger(MapFileClientTest.class);
     private IMapFileClient client;
 
     @Before

@@ -17,14 +17,15 @@ package com.dasasian.chok.protocol.upgrade;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.Version;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class UpgradeRegistry {
 
-    private static final Logger LOG = Logger.getLogger(UpgradeRegistry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UpgradeRegistry.class);
     private static Map<VersionPair, UpgradeAction> _upgradeActionsByVersion = new HashMap<>();
 
     static {

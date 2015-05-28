@@ -22,8 +22,9 @@ import com.dasasian.chok.testutil.NodeConfigurationFactory;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
@@ -44,7 +45,7 @@ public class MapFileServerTest extends AbstractTest {
     private static final String SHARD_B_1 = "shard_B_1";
     private static final String SHARD_B_2 = "shard_B_2";
     @SuppressWarnings("unused")
-    private static Logger LOG = Logger.getLogger(MapFileServerTest.class);
+    private static Logger LOG = LoggerFactory.getLogger(MapFileServerTest.class);
     private final NodeConfigurationFactory nodeConfigurationFactory = new TestNodeConfigurationFactory(temporaryFolder);
 
     @Test

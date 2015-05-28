@@ -30,7 +30,8 @@ import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import com.google.common.base.Preconditions;
 import org.I0Itec.zkclient.NetworkUtil;
 import org.I0Itec.zkclient.ZkServer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +39,7 @@ import java.util.UUID;
 
 public class Master implements ConnectedComponent {
 
-    protected final static Logger LOG = Logger.getLogger(Master.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(Master.class);
     protected volatile OperatorThread operatorThread;
     protected InteractionProtocol protocol;
     private String masterName;

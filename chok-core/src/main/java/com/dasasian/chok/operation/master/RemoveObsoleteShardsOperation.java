@@ -21,7 +21,8 @@ import com.dasasian.chok.operation.node.OperationResult;
 import com.dasasian.chok.operation.node.ShardUndeployOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +30,7 @@ import java.util.List;
 
 public class RemoveObsoleteShardsOperation implements MasterOperation {
 
-    private final static Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
+    private final static Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
 
     private static final long serialVersionUID = 1L;
     private final String nodeName;

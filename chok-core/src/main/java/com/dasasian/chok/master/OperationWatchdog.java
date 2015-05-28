@@ -23,7 +23,8 @@ import com.dasasian.chok.protocol.IAddRemoveListener;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.IZkDataListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import java.util.List;
  */
 public class OperationWatchdog implements ConnectedComponent, Serializable {
 
-    protected final static Logger LOG = Logger.getLogger(OperationWatchdog.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(OperationWatchdog.class);
     private static final long serialVersionUID = 1L;
     private final String queueElementId;
     private final List<OperationId> openOperationIds;

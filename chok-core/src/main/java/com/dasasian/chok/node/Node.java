@@ -31,7 +31,8 @@ import org.I0Itec.zkclient.exception.ZkInterruptedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
 import org.apache.hadoop.ipc.RPC.Server;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +41,7 @@ import java.util.Collection;
 
 public class Node implements ConnectedComponent {
 
-    protected final static Logger LOG = Logger.getLogger(Node.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(Node.class);
     private final NodeConfiguration nodeConfiguration;
     private final IContentServer contentServer;
     protected InteractionProtocol protocol;
@@ -252,39 +253,39 @@ public class Node implements ConnectedComponent {
     protected static class NodeOperationProcessor implements Runnable {
 
         private final NodeQueue _queue;
-        private final NodeContext _nodeContext;
+        private final NodeContext nodeContext;
 
         public NodeOperationProcessor(NodeQueue queue, NodeContext nodeContext) {
             _queue = queue;
-            _nodeContext = nodeContext;
+            this.nodeContext = nodeContext;
         }
 
         @Override
         public void run() {
             try {
-                while (_nodeContext.getNode().isRunning()) {
+                while (nodeContext.getNode().isRunning()) {
                     try {
                         NodeOperation operation = _queue.peek();
                         OperationResult operationResult = null;
                         try {
                             LOG.info("executing " + operation);
-                            operationResult = operation.execute(_nodeContext);
+                            operationResult = operation.execute(nodeContext);
                         } catch (Exception e) {
-                            LOG.error(_nodeContext.getNode().getName() + ": failed to execute " + operation, e);
-                            operationResult = new OperationResult(_nodeContext.getNode().getName(), e);
+                            LOG.error(nodeContext.getNode().getName() + ": failed to execute " + operation, e);
+                            operationResult = new OperationResult(nodeContext.getNode().getName(), e);
                             ExceptionUtil.rethrowInterruptedException(e);
                         } finally {
                             _queue.complete(operationResult);// only remove after finish
                         }
                     } catch (Throwable e) {
                         ExceptionUtil.rethrowInterruptedException(e);
-                        LOG.fatal(_nodeContext.getNode().getName() + ": operation failure ", e);
+                        LOG.error(nodeContext.getNode().getName() + ": operation failure ", e);
                     }
                 }
             } catch (InterruptedException | ZkInterruptedException e) {
                 Thread.interrupted();
             }
-            LOG.info("node operation processor for " + _nodeContext.getNode().getName() + " stopped");
+            LOG.info("node operation processor for " + nodeContext.getNode().getName() + " stopped");
         }
     }
 }

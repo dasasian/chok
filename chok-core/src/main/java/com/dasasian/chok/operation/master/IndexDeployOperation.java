@@ -28,7 +28,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,7 +40,7 @@ import java.util.List;
 public class IndexDeployOperation extends AbstractIndexOperation {
 
     private static final long serialVersionUID = 1L;
-    private final static Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
+    private final static Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
     private final String indexName;
     private final String indexPath;
     protected IndexMetaData indexMetaData;

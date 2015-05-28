@@ -21,7 +21,8 @@ import com.dasasian.chok.client.INodeSelectionPolicy;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -33,7 +34,7 @@ import java.util.List;
  */
 public class SimpleTestClient implements ISimpleTestClient {
 
-    protected final static Logger LOG = Logger.getLogger(SimpleTestClient.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(SimpleTestClient.class);
     private static final Method SLEEP_METHOD;
     private static final int SLEEP_METHOD_SHARD_ARG_IDX = 1;
     static {

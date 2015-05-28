@@ -20,11 +20,12 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.IZkDataListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IndexDeployFuture implements IIndexDeployFuture, IZkDataListener, ConnectedComponent {
 
-    private static Logger LOG = Logger.getLogger(IndexDeployFuture.class);
+    private static Logger LOG = LoggerFactory.getLogger(IndexDeployFuture.class);
 
     private final InteractionProtocol protocol;
     private final String indexName;

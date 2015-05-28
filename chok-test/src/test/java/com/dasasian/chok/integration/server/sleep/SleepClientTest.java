@@ -31,7 +31,7 @@ import com.dasasian.chok.util.ClassUtil;
 import com.google.common.collect.Lists;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
 import org.fest.assertions.Assertions;
@@ -39,6 +39,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,7 +57,7 @@ import static org.junit.Assert.*;
 public class SleepClientTest extends AbstractTest {
 
     public static final String INDEX_NAME = "index1";
-    protected static final Logger LOG = Logger.getLogger(SleepClientTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(SleepClientTest.class);
     private static final String[] INDEXES_ARRAY = new String[]{INDEX_NAME};
     @Rule
     public ChokMiniCluster miniCluster = new ChokMiniCluster(SleepServer.class, 1, 20000, TestNodeConfigurationFactory.class);

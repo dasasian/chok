@@ -19,7 +19,8 @@ import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.util.NodeConfiguration;
 import com.google.common.collect.ImmutableSet;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +38,7 @@ import java.util.Map;
  */
 public class SimpleTestServer implements IContentServer, ISimpleTestServer {
 
-    private final static Logger LOG = Logger.getLogger(SimpleTestServer.class);
+    private final static Logger LOG = LoggerFactory.getLogger(SimpleTestServer.class);
 
     protected String _nodeName;
 

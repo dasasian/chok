@@ -25,7 +25,7 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.document.Fieldable;
@@ -36,6 +36,7 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.TimeLimitingCollector.TimeExceededException;
 import org.apache.lucene.util.Counter;
 import org.apache.lucene.util.PriorityQueue;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +53,7 @@ import java.util.concurrent.*;
  */
 public class LuceneServer implements IContentServer, ILuceneServer {
 
-    private final static Logger LOG = Logger.getLogger(LuceneServer.class);
+    private final static Logger LOG = LoggerFactory.getLogger(LuceneServer.class);
 
     protected final Map<String, IndexSearcher> searcherByShard = new ConcurrentHashMap<>();
     protected Cache<Filter, CachingWrapperFilter> filterCache;

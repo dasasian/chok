@@ -21,7 +21,8 @@ import com.dasasian.chok.operation.master.MasterOperation.ExecutionInstruction;
 import com.dasasian.chok.protocol.MasterQueue;
 import org.I0Itec.zkclient.ExceptionUtil;
 import org.I0Itec.zkclient.exception.ZkInterruptedException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ import java.util.List;
  */
 class OperatorThread extends Thread {
 
-    protected final static Logger LOG = Logger.getLogger(OperatorThread.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(OperatorThread.class);
 
     private final MasterContext masterContext;
     private final MasterQueue masterQueue;
@@ -90,7 +91,7 @@ class OperatorThread extends Thread {
                     }
                 } catch (Throwable e) {
                     ExceptionUtil.rethrowInterruptedException(e);
-                    LOG.fatal("master operation failure", e);
+                    LOG.error("master operation failure", e);
                 }
             }
         } catch (final InterruptedException | ZkInterruptedException e) {

@@ -22,8 +22,9 @@ import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkServer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.zookeeper.server.DatadirCleanupManager;
+import org.slf4j.LoggerFactory;
 
 /**
  * User: damith.chandrasekara
@@ -31,7 +32,7 @@ import org.apache.zookeeper.server.DatadirCleanupManager;
  */
 public class StartMasterCommand extends Command {
 
-    protected static final Logger LOG = Logger.getLogger(StartMasterCommand.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(StartMasterCommand.class);
     private boolean embeddedMode;
 
     public StartMasterCommand() {

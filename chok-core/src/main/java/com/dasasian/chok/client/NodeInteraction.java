@@ -17,7 +17,8 @@ package com.dasasian.chok.client;
 
 import com.dasasian.chok.util.ChokException;
 import org.apache.hadoop.ipc.VersionedProtocol;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -33,7 +34,7 @@ import java.util.Map;
  */
 class NodeInteraction<T> implements Runnable {
 
-    private static final Logger LOG = Logger.getLogger(NodeInteraction.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NodeInteraction.class);
 
     // Used to make logs easier to read.
     private static int interactionInstanceCounter;

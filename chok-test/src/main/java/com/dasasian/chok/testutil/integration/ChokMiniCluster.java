@@ -30,9 +30,10 @@ import com.dasasian.chok.util.NodeConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.google.common.collect.ImmutableList;
 import org.I0Itec.zkclient.ZkClient;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +48,7 @@ import java.util.List;
  */
 public class ChokMiniCluster extends ExternalResource {
 
-    protected static final Logger LOG = Logger.getLogger(ZkTestSystem.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(ZkTestSystem.class);
 
     private final Class<? extends IContentServer> contentServerClass;
     private final int nodeStartPort;

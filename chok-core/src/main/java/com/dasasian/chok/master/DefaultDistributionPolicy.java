@@ -16,7 +16,8 @@
 package com.dasasian.chok.master;
 
 import com.dasasian.chok.util.CircularList;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -34,7 +35,7 @@ import java.util.*;
  */
 public class DefaultDistributionPolicy implements IDeployPolicy {
 
-    private final static Logger LOG = Logger.getLogger(DefaultDistributionPolicy.class);
+    private final static Logger LOG = LoggerFactory.getLogger(DefaultDistributionPolicy.class);
 
     public Map<String, List<String>> createDistributionPlan(final Map<String, List<String>> currentShard2NodesMap, final Map<String, List<String>> currentNode2ShardsMap, List<String> aliveNodes, final int replicationLevel) {
         if (aliveNodes.size() == 0) {

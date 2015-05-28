@@ -17,7 +17,8 @@ package com.dasasian.chok.node.monitor;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
 import org.I0Itec.zkclient.ExceptionUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -29,7 +30,7 @@ import java.util.List;
 
 public class JmxMonitor implements IMonitor {
 
-    protected final static Logger LOG = Logger.getLogger(JmxMonitor.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(JmxMonitor.class);
 
     protected InteractionProtocol _protocol;
     protected JmxMonitorThread _thread;

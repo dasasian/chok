@@ -27,7 +27,8 @@ import com.google.common.collect.*;
 import org.I0Itec.zkclient.IZkDataListener;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.VersionedProtocol;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -35,7 +36,7 @@ import java.util.regex.Pattern;
 
 public class Client implements ConnectedComponent, AutoCloseable {
 
-    protected final static Logger LOG = Logger.getLogger(Client.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(Client.class);
     private static final String[] ALL_INDICES = new String[]{"*"};
 
     protected final Set<String> indicesToWatch = Sets.newHashSet();

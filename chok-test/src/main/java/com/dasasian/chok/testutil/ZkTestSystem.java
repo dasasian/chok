@@ -21,16 +21,17 @@ import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkServer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class ZkTestSystem extends ExternalResource {
 
     public static final String ZK_ROOT_PATH = "/zk_testsystem";
-    protected static final Logger LOG = Logger.getLogger(ZkTestSystem.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(ZkTestSystem.class);
     private final static int PORT = 10001;
     private TemporaryFolder temporaryFolder;
     private ZkServer zkServer;

@@ -23,10 +23,11 @@ import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.apache.hadoop.io.MapWritable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.lucene.search.Filter;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import java.util.concurrent.*;
  */
 public class LuceneClient implements ILuceneClient {
 
-    protected final static Logger LOG = Logger.getLogger(LuceneClient.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(LuceneClient.class);
     private static final Method SEARCH_METHOD;
     private static final Method SORTED_SEARCH_METHOD;
     private static final Method FILTERED_SEARCH_METHOD;

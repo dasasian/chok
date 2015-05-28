@@ -39,8 +39,9 @@ import org.I0Itec.zkclient.exception.ZkNoNodeException;
 import org.I0Itec.zkclient.exception.ZkNodeExistsException;
 import org.I0Itec.zkclient.util.ZkPathUtil;
 import org.I0Itec.zkclient.util.ZkPathUtil.PathFilter;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.zookeeper.Watcher.Event.KeeperState;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
@@ -54,7 +55,7 @@ import java.util.*;
  */
 public class InteractionProtocol {
 
-    protected final static Logger LOG = Logger.getLogger(InteractionProtocol.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(InteractionProtocol.class);
 
     public static final String DISABLE_INDEX_AUTO_REPAIR_FLAG = "disable-index-auto-repair";
 

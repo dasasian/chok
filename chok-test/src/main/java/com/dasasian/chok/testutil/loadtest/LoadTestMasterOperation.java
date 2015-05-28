@@ -24,7 +24,8 @@ import com.dasasian.chok.testutil.loadtest.query.AbstractQueryExecutor;
 import org.apache.commons.math3.stat.descriptive.StorelessUnivariateStatistic;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ import java.util.List;
 @SuppressWarnings("serial")
 public class LoadTestMasterOperation implements MasterOperation {
 
-    private static final Logger LOG = Logger.getLogger(LoadTestMasterOperation.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LoadTestMasterOperation.class);
     private final int numberOfTesterNodes;
     private final int startRate;
     private final int endRate;

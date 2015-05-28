@@ -27,13 +27,14 @@ import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.Writable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 class UpgradeAction05_06 implements UpgradeAction {
 
-    private static final Logger LOG = Logger.getLogger(UpgradeAction05_06.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UpgradeAction05_06.class);
 
     protected static String getOldIndicesPath(ZkConfiguration zkConf) {
         return zkConf.getRootPath() + "/" + "indexes";

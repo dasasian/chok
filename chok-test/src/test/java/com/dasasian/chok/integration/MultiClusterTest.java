@@ -28,10 +28,11 @@ import com.dasasian.chok.testutil.server.sleep.SleepServer;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.google.common.collect.Lists;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ public class MultiClusterTest extends AbstractTest {
     public static final String INDEX2 = "pool2";
     public static final String ZK_ROOT_PATH1 = "/MultiClusterTest/pool1";
     public static final String ZK_ROOT_PATH2 = "/MultiClusterTest/pool2";
-    protected static final Logger LOG = Logger.getLogger(MultiClusterTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(MultiClusterTest.class);
     private static final int POOL_SIZE_1 = 9;
     private static final int POOL_SIZE_2 = 7;
 

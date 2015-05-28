@@ -23,7 +23,8 @@ import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import java.util.List;
 public class MapFileClient implements IMapFileClient {
 
     @SuppressWarnings("unused")
-    private static final Logger LOG = Logger.getLogger(MapFileClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MapFileClient.class);
     private static final long TIMEOUT = 12000;
     private static final Method GET_METHOD;
     private static final int GET_METHOD_SHARD_ARG_IDX = 1;

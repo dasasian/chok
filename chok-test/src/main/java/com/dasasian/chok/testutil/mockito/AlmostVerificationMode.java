@@ -15,7 +15,7 @@
  */
 package com.dasasian.chok.testutil.mockito;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.mockito.exceptions.Reporter;
 import org.mockito.internal.invocation.InvocationMatcher;
 import org.mockito.internal.invocation.InvocationsFinder;
@@ -24,6 +24,7 @@ import org.mockito.internal.verification.checkers.AtLeastDiscrepancy;
 import org.mockito.invocation.Invocation;
 import org.mockito.invocation.Location;
 import org.mockito.verification.VerificationMode;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ import java.util.List;
  */
 public class AlmostVerificationMode implements VerificationMode {
 
-    private static final Logger LOG = Logger.getLogger(AlmostVerificationMode.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AlmostVerificationMode.class);
 
     private final int _wantedNumberOfInvocations;
     private final int _aberration;

@@ -24,12 +24,13 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.exception.ZkNoNodeException;
-import org.apache.log4j.Logger;
 import org.mockito.Mockito;
 import org.mockito.exceptions.base.MockitoAssertionError;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.Stubber;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
@@ -42,7 +43,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TestUtil {
 
-    private static final Logger LOG = Logger.getLogger(TestUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestUtil.class);
 
     /**
      * This waits until the provided {@link Callable} returns an object that is

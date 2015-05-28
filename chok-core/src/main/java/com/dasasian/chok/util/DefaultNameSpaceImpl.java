@@ -19,14 +19,15 @@ import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.IDefaultNameSpace;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.exception.ZkNodeExistsException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implements the default name space in zookeeper for this chok instance.
  */
 public class DefaultNameSpaceImpl implements IDefaultNameSpace {
 
-    private static final Logger LOG = Logger.getLogger(DefaultNameSpaceImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultNameSpaceImpl.class);
 
     private ZkConfiguration _conf;
 

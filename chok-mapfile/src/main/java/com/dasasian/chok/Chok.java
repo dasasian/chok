@@ -22,7 +22,8 @@ import com.dasasian.chok.client.IndexState;
 import com.dasasian.chok.command.*;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.StringUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -31,7 +32,7 @@ import java.util.*;
  */
 public class Chok {
 
-    protected static final Logger LOG = Logger.getLogger(CommandLineHelper.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(CommandLineHelper.class);
     private final static List<com.dasasian.chok.command.Command> COMMANDS = new ArrayList<>();
     protected static com.dasasian.chok.command.Command START_NODE_COMMAND = new StartMapFileNodeCommand();
     static {

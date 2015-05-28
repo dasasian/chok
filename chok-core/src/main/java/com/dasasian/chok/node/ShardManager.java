@@ -23,7 +23,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.util.Progressable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -35,7 +36,7 @@ import java.util.Collections;
 
 public class ShardManager {
 
-    protected final static Logger LOG = Logger.getLogger(ShardManager.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(ShardManager.class);
     private final File shardsFolder;
     private final ThrottleSemaphore throttleSemaphore;
 

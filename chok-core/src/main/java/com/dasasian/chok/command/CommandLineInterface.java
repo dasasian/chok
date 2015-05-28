@@ -18,7 +18,8 @@ package com.dasasian.chok.command;
 import com.dasasian.chok.util.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -27,7 +28,7 @@ import java.util.*;
  */
 public class CommandLineInterface {
 
-    private static final Logger LOG = Logger.getLogger(CommandLineInterface.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CommandLineInterface.class);
 
     private static final Set<String> COMMAND_STRINGS = Sets.newHashSet();
     private final static List<Command> COMMANDS = Lists.newArrayList();

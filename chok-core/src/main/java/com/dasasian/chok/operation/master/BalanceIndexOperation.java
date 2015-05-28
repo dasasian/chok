@@ -23,14 +23,15 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import org.I0Itec.zkclient.ExceptionUtil;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class BalanceIndexOperation extends AbstractIndexOperation {
 
     private static final long serialVersionUID = 1L;
-    private final static Logger LOG = Logger.getLogger(AbstractIndexOperation.class);
+    private final static Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
     private final String _indexName;
 
     public BalanceIndexOperation(String indexName) {

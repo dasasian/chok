@@ -27,7 +27,7 @@ import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.util.StringUtil;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.google.common.collect.Lists;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
@@ -35,6 +35,7 @@ import org.apache.lucene.util.Version;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -192,7 +193,7 @@ public class LuceneSearchIntegrationTest extends AbstractTest {
 
     protected static class SearchThread extends Thread {
 
-        private static Logger LOG = Logger.getLogger(SearchThread.class);
+        private static Logger LOG = LoggerFactory.getLogger(SearchThread.class);
         private final long expectedTotalHitCount;
         private volatile boolean stopped;
         private ZkConfiguration zkConfiguration;

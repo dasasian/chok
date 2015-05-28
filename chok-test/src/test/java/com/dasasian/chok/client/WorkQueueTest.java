@@ -18,8 +18,9 @@ package com.dasasian.chok.client;
 import com.dasasian.chok.client.WorkQueue.INodeInteractionFactory;
 import com.dasasian.chok.testutil.AbstractTest;
 import org.apache.hadoop.ipc.VersionedProtocol;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
@@ -32,7 +33,7 @@ import static org.junit.Assert.*;
 public class WorkQueueTest extends AbstractTest {
 
     @SuppressWarnings("unused")
-    private static final Logger LOG = Logger.getLogger(WorkQueueTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WorkQueueTest.class);
 
     /**
      * Returns an interaction factory that ignores all calls and does nothing.

@@ -20,8 +20,9 @@ import com.dasasian.chok.testutil.TestZkConfiguration;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestClient;
 import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.Ignore;
+import org.slf4j.LoggerFactory;
 
 /**
  * - start a chok-cluster<br>
@@ -31,7 +32,7 @@ import org.junit.Ignore;
 @Ignore
 public class DeployUndeploySearchInLoop {
 
-    private static Logger LOG = Logger.getLogger(DeployUndeploySearchInLoop.class);
+    private static Logger LOG = LoggerFactory.getLogger(DeployUndeploySearchInLoop.class);
 
     public static void main(String[] args) throws Exception {
         SimpleTestClient testClient = new SimpleTestClient();
@@ -65,7 +66,7 @@ public class DeployUndeploySearchInLoop {
             }
             Thread.sleep(5000);
             runThroughs++;
-            LOG.info(testClient.getClient().getSelectionPolicy());
+            LOG.info(testClient.getClient().getSelectionPolicy().toString());
         }
     }
 

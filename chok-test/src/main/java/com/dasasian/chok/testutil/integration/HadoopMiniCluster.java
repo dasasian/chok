@@ -21,13 +21,14 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hdfs.server.common.HdfsConstants.StartupOption;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class HadoopMiniCluster {
 
-    private static final Logger LOG = Logger.getLogger(HadoopMiniCluster.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HadoopMiniCluster.class);
     private final int _namenodePort;
     private final int _jobtrackerPort;
     private final int _datanodeCount;

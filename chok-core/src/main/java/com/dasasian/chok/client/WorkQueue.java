@@ -16,7 +16,8 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.client.ClientResult.IClosedListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -36,7 +37,7 @@ import java.util.concurrent.RejectedExecutionException;
  */
 class WorkQueue<T> implements INodeExecutor {
 
-    private static final Logger LOG = Logger.getLogger(WorkQueue.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WorkQueue.class);
 
     private static int instanceCounter = 0;
     private final INodeInteractionFactory<T> interactionFactory;

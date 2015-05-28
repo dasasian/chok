@@ -20,7 +20,8 @@ import com.dasasian.chok.client.IDeployClient;
 import com.dasasian.chok.client.IIndexDeployFuture;
 import com.dasasian.chok.client.IndexState;
 import com.dasasian.chok.protocol.InteractionProtocol;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CommandLineHelper {
 
-    protected static final Logger LOG = Logger.getLogger(CommandLineHelper.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(CommandLineHelper.class);
 
     public static Map<String, String> parseOptionMap(final String[] args) {
         Map<String, String> optionMap = new HashMap<>();

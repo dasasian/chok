@@ -16,7 +16,8 @@
 package com.dasasian.chok.master;
 
 import com.dasasian.chok.operation.master.MasterOperation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,7 +25,7 @@ import java.util.List;
 
 public class OperationRegistry {
 
-    private final static Logger LOG = Logger.getLogger(OperationRegistry.class);
+    private final static Logger LOG = LoggerFactory.getLogger(OperationRegistry.class);
 
     private final MasterContext context;
     private final List<OperationWatchdog> watchdogs = new ArrayList<>();

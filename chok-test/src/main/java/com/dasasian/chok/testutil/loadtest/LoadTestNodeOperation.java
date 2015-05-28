@@ -20,7 +20,8 @@ import com.dasasian.chok.operation.node.NodeOperation;
 import com.dasasian.chok.operation.node.OperationResult;
 import com.dasasian.chok.testutil.loadtest.query.AbstractQueryExecutor;
 import org.I0Itec.zkclient.ExceptionUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Random;
@@ -32,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @SuppressWarnings("serial")
 public class LoadTestNodeOperation implements NodeOperation {
 
-    protected final static Logger LOG = Logger.getLogger(LoadTestNodeOperation.class);
+    protected final static Logger LOG = LoggerFactory.getLogger(LoadTestNodeOperation.class);
     protected final AbstractQueryExecutor _queryExecutor;
     protected final long _runTime;
     protected Random _random = new Random(System.currentTimeMillis());

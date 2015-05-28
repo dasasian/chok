@@ -16,7 +16,8 @@
 package com.dasasian.chok.util;
 
 import com.google.common.base.Optional;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serializable;
@@ -27,7 +28,7 @@ public class ChokConfiguration implements Serializable {
 
     public static final String CHOK_CONFIGURATION_HOME = "chok.configuration.home";
     @SuppressWarnings("unused")
-    private final static Logger LOG = Logger.getLogger(ChokConfiguration.class);
+    private final static Logger LOG = LoggerFactory.getLogger(ChokConfiguration.class);
     private static final long serialVersionUID = 1L;
     protected Properties properties;
 

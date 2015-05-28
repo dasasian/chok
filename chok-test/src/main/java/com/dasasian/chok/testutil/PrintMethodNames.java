@@ -15,14 +15,15 @@
  */
 package com.dasasian.chok.testutil;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
+import org.slf4j.LoggerFactory;
 
 public class PrintMethodNames implements MethodRule {
 
-    protected static final Logger LOG = Logger.getLogger(PrintMethodNames.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(PrintMethodNames.class);
 
     private String _methodName;
 

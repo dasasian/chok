@@ -17,7 +17,8 @@ package com.dasasian.chok.operation.node;
 
 import com.dasasian.chok.node.NodeContext;
 import org.I0Itec.zkclient.ExceptionUtil;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.Set;
 public abstract class AbstractShardOperation implements NodeOperation {
 
     private static final long serialVersionUID = 1L;
-    private final static Logger LOG = Logger.getLogger(AbstractShardOperation.class);
+    private final static Logger LOG = LoggerFactory.getLogger(AbstractShardOperation.class);
 
     private Map<String, String> shardPathsByShardNames = new LinkedHashMap<>(3);
 

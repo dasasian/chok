@@ -19,7 +19,8 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.zip.ZipEntry;
@@ -33,7 +34,7 @@ public class FileUtil {
             return !name.startsWith(".");
         }
     };
-    private final static Logger LOG = Logger.getLogger(FileUtil.class);
+    private final static Logger LOG = LoggerFactory.getLogger(FileUtil.class);
     private static final int BUFFER = 4096;
 
     public static void deleteFolder(File folder) {

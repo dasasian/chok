@@ -29,10 +29,11 @@ import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.loadtest.LoadTestMasterOperation;
 import com.dasasian.chok.testutil.server.sleep.SleepServer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 
@@ -43,7 +44,7 @@ public class LuceneLoadTest extends AbstractZkTest {
 
     public static final String LUCENE_ZK_ROOT_PATH = "/LuceneLoadIntegrationTest/luceneCluster";
     public static final String LOAD_TEST_ZK_ROOT_PATH = "/LuceneLoadIntegrationTest/loadTestCluster";
-    protected static final Logger LOG = Logger.getLogger(LuceneLoadTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(LuceneLoadTest.class);
     private static final int NODE_COUNT_LOAD_TEST = 3;
     private static final int NODE_COUNT_LUCENE = 5;
     private ChokMiniCluster luceneCluster;

@@ -16,8 +16,8 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.util.ChokException;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -41,7 +41,7 @@ import java.util.*;
  */
 public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResult<T>.Entry> {
 
-    private static final Logger LOG = Logger.getLogger(ClientResult.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ClientResult.class);
     private final Set<String> allShards;
     private final Set<String> seenShards = new HashSet<>();
     private final Set<Entry> entries = new HashSet<>();
@@ -111,7 +111,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
             if (LOG.isTraceEnabled()) {
                 LOG.trace(String.format("Adding result %s", entry));
             }
-            if (LOG.isEnabledFor(Level.WARN)) {
+            if (LOG.isWarnEnabled()) {
                 for (String shard : entry.shards) {
                     if (seenShards.contains(shard)) {
                         LOG.warn("Duplicate occurances of shard " + shard);
@@ -166,7 +166,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
             if (LOG.isTraceEnabled()) {
                 LOG.trace(String.format("Adding error %s", entry));
             }
-            if (LOG.isEnabledFor(Level.WARN)) {
+            if (LOG.isWarnEnabled()) {
                 for (String shard : entry.shards) {
                     if (seenShards.contains(shard)) {
                         LOG.warn("Duplicate occurances of shard " + shard);

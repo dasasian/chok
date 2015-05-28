@@ -19,8 +19,9 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.NodeConfigurationFactory;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.server.sleep.SleepServer;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.*;
 
@@ -30,7 +31,7 @@ import static org.junit.Assert.*;
 public class SleepServerTest extends AbstractTest {
 
     @SuppressWarnings("unused")
-    private static Logger LOG = Logger.getLogger(SleepServerTest.class);
+    private static Logger LOG = LoggerFactory.getLogger(SleepServerTest.class);
     private final NodeConfigurationFactory nodeConfigurationFactory = new TestNodeConfigurationFactory(temporaryFolder);
 
     @Test

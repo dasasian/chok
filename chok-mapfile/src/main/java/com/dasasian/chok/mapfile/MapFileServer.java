@@ -24,7 +24,8 @@ import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +37,7 @@ import java.util.concurrent.*;
  */
 public class MapFileServer implements IContentServer, IMapFileServer {
 
-    private final static Logger LOG = Logger.getLogger(MapFileServer.class);
+    private final static Logger LOG = LoggerFactory.getLogger(MapFileServer.class);
 
     private final Configuration conf = new Configuration();
     private final FileSystem fileSystem;
