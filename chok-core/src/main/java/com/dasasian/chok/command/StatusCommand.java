@@ -28,6 +28,7 @@ import java.util.List;
  */
 public class StatusCommand extends ProtocolCommand {
 
+    // todo
     private boolean detailedView;
 
     public StatusCommand() {
@@ -41,12 +42,10 @@ public class StatusCommand extends ProtocolCommand {
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) {
-        boolean isIndexAutoRepairEnabled = protocol.isIndexAutoRepairEnabled();
-        System.out.println("Index Auto Repair: " + (isIndexAutoRepairEnabled ? "enabled" : "disabled"));
 
         final int knownNodesCount = protocol.getKnownNodes().size();
         final int liveNodesCount = protocol.getLiveNodes().size();
-        System.out.println("Nodes (active/known): " + liveNodesCount + "/" + knownNodesCount);
+        final boolean nodesHealthy = liveNodesCount == knownNodesCount;
 
         List<String> indices = protocol.getIndices();
         int deployedCount = 0;
@@ -61,7 +60,14 @@ public class StatusCommand extends ProtocolCommand {
                 }
             }
         }
+        final boolean indicesHealthy = (indices.size() == deployedCount) && (deployedCount == balancedCount);
+
+        final boolean healthy = nodesHealthy && indicesHealthy;
+        System.out.println("Healthy: "+healthy);
+        System.out.println("Nodes (active/known): " + liveNodesCount + "/" + knownNodesCount);
         System.out.println("Indices (deployed/balanced/known): " + deployedCount + "/" + balancedCount + "/" + indices.size());
 
+        boolean isIndexAutoRepairEnabled = protocol.isIndexAutoRepairEnabled();
+        System.out.println("Index Auto Repair: " + (isIndexAutoRepairEnabled ? "enabled" : "disabled"));
     }
 }

@@ -15,7 +15,6 @@
  */
 package com.dasasian.chok.command;
 
-import com.dasasian.chok.master.Master;
 import com.dasasian.chok.operation.master.CheckIndicesOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.ZkConfiguration;
@@ -26,10 +25,10 @@ import com.dasasian.chok.util.ZkConfiguration;
  */
 public class IndexAutoRepairCommand extends ProtocolCommand {
 
-    private boolean enable;
+    private Boolean enable = null;
 
     public IndexAutoRepairCommand() {
-        super("indexAutoRepair", "enable/disable", "Enable or Disable index auto repair");
+        super("indexAutoRepair", "enable/disable/state", "Enable or Disable index auto repair");
     }
 
     @Override
@@ -40,21 +39,28 @@ public class IndexAutoRepairCommand extends ProtocolCommand {
             enable = true;
         } else if ("disable".equalsIgnoreCase(enableDisable)) {
             enable = false;
+        } else if ("state".equalsIgnoreCase(enableDisable)) {
+            enable = null;
+        } else {
+            throw new RuntimeException("Invalid value for enable/disable:" + enableDisable);
         }
-        throw new RuntimeException("Invalid value for enable/disable:" + enableDisable);
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        if(enable) {
-            protocol.disableIndexAutoRepair();
+        if (enable == null) {
+            String state = protocol.isIndexAutoRepairEnabled() ? "enabled" : "disabled";
+            System.out.println("Index auto repair state is "+state);
+        }
+        else if (enable) {
+            protocol.enableIndexAutoRepair();
             System.out.println("Enabled index auto repair");
             // add check indices operation
             System.out.println("Checking indexes");
             protocol.addMasterOperation(new CheckIndicesOperation());
         }
         else {
-            protocol.enableIndexAutoRepair();
+            protocol.disableIndexAutoRepair();
             System.out.println("Disabled index auto repair");
         }
     }
