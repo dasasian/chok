@@ -22,11 +22,8 @@ import com.dasasian.chok.util.ZkConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -63,10 +60,6 @@ public class HealthcheckCommand extends ProtocolCommand {
         nodesHealthcheckResult.put("healthy", (liveNodesCount == knownNodesCount));
         nodesHealthcheckResult.put("message", "Nodes (active/known): " + liveNodesCount + "/" + knownNodesCount);
         healthchecks.put("nodes", nodesHealthcheckResult);
-
-        boolean isIndexAutoRepairEnabled = protocol.isIndexAutoRepairEnabled();
-        System.out.println("Index Auto Repair: " + (isIndexAutoRepairEnabled ? "enabled" : "disabled"));
-
 
         Map<String, Object> indicesHealthcheckResult = Maps.newHashMap();
         List<String> indices = protocol.getIndices();
