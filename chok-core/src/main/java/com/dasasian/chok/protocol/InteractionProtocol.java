@@ -569,15 +569,15 @@ public class InteractionProtocol {
     }
 
     public void disableIndexAutoRepair() {
-        setFlag(DISABLE_INDEX_AUTO_REPAIR_FLAG);
+        zkClient.createPersistent(zkConf.getPath(PathDef.FLAGS, DISABLE_INDEX_AUTO_REPAIR_FLAG));
     }
 
     public void enableIndexAutoRepair() {
-        removeFlag(DISABLE_INDEX_AUTO_REPAIR_FLAG);
+        zkClient.delete(zkConf.getPath(PathDef.FLAGS, DISABLE_INDEX_AUTO_REPAIR_FLAG));
     }
 
     public boolean isIndexAutoRepairEnabled() {
-        return !flagExists(DISABLE_INDEX_AUTO_REPAIR_FLAG);
+        return !zkClient.exists(zkConf.getPath(PathDef.FLAGS, DISABLE_INDEX_AUTO_REPAIR_FLAG));
     }
 
     static class ListenerAdapter {
