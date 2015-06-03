@@ -30,7 +30,7 @@ public interface ISleepClient {
      * @return the total number of shards referenced (note: sleeping is done per-node).
      * @throws com.dasasian.chok.util.ChokException If an IO exception occurs.
      */
-    public int sleep(long msec) throws ChokException;
+    int sleep(long msec) throws ChokException;
 
     /**
      * Sleep for the given number of milliseconds on all nodes.
@@ -42,7 +42,7 @@ public interface ISleepClient {
      * @return the total number of shards referenced (note: sleeping is done per-node).
      * @throws com.dasasian.chok.util.ChokException If an IO exception occurs.
      */
-    public int sleep(long msec, int delta) throws ChokException;
+    int sleep(long msec, int delta) throws ChokException;
 
     /**
      * Sleep for the given number of milliseconds.
@@ -54,7 +54,7 @@ public interface ISleepClient {
      * @return the total number of shards referenced (note: sleeping is done per-node).
      * @throws com.dasasian.chok.util.ChokException If an IO exception occurs.
      */
-    public int sleepShards(long msec, String[] shards) throws ChokException;
+    int sleepShards(long msec, String[] shards) throws ChokException;
 
     /**
      * Sleep for the given number of milliseconds, +- a random delta.
@@ -69,7 +69,7 @@ public interface ISleepClient {
      * @return the total number of shards referenced (note: sleeping is done per-node).
      * @throws com.dasasian.chok.util.ChokException If an IO exception occurs.
      */
-    public int sleepShards(long msec, int delta, String[] shards) throws ChokException;
+    int sleepShards(long msec, int delta, String[] shards) throws ChokException;
 
     /**
      * Sleep for the given number of milliseconds.
@@ -81,7 +81,7 @@ public interface ISleepClient {
      * @return the total number of shards referenced (note: sleeping is done per-node).
      * @throws com.dasasian.chok.util.ChokException If an IO exception occurs.
      */
-    public int sleepIndices(long msec, String[] indices) throws ChokException;
+    int sleepIndices(long msec, String[] indices) throws ChokException;
 
     /**
      * Sleep for the given number of milliseconds, +- a random delta.
@@ -96,11 +96,11 @@ public interface ISleepClient {
      * @return the total number of shards referenced (note: sleeping is done per-node).
      * @throws com.dasasian.chok.util.ChokException If an IO exception occurs.
      */
-    public int sleepIndices(long msec, int delta, String[] indices) throws ChokException;
+    int sleepIndices(long msec, int delta, String[] indices) throws ChokException;
 
     /**
      * Closes down the client. Does nothing.
      */
-    public void close();
+    void close();
 
 }

@@ -30,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.endsWith;
 import static org.mockito.Mockito.*;
 
 public class MasterQueueTest extends AbstractZkTest {

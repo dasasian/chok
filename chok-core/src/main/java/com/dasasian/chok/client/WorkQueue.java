@@ -67,11 +67,7 @@ class WorkQueue<T> implements INodeExecutor {
      * @param args                 The arguments to pass in to the method on the server side.
      */
     protected WorkQueue(INodeProxyManager shardManager, Set<String> allShards, Method method, int shardArrayParamIndex, Object... args) {
-        this(new INodeInteractionFactory<T>() {
-            public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results) {
-                return new NodeInteraction<>(method, args, shardArrayParamIndex, node, nodeShardMap, tryCount, maxTryCount, shardManager, nodeExecutor, results);
-            }
-        }, shardManager, allShards, method, shardArrayParamIndex, args);
+        this(NodeInteraction::new, shardManager, allShards, method, shardArrayParamIndex, args);
     }
     /**
      * Used by unit tests. By providing an alternate factory, this class can be tested without creating
@@ -173,7 +169,7 @@ class WorkQueue<T> implements INodeExecutor {
      * @return the results of the call, which will be closed.
      */
     public ClientResult<T> getResults(long timeout) {
-        return getResults(new ResultCompletePolicy<T>(timeout, true));
+        return getResults(new ResultCompletePolicy<>(timeout, true));
     }
 
     /**
@@ -191,7 +187,7 @@ class WorkQueue<T> implements INodeExecutor {
      * @return the results of the call, which will be closed.
      */
     public ClientResult<T> getResults(long timeout, boolean shutdown) {
-        return getResults(new ResultCompletePolicy<T>(timeout, shutdown));
+        return getResults(new ResultCompletePolicy<>(timeout, shutdown));
     }
 
     /**
@@ -253,7 +249,7 @@ class WorkQueue<T> implements INodeExecutor {
     }
 
     public interface INodeInteractionFactory<T> {
-        public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results);
+        Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results);
     }
 
 }

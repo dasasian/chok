@@ -119,19 +119,17 @@ public class MapFileClientTest extends AbstractTest {
         final AtomicInteger count = new AtomicInteger(0);
         for (int i = 0; i < 15; i++) {
             final Random rand2 = new Random(rand.nextInt());
-            Thread t = new Thread(new Runnable() {
-                public void run() {
-                    for (int j = 0; j < 300; j++) {
-                        int n = rand2.nextInt(entries.size());
-                        String key = keys.get(n);
-                        try {
-                            assertEquals(entries.get(key), getOneResult(key, INDEX_BOTH));
-                            count.incrementAndGet();
-                        } catch (Exception e) {
-                            System.err.println(e);
-                            exceptions.add(e);
-                            break;
-                        }
+            Thread t = new Thread(() -> {
+                for (int j = 0; j < 300; j++) {
+                    int n = rand2.nextInt(entries.size());
+                    String key = keys.get(n);
+                    try {
+                        assertEquals(entries.get(key), getOneResult(key, INDEX_BOTH));
+                        count.incrementAndGet();
+                    } catch (Exception e) {
+                        LOG.error("Exception thrown:", e);
+                        exceptions.add(e);
+                        break;
                     }
                 }
             });

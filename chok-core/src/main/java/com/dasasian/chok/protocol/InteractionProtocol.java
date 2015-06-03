@@ -518,12 +518,7 @@ public class InteractionProtocol {
                     nonViPathes.add(zkConf.getPath(pathDef));
                 }
             }
-            string = ZkPathUtil.toString(zkClient, zkConf.getRootPath(), new PathFilter() {
-                @Override
-                public boolean showChilds(String path) {
-                    return !nonViPathes.contains(path);
-                }
-            });
+            string = ZkPathUtil.toString(zkClient, zkConf.getRootPath(), path -> !nonViPathes.contains(path));
         }
         System.out.println(string);
     }

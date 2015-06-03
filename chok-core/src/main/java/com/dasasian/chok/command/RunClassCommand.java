@@ -27,7 +27,6 @@ import java.util.Arrays;
  */
 public class RunClassCommand extends Command {
 
-    private Class<?> clazz;
     private Method method;
     private String[] methodArgs;
 
@@ -38,7 +37,7 @@ public class RunClassCommand extends Command {
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) throws Exception {
         CommandLineHelper.validateMinArguments(args, 2);
-        clazz = ClassUtil.forName(args[1], Object.class);
+        final Class<?> clazz = ClassUtil.forName(args[1], Object.class);
         method = clazz.getMethod("main", args.getClass());
         if (method == null) {
             throw new IllegalArgumentException("class " + clazz.getName() + " doesn't have a main method");

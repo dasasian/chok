@@ -24,57 +24,56 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
 
 public class NodeOperationProcessorTest {
 
-    private NodeQueue _queue = Mockito.mock(NodeQueue.class);
-    private NodeContext _context = Mockito.mock(NodeContext.class);
-    private Node _node = Mockito.mock(Node.class);
-    private NodeOperationProcessor _processor;
+    private NodeQueue queue = Mockito.mock(NodeQueue.class);
+    private NodeContext context = Mockito.mock(NodeContext.class);
+    private NodeOperationProcessor processor;
 
     public NodeOperationProcessorTest() throws InterruptedException {
-        Mockito.when(_context.getNode()).thenReturn(_node);
-        Mockito.when(_node.isRunning()).thenReturn(true);
-        Mockito.when(_node.getName()).thenReturn("aNode");
-        _processor = new NodeOperationProcessor(_queue, _context);
+        final Node node = Mockito.mock(Node.class);
+        Mockito.when(context.getNode()).thenReturn(node);
+        Mockito.when(node.isRunning()).thenReturn(true);
+        Mockito.when(node.getName()).thenReturn("aNode");
+        processor = new NodeOperationProcessor(queue, context);
         // when(queue.peek()).thenAnswer(new SleepingAnswer());
     }
 
     @Test(timeout = 10000)
     public void testInterruptedException_Queue() throws Exception {
-        Mockito.when(_queue.peek()).thenThrow(new InterruptedException());
-        _processor.run();
+        Mockito.when(queue.peek()).thenThrow(new InterruptedException());
+        processor.run();
     }
 
     @Test(timeout = 10000)
     public void testInterruptedException_Queue_Zk() throws Exception {
-        Mockito.when(_queue.peek()).thenThrow(new ZkInterruptedException(new InterruptedException()));
-        _processor.run();
+        Mockito.when(queue.peek()).thenThrow(new ZkInterruptedException(new InterruptedException()));
+        processor.run();
     }
 
     @Test(timeout = 10000)
     public void testInterruptedException_Operation() throws Exception {
         NodeOperation nodeOperation = Mockito.mock(NodeOperation.class);
-        Mockito.when(_queue.peek()).thenReturn(nodeOperation);
-        Mockito.when(nodeOperation.execute(_context)).thenThrow(new InterruptedException());
-        _processor.run();
+        Mockito.when(queue.peek()).thenReturn(nodeOperation);
+        Mockito.when(nodeOperation.execute(context)).thenThrow(new InterruptedException());
+        processor.run();
     }
 
     @Test(timeout = 10000)
     public void testInterruptedException_Operation_ZK() throws Exception {
         NodeOperation nodeOperation = Mockito.mock(NodeOperation.class);
-        Mockito.when(_queue.peek()).thenReturn(nodeOperation);
-        Mockito.when(nodeOperation.execute(_context)).thenThrow(new ZkInterruptedException(new InterruptedException()));
-        _processor.run();
+        Mockito.when(queue.peek()).thenReturn(nodeOperation);
+        Mockito.when(nodeOperation.execute(context)).thenThrow(new ZkInterruptedException(new InterruptedException()));
+        processor.run();
     }
 
     @Test(timeout = 10000)
     public void testDontStopOnOOM() throws Exception {
-        Mockito.when(_queue.peek()).thenThrow(new OutOfMemoryError("test exception")).thenAnswer(new SleepingAnswer());
+        Mockito.when(queue.peek()).thenThrow(new OutOfMemoryError("test exception")).thenAnswer(new SleepingAnswer());
         Thread thread = new Thread() {
             public void run() {
-                _processor.run();
+                processor.run();
             }
 
         };
@@ -82,6 +81,6 @@ public class NodeOperationProcessorTest {
         Thread.sleep(500);
         assertEquals(true, thread.isAlive());
         thread.interrupt();
-        Mockito.verify(_queue, Mockito.atLeast(2)).peek();
+        Mockito.verify(queue, Mockito.atLeast(2)).peek();
     }
 }

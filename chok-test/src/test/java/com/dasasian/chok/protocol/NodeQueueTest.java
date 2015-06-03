@@ -24,7 +24,6 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.endsWith;
 import static org.mockito.Mockito.*;
 
 public class NodeQueueTest extends AbstractZkTest {

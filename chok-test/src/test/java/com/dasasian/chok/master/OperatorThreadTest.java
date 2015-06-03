@@ -33,12 +33,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.notNull;
-import static org.mockito.Mockito.*;
 
 @SuppressWarnings("unchecked")
 public class OperatorThreadTest {
@@ -154,12 +151,7 @@ public class OperatorThreadTest {
     }
 
     private void waitUntilLeaveSafeMode(final OperatorThread operatorThread) throws Exception {
-        TestUtil.waitUntil(false, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return operatorThread.isInSafeMode();
-            }
-        }, TimeUnit.SECONDS, 30);
+        TestUtil.waitUntil(false, operatorThread::isInSafeMode, TimeUnit.SECONDS, 30);
     }
 
     @Test(timeout = 10000)

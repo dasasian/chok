@@ -170,21 +170,19 @@ public class MultiClusterTest extends AbstractTest {
         final List<Throwable> throwables = Collections.synchronizedList(new ArrayList<>());
         for (int i = 0; i < 15; i++) {
             final Random rand2 = new Random(rand.nextInt());
-            Thread thread = new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        for (int j = 0; j < 400; j++) {
-                            if (rand2.nextBoolean()) {
-                                assertEquals(NUM_SHARDS_1, client1.sleep(rand2.nextInt(2), rand2.nextInt(2)));
-                            }
-                            if (rand2.nextBoolean()) {
-                                assertEquals(NUM_SHARDS_2, client2.sleep(rand2.nextInt(2), rand2.nextInt(2)));
-                            }
+            Thread thread = new Thread(() -> {
+                try {
+                    for (int j = 0; j < 400; j++) {
+                        if (rand2.nextBoolean()) {
+                            assertEquals(NUM_SHARDS_1, client1.sleep(rand2.nextInt(2), rand2.nextInt(2)));
                         }
-                    } catch (Throwable t) {
-                        LOG.error("Error! ", t);
-                        throwables.add(t);
+                        if (rand2.nextBoolean()) {
+                            assertEquals(NUM_SHARDS_2, client2.sleep(rand2.nextInt(2), rand2.nextInt(2)));
+                        }
                     }
+                } catch (Throwable t) {
+                    LOG.error("Error! ", t);
+                    throwables.add(t);
                 }
             });
             threads.add(thread);
@@ -195,7 +193,7 @@ public class MultiClusterTest extends AbstractTest {
         }
         LOG.info("Took " + (System.currentTimeMillis() - start) + " msec");
         for (Throwable t : throwables) {
-            System.err.println(t);
+            LOG.error("Exception thrown:", t);
             t.printStackTrace();
         }
         assertTrue(throwables.isEmpty());

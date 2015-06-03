@@ -134,7 +134,7 @@ public class JmxMonitor implements IMonitor {
         }
 
         private Long getValue(OperatingSystemMXBean operatingSystemMXBean, String methodName) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-            Method method = operatingSystemMXBean.getClass().getMethod(methodName, new Class[0]);
+            Method method = operatingSystemMXBean.getClass().getMethod(methodName);
             method.setAccessible(true);
             return (Long) method.invoke(operatingSystemMXBean);
         }

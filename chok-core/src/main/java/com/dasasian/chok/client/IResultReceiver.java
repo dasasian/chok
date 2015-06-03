@@ -26,7 +26,7 @@ public interface IResultReceiver<T> {
      * @return true if the result is closed, and therefore not accepting any new
      * results.
      */
-    public boolean isClosed();
+    boolean isClosed();
 
     /**
      * Add the shard's results. Silently fails if result is closed.
@@ -34,7 +34,7 @@ public interface IResultReceiver<T> {
      * @param result The result to add.
      * @param shards The shards that were called to produce the result.
      */
-    public void addResult(T result, Collection<String> shards);
+    void addResult(T result, Collection<String> shards);
 
     /**
      * Report an error thrown by the node when we tried to access the specified
@@ -43,6 +43,6 @@ public interface IResultReceiver<T> {
      * @param error the error to add
      * @param shards The shards that were called to produce the result.
      */
-    public void addError(Throwable error, Collection<String> shards);
+    void addError(Throwable error, Collection<String> shards);
 
 }

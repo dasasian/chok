@@ -50,9 +50,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
 
 public class InteractionProtocolTest extends AbstractTest {
 
@@ -299,8 +296,6 @@ public class InteractionProtocolTest extends AbstractTest {
     public void testShardManagement() throws Exception {
         Node node1 = Mocks.mockNode();
         Node node2 = Mocks.mockNode();
-        Map<String, String> shardMD = new HashMap<>();
-        shardMD.put("a", "1");
 
         assertEquals(0, protocol.getShardNodes("shard1").size());
 

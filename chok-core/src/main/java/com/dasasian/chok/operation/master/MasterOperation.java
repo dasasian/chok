@@ -48,7 +48,6 @@ public interface MasterOperation extends Serializable {
      * @return null or a list of operationId which have to be completed before
      * {@link #nodeOperationsComplete(MasterContext, java.util.List)} method is called.
      * @param context the context
-     * @param runningOperations the running operations
      * @throws java.lang.Exception when an error occurs
      */
     List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception;
@@ -64,7 +63,7 @@ public interface MasterOperation extends Serializable {
      */
     void nodeOperationsComplete(MasterContext context, List<OperationResult> results) throws Exception;
 
-    static enum ExecutionInstruction {
+    enum ExecutionInstruction {
         EXECUTE, CANCEL, ADD_TO_QUEUE_TAIL
     }
 

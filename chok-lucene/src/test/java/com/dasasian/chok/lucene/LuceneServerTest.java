@@ -30,8 +30,6 @@ import org.apache.lucene.util.Version;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,8 +42,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 public class LuceneServerTest extends AbstractTest {
@@ -138,21 +134,18 @@ public class LuceneServerTest extends AbstractTest {
         final DefaultSearcherFactory seacherFactory = new DefaultSearcherFactory();
         ISearcherFactory mockSeacherFactory = mock(ISearcherFactory.class);
         final AtomicInteger shardsWithTimeoutCount = new AtomicInteger();
-        when(mockSeacherFactory.createSearcher(anyString(), any(File.class))).thenAnswer(new Answer<IndexSearcher>() {
-            @Override
-            public IndexSearcher answer(InvocationOnMock invocation) throws Throwable {
-                final IndexSearcher indexSearcher = seacherFactory.createSearcher((String) invocation.getArguments()[0], (File) invocation.getArguments()[1]);
-                synchronized (shardsWithTimeoutCount) {
-                    if (shardsWithTimeoutCount.intValue() >= 2) {
-                        // 2 from 4 shards will get tiemout
-                        return indexSearcher;
-                    }
-                    shardsWithTimeoutCount.incrementAndGet();
+        when(mockSeacherFactory.createSearcher(anyString(), any(File.class))).thenAnswer(invocation -> {
+            final IndexSearcher indexSearcher = seacherFactory.createSearcher((String) invocation.getArguments()[0], (File) invocation.getArguments()[1]);
+            synchronized (shardsWithTimeoutCount) {
+                if (shardsWithTimeoutCount.intValue() >= 2) {
+                    // 2 from 4 shards will get tiemout
+                    return indexSearcher;
                 }
-                IndexSearcher indexSearcherSpy = spy(indexSearcher);
-                doAnswer(new ChainedAnswer(new SleepingAnswer(serverTimeout * 2), new CallsRealMethods())).when(indexSearcherSpy).search(any(Weight.class), any(Filter.class), any(Collector.class));
-                return indexSearcherSpy;
+                shardsWithTimeoutCount.incrementAndGet();
             }
+            IndexSearcher indexSearcherSpy = spy(indexSearcher);
+            doAnswer(new ChainedAnswer(new SleepingAnswer(serverTimeout * 2), new CallsRealMethods())).when(indexSearcherSpy).search(any(Weight.class), any(Filter.class), any(Collector.class));
+            return indexSearcherSpy;
         });
 
         luceneNodeConfiguration = nodeConfigurationFactory.getConfiguration(0.01f);

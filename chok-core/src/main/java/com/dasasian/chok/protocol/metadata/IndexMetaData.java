@@ -111,12 +111,7 @@ public class IndexMetaData implements Serializable {
         }
 
         public static List<String> getShardNames(Collection<Shard> shards) {
-            return ImmutableList.copyOf(Iterables.transform(shards, new Function<Shard, String>() {
-                @Override
-                public String apply(Shard shard) {
-                    return shard.getName();
-                }
-            }));
+            return ImmutableList.copyOf(Iterables.transform(shards, shard -> shard.getName()));
         }
 
         public String getName() {

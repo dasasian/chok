@@ -48,22 +48,22 @@ public class LuceneClient implements ILuceneClient {
     private static final int SEARCH_METHOD_SHARD_ARG_IDX = 2;
     static {
         try {
-            SEARCH_METHOD = ILuceneServer.class.getMethod("search", new Class[]{QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE});
+            SEARCH_METHOD = ILuceneServer.class.getMethod("search", QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method search() in ILuceneSearch!");
         }
         try {
-            SORTED_SEARCH_METHOD = ILuceneServer.class.getMethod("search", new Class[]{QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE, SortWritable.class});
+            SORTED_SEARCH_METHOD = ILuceneServer.class.getMethod("search", QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE, SortWritable.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method search() in ILuceneSearch!");
         }
         try {
-            FILTERED_SEARCH_METHOD = ILuceneServer.class.getMethod("search", new Class[]{QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE, FilterWritable.class});
+            FILTERED_SEARCH_METHOD = ILuceneServer.class.getMethod("search", QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE, FilterWritable.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method search() in ILuceneSearch!");
         }
         try {
-            FILTERED_SORTED_SEARCH_METHOD = ILuceneServer.class.getMethod("search", new Class[]{QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE, SortWritable.class, FilterWritable.class});
+            FILTERED_SORTED_SEARCH_METHOD = ILuceneServer.class.getMethod("search", QueryWritable.class, DocumentFrequencyWritable.class, String[].class, Long.TYPE, Integer.TYPE, SortWritable.class, FilterWritable.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method search() in ILuceneSearch!");
         }
@@ -74,12 +74,12 @@ public class LuceneClient implements ILuceneClient {
     private static final int FILTER_COUNT_METHOD_SHARD_ARG_IDX = 2;
     static {
         try {
-            COUNT_METHOD = ILuceneServer.class.getMethod("getResultCount", new Class[]{QueryWritable.class, String[].class, Long.TYPE});
+            COUNT_METHOD = ILuceneServer.class.getMethod("getResultCount", QueryWritable.class, String[].class, Long.TYPE);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method getResultCount() in ILuceneSearch!");
         }
         try {
-            FILTER_COUNT_METHOD = ILuceneServer.class.getMethod("getResultCount", new Class[]{QueryWritable.class, FilterWritable.class, String[].class, Long.TYPE});
+            FILTER_COUNT_METHOD = ILuceneServer.class.getMethod("getResultCount", QueryWritable.class, FilterWritable.class, String[].class, Long.TYPE);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method getResultCount() in ILuceneSearch!");
         }
@@ -88,7 +88,7 @@ public class LuceneClient implements ILuceneClient {
     private static final int DOC_FREQ_METHOD_SHARD_ARG_IDX = 1;
     static {
         try {
-            DOC_FREQ_METHOD = ILuceneServer.class.getMethod("getDocFreqs", new Class[]{QueryWritable.class, String[].class});
+            DOC_FREQ_METHOD = ILuceneServer.class.getMethod("getDocFreqs", QueryWritable.class, String[].class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method getDocFreqs() in ILuceneSearch!");
         }
@@ -104,8 +104,8 @@ public class LuceneClient implements ILuceneClient {
     private static final int GET_DETAILS_FIELDS_METHOD_SHARD_ARG_IDX = 0;
     static {
         try {
-            GET_DETAILS_METHOD = ILuceneServer.class.getMethod("getDetails", new Class[]{String[].class, Integer.TYPE});
-            GET_DETAILS_FIELDS_METHOD = ILuceneServer.class.getMethod("getDetails", new Class[]{String[].class, Integer.TYPE, String[].class});
+            GET_DETAILS_METHOD = ILuceneServer.class.getMethod("getDetails", String[].class, Integer.TYPE);
+            GET_DETAILS_FIELDS_METHOD = ILuceneServer.class.getMethod("getDetails", String[].class, Integer.TYPE, String[].class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method getDetails() in ILuceneSearch!");
         }
@@ -306,12 +306,7 @@ public class LuceneClient implements ILuceneClient {
         List<MapWritable> results = new ArrayList<>();
         List<Future<MapWritable>> futures = new ArrayList<>();
         for (final Hit hit : hits) {
-            futures.add(executorService.submit(new Callable<MapWritable>() {
-                @Override
-                public MapWritable call() throws Exception {
-                    return getDetails(hit, fields);
-                }
-            }));
+            futures.add(executorService.submit(() -> getDetails(hit, fields)));
         }
 
         for (Future<MapWritable> future : futures) {

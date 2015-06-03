@@ -114,7 +114,7 @@ public class DefaultDistributionPolicyTest extends AbstractTest {
         List<String> nodes = new ArrayList<>();
         for (String nodeName : nodeNames) {
             nodes.add(nodeName);
-            _currentNode2ShardsMap.put(nodeName, new ArrayList<String>());
+            _currentNode2ShardsMap.put(nodeName, new ArrayList<>());
         }
         return nodes;
     }
@@ -124,7 +124,7 @@ public class DefaultDistributionPolicyTest extends AbstractTest {
         for (String shardName : shardNames) {
             shards.add(shardName);
             if (!_currentNode2ShardsMap.containsKey(shardName)) {
-                _currentShard2NodesMap.put(shardName, new ArrayList<String>());
+                _currentShard2NodesMap.put(shardName, new ArrayList<>());
             }
         }
         return shards;

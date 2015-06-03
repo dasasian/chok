@@ -15,7 +15,6 @@
  */
 package com.dasasian.chok.client;
 
-import com.dasasian.chok.client.ClientResult.IClosedListener;
 import com.dasasian.chok.testutil.AbstractTest;
 import org.junit.Test;
 
@@ -146,7 +145,7 @@ public class ClientResultTest extends AbstractTest {
             // Good.
         }
         try {
-            new ClientResult<String>(null, new ArrayList<String>());
+            new ClientResult<String>(null, new ArrayList<>());
             fail("Should have thrown an exception");
         } catch (IllegalArgumentException e) {
             // Good.
@@ -155,13 +154,13 @@ public class ClientResultTest extends AbstractTest {
         r.addResult("foo", (Collection<String>) null);
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getResults().isEmpty());
-        r.addResult("foo", new ArrayList<String>());
+        r.addResult("foo", new ArrayList<>());
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getResults().isEmpty());
         r.addError(new Exception("foo"), (Collection<String>) null);
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getErrors().isEmpty());
-        r.addError(new Exception("foo"), new ArrayList<String>());
+        r.addError(new Exception("foo"), new ArrayList<>());
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getErrors().isEmpty());
     }
@@ -325,11 +324,7 @@ public class ClientResultTest extends AbstractTest {
     @Test
     public void testClosingCallback() {
         final AtomicInteger count = new AtomicInteger(0);
-        ClientResult<String> r = new ClientResult<>(new IClosedListener() {
-            public void clientResultClosed() {
-                count.incrementAndGet();
-            }
-        }, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(count::incrementAndGet, "a", "b", "c");
         assertEquals(0, count.get());
         r.close();
         assertEquals(1, count.get());
@@ -417,11 +412,9 @@ public class ClientResultTest extends AbstractTest {
             final int result = i;
             total += result;
             final long delay = rand.nextInt(50);
-            executor.submit(new Runnable() {
-                public void run() {
-                    sleep(delay);
-                    r.addResult(result, shard);
-                }
+            executor.submit(() -> {
+                sleep(delay);
+                r.addResult(result, shard);
             });
         }
         executor.shutdown();

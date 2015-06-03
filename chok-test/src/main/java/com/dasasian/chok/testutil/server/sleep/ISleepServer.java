@@ -37,6 +37,6 @@ public interface ISleepServer extends VersionedProtocol {
      * @return the number of shards used (note: sleeping is only done once).
      * @throws IllegalArgumentException if invalid shard names are passed in.
      */
-    public int sleep(long msec, int delta, String[] shards) throws IllegalArgumentException;
+    int sleep(long msec, int delta, String[] shards) throws IllegalArgumentException;
 
 }

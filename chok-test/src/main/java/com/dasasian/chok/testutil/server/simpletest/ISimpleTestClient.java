@@ -21,6 +21,6 @@ import com.dasasian.chok.util.ChokException;
  */
 public interface ISimpleTestClient {
 
-    public String testRequest(String query) throws ChokException;
+    String testRequest(String query) throws ChokException;
 
 }

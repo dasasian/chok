@@ -24,7 +24,6 @@ import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.ZkServer;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
-import org.apache.zookeeper.server.DatadirCleanupManager;
 
 public class ZkChokUtil {
 

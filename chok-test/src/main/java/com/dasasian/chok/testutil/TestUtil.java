@@ -26,8 +26,6 @@ import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.exception.ZkNoNodeException;
 import org.mockito.Mockito;
 import org.mockito.exceptions.base.MockitoAssertionError;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.mockito.stubbing.Stubber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,102 +140,63 @@ public class TestUtil {
      */
 
     public static Stubber createCountDownAnswer(final CountDownLatch countDownLatch) {
-        return Mockito.doAnswer(new Answer<Object>() {
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                countDownLatch.countDown();
-                return null;
-            }
+        return Mockito.doAnswer(invocation -> {
+            countDownLatch.countDown();
+            return null;
         });
     }
 
     public static void waitUntilLeaveSafeMode(final Master master) throws Exception {
-        waitUntil(false, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return master.isInSafeMode();
-            }
-        }, TimeUnit.SECONDS, 30);
+        waitUntil(false, master::isInSafeMode, TimeUnit.SECONDS, 30);
         assertEquals(false, master.isInSafeMode());
     }
 
     public static void waitUntilBecomeMaster(final Master master) throws Exception {
-        waitUntil(false, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return !master.isMaster();
-            }
-        }, TimeUnit.SECONDS, 30);
+        waitUntil(false, () -> !master.isMaster(), TimeUnit.SECONDS, 30);
         assertEquals(true, master.isMaster());
     }
 
     public static void waitUntilIndexDeployed(final InteractionProtocol protocol, final String indexName) throws Exception {
-        waitUntil(false, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return protocol.getIndexMD(indexName) == null;
-            }
-        }, TimeUnit.SECONDS, 30);
+        waitUntil(false, () -> protocol.getIndexMD(indexName) == null, TimeUnit.SECONDS, 30);
     }
 
     public static void waitUntilIndexBalanced(final InteractionProtocol protocol, final String indexName) throws Exception {
-        waitUntil(true, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                IndexMetaData indexMD = protocol.getIndexMD(indexName);
-                if (indexMD.hasDeployError()) {
-                    throw new IllegalStateException("index " + indexName + " has a deploy error");
-                }
-                return protocol.getReplicationReport(indexMD).isBalanced();
+        waitUntil(true, () -> {
+            IndexMetaData indexMD = protocol.getIndexMD(indexName);
+            if (indexMD.hasDeployError()) {
+                throw new IllegalStateException("index " + indexName + " has a deploy error");
             }
+            return protocol.getReplicationReport(indexMD).isBalanced();
         }, TimeUnit.SECONDS, 30);
     }
 
     public static void waitUntilShardsUndeployed(final InteractionProtocol protocol, final IndexMetaData indexMD) throws Exception {
-        TestUtil.waitUntil(false, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                int nodeCount = 0;
-                Set<Shard> shards = indexMD.getShards();
-                for (Shard shard : shards) {
-                    try {
-                        nodeCount += protocol.getShardNodes(shard.getName()).size();
-                    } catch (ZkNoNodeException e) {
-                        // deleted already
-                    }
+        TestUtil.waitUntil(false, () -> {
+            int nodeCount = 0;
+            Set<Shard> shards = indexMD.getShards();
+            for (Shard shard : shards) {
+                try {
+                    nodeCount += protocol.getShardNodes(shard.getName()).size();
+                } catch (ZkNoNodeException e) {
+                    // deleted already
                 }
-                return nodeCount != 0;
             }
+            return nodeCount != 0;
         }, TimeUnit.SECONDS, 30);
     }
 
     public static void waitUntilNodeServesShards(final InteractionProtocol protocol, final String nodeName, final int shardCount) throws Exception {
-        waitUntil(true, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return protocol.getNodeShards(nodeName).size() == shardCount;
-            }
-        }, TimeUnit.SECONDS, 30);
+        waitUntil(true, () -> protocol.getNodeShards(nodeName).size() == shardCount, TimeUnit.SECONDS, 30);
         assertEquals(shardCount, protocol.getNodeShards(nodeName).size());
     }
 
     public static void waitUntilNumberOfLiveNode(final InteractionProtocol protocol, final int nodeCount) throws Exception {
-        waitUntil(true, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return protocol.getLiveNodes().size() == nodeCount;
-            }
-        }, TimeUnit.SECONDS, 30);
+        waitUntil(true, () -> protocol.getLiveNodes().size() == nodeCount, TimeUnit.SECONDS, 30);
         assertEquals(nodeCount, protocol.getLiveNodes().size());
     }
 
     public static void waitUntilEmptyOperationQueues(final InteractionProtocol protocol, final Master master, final List<Node> nodes) throws Exception {
-        waitUntil(true, new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return operationQueuesEmpty(protocol, master, nodes);
-            }
-
-        }, TimeUnit.SECONDS, 30);
+        waitUntil(true, () -> operationQueuesEmpty(protocol, master, nodes), TimeUnit.SECONDS, 30);
         assertThat(operationQueuesEmpty(protocol, master, nodes)).as("node operation queues are empty").isTrue();
     }
 

@@ -53,7 +53,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @return A object that capsulates all results.
      * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
-    public Hits search(Query query, String[] indexNames) throws ChokException;
+    Hits search(Query query, String[] indexNames) throws ChokException;
 
     /**
      * Searches with a given query in the supplied indexes for a limited amount of
@@ -65,7 +65,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @return A object that capsulates all results.
      * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
-    public Hits search(Query query, String[] indexNames, int count) throws ChokException;
+    Hits search(Query query, String[] indexNames, int count) throws ChokException;
 
     /**
      * Searches with a given query in the supplied indexes for a limited amount of
@@ -78,7 +78,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @return A object that capsulates all results.
      * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
-    public Hits search(Query query, String[] indexNames, int count, Sort sort) throws ChokException;
+    Hits search(Query query, String[] indexNames, int count, Sort sort) throws ChokException;
 
     /**
      * Searches with a given query in the supplied indexes for a limited amount of
@@ -92,7 +92,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @return A object that capsulates all results.
      * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
-    public Hits search(Query query, String[] indexNames, int count, Sort sort, Filter filter) throws ChokException;
+    Hits search(Query query, String[] indexNames, int count, Sort sort, Filter filter) throws ChokException;
 
     /**
      * Gets all the details to a hit.
@@ -101,7 +101,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @return All fields to a {@link Hit} as field name and field value pairs.
      * @throws com.dasasian.chok.util.ChokException If indexes can't be searched.
      */
-    public MapWritable getDetails(Hit hit) throws ChokException;
+    MapWritable getDetails(Hit hit) throws ChokException;
 
     /**
      * Gets a specific details to a hit.
@@ -112,7 +112,7 @@ public interface ILuceneClient extends AutoCloseable {
      * pair.
      * @throws com.dasasian.chok.util.ChokException If indexes can't be searched.
      */
-    public MapWritable getDetails(Hit hit, String[] fields) throws ChokException;
+    MapWritable getDetails(Hit hit, String[] fields) throws ChokException;
 
     /**
      * Gets list of all details for the given list of hits. The details are
@@ -124,7 +124,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @throws com.dasasian.chok.util.ChokException If indexes can't be searched.
      * @throws InterruptedException                 If the current thread got interrupted.
      */
-    public List<MapWritable> getDetails(List<Hit> hits) throws ChokException, InterruptedException;
+    List<MapWritable> getDetails(List<Hit> hits) throws ChokException, InterruptedException;
 
     /**
      * Gets list of details for the given list of hits. The details are retrieved
@@ -137,14 +137,14 @@ public interface ILuceneClient extends AutoCloseable {
      * @throws com.dasasian.chok.util.ChokException If indexes can't be searched.
      * @throws InterruptedException                 If the current thread got interrupted.
      */
-    public List<MapWritable> getDetails(List<Hit> hits, final String[] fields) throws ChokException, InterruptedException;
+    List<MapWritable> getDetails(List<Hit> hits, final String[] fields) throws ChokException, InterruptedException;
 
     /**
      * The overall queries per minute.
      *
      * @return A number that represents the queries per minute in the last minute.
      */
-    public double getQueryPerMinute();
+    double getQueryPerMinute();
 
     /**
      * Gets only the result count to a query.
@@ -154,7 +154,7 @@ public interface ILuceneClient extends AutoCloseable {
      * @return A number that represents the overall result count to a query.
      * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
-    public int count(Query query, String[] indexNames) throws ChokException;
+    int count(Query query, String[] indexNames) throws ChokException;
 
     /**
      * Gets only the result count to a query.
@@ -165,11 +165,11 @@ public interface ILuceneClient extends AutoCloseable {
      * @return A number that represents the overall result count to a query.
      * @throws com.dasasian.chok.util.ChokException when an error occurs
      */
-    public int count(Query query, Filter filter, String[] indexNames) throws ChokException;
+    int count(Query query, Filter filter, String[] indexNames) throws ChokException;
 
     /**
      * Closes down the client.
      */
-    public void close();
+    void close();
 
 }

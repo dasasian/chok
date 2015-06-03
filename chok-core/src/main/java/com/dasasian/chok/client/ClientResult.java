@@ -414,19 +414,17 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
         synchronized (this) {
             arrivals = new ArrayList<>(entries);
         }
-        Collections.sort(arrivals, new Comparator<Entry>() {
-            public int compare(Entry o1, Entry o2) {
-                if (o1.time != o2.time) {
-                    return o1.time < o2.time ? -1 : 1;
+        Collections.sort(arrivals, (o1, o2) -> {
+            if (o1.time != o2.time) {
+                return o1.time < o2.time ? -1 : 1;
+            } else {
+                // Break ties in favor of results.
+                if (o1.result != null && o2.result == null) {
+                    return -1;
+                } else if (o2.result != null && o1.result == null) {
+                    return 1;
                 } else {
-                    // Break ties in favor of results.
-                    if (o1.result != null && o2.result == null) {
-                        return -1;
-                    } else if (o2.result != null && o1.result == null) {
-                        return 1;
-                    } else {
-                        return 0;
-                    }
+                    return 0;
                 }
             }
         });
@@ -488,7 +486,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
          * The ClientResult's close() method was called. The result is closed before
          * calling this.
          */
-        public void clientResultClosed();
+        void clientResultClosed();
     }
 
     /**

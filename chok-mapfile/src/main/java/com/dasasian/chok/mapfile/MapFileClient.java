@@ -42,7 +42,7 @@ public class MapFileClient implements IMapFileClient {
     private static final int GET_METHOD_SHARD_ARG_IDX = 1;
     static {
         try {
-            GET_METHOD = IMapFileServer.class.getMethod("get", new Class[]{Text.class, String[].class});
+            GET_METHOD = IMapFileServer.class.getMethod("get", Text.class, String[].class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method get() in IMapFileServer!");
         }

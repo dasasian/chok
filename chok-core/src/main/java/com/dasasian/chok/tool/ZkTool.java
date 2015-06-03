@@ -26,12 +26,10 @@ import java.util.List;
 
 public class ZkTool {
 
-    private ZkConfiguration conf;
     private ZkClient zkClient;
 
     public ZkTool() {
-        conf = ZkConfigurationLoader.loadConfiguration();
-        zkClient = ZkChokUtil.startZkClient(conf, 5000);
+        zkClient = ZkChokUtil.startZkClient(ZkConfigurationLoader.loadConfiguration(), 5000);
     }
 
     public static void main(String[] args) {
@@ -54,7 +52,7 @@ public class ZkTool {
         actionGroup.addOption(rmrOption);
         options.addOptionGroup(actionGroup);
 
-        final CommandLineParser parser = new GnuParser();
+        final CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         try {
             final CommandLine line = parser.parse(options, args);

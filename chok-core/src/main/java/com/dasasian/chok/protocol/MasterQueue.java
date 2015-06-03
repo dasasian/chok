@@ -70,7 +70,7 @@ public class MasterQueue extends BlockingQueue<MasterOperation> {
         List<String> childs = zkClient.getChildren(_watchdogsPath);
         List<OperationWatchdog> watchdogs = new ArrayList<>(childs.size());
         for (String child : childs) {
-            watchdogs.add((OperationWatchdog) zkClient.readData(getWatchdogPath(child)));
+            watchdogs.add(zkClient.readData(getWatchdogPath(child)));
         }
         return watchdogs;
     }

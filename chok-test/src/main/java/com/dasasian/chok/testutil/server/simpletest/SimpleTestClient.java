@@ -21,6 +21,7 @@ import com.dasasian.chok.client.INodeSelectionPolicy;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
+import com.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +40,7 @@ public class SimpleTestClient implements ISimpleTestClient {
     private static final int SLEEP_METHOD_SHARD_ARG_IDX = 1;
     static {
         try {
-            SLEEP_METHOD = ISimpleTestServer.class.getMethod("testRequest", new Class[]{String.class, String[].class});
+            SLEEP_METHOD = ISimpleTestServer.class.getMethod("testRequest", String.class, String[].class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method testRequest() in ITestServer!");
         }
@@ -76,10 +77,7 @@ public class SimpleTestClient implements ISimpleTestClient {
         if (results.isError()) {
             throw results.getChokException();
         }
-        for (String result : results.getResults()) {
-            return result;
-        }
-        return null;
+        return Iterables.getFirst(results.getResults(), null);
     }
 
     public Client getClient() {

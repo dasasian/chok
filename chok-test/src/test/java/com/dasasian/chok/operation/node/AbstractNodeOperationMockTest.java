@@ -24,8 +24,6 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.Mocks;
 import org.mockito.Mockito;
 
-import static org.mockito.Mockito.mock;
-
 public class AbstractNodeOperationMockTest extends AbstractTest {
 
     protected InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);

@@ -76,7 +76,7 @@ public class NodeQueue extends BlockingQueue<NodeOperation> {
         List<String> childs = zkClient.getChildren(_resultsPath);
         List<OperationResult> watchdogs = new ArrayList<>(childs.size());
         for (String child : childs) {
-            watchdogs.add((OperationResult) zkClient.readData(getResultPath(child)));
+            watchdogs.add(zkClient.readData(getResultPath(child)));
         }
         return watchdogs;
     }

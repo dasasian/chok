@@ -21,6 +21,6 @@ public interface IMonitor {
 
     void startMonitoring(String serverId, InteractionProtocol protocol);
 
-    public void stopMonitoring();
+    void stopMonitoring();
 
 }

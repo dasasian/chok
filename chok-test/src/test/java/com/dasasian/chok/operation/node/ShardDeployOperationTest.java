@@ -26,8 +26,6 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.*;
 
 public class ShardDeployOperationTest extends AbstractNodeOperationMockTest {

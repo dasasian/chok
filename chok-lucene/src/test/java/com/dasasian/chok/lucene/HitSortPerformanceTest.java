@@ -15,6 +15,7 @@
  */
 package com.dasasian.chok.lucene;
 
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -87,16 +88,16 @@ public class HitSortPerformanceTest {
 
     private Hits setupHitsWithSortedSubLists() {
         final Random random = new Random();
-        // the same number everytime to get comparable results
+        // the same number every time to get comparable results
         random.setSeed(64567547657L);
-        List<Hit>[] hitListsArray = new ArrayList[4];
-        for (int i = 0; i < hitListsArray.length; i++) {
-            hitListsArray[i] = new ArrayList<>();
+        List<List<Hit>> hitListsArray = Lists.newArrayList();
+        for (int i = 0; i < 4; i++) {
+            hitListsArray.add(Lists.newArrayList());
         }
 
         for (int i = 0; i < hitCount; i++) {
             final Hit hit = new Hit("shard", "node", random.nextFloat(), random.nextInt());
-            hitListsArray[random.nextInt(hitListsArray.length)].add(hit);
+            hitListsArray.get(random.nextInt(hitListsArray.size())).add(hit);
         }
 
         final Hits hits = new Hits();

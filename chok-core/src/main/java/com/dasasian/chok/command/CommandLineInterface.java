@@ -45,7 +45,6 @@ public class CommandLineInterface {
         addCommand(new CheckCommand());
         addCommand(new VersionCommand());
         addCommand(new ShowStructureCommand());
-        addCommand(new StartGuiCommand());
         addCommand(new LogMetricsCommand());
         addCommand(new RunClassCommand());
         addCommand(new IndexAutoRepairCommand());

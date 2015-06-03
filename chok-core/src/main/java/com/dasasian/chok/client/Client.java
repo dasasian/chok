@@ -44,7 +44,6 @@ public class Client implements ConnectedComponent, AutoCloseable {
 
     protected final INodeSelectionPolicy selectionPolicy;
     private final long startupTime;
-    private final ClientConfiguration clientConfiguration;
     private final int maxTryCount;
     protected InteractionProtocol protocol;
     private long queryCount = 0;
@@ -87,8 +86,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
         proxyManager = new NodeProxyManager(serverClass, hadoopConf, policy);
         selectionPolicy = policy;
         this.protocol = protocol;
-        this.clientConfiguration = clientConfiguration;
-        maxTryCount = this.clientConfiguration.getInt(ClientConfiguration.CLIENT_NODE_INTERACTION_MAXTRYCOUNT);
+        maxTryCount = clientConfiguration.getInt(ClientConfiguration.CLIENT_NODE_INTERACTION_MAXTRYCOUNT);
 
         List<String> indexList = this.protocol.registerChildListener(this, PathDef.INDICES_METADATA, new IAddRemoveListener() {
             @Override
@@ -241,7 +239,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
      * @throws ChokException on exception
      */
     public <T> ClientResult<T> broadcastToAll(long timeout, boolean shutdown, Method method, int shardArrayParamIndex, Object... args) throws ChokException {
-        return broadcastToAll(new ResultCompletePolicy<T>(timeout, shutdown), method, shardArrayParamIndex, args);
+        return broadcastToAll(new ResultCompletePolicy<>(timeout, shutdown), method, shardArrayParamIndex, args);
     }
 
     public <T> ClientResult<T> broadcastToAll(IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, Object... args) throws ChokException {
@@ -249,7 +247,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
     }
 
     public <T> ClientResult<T> broadcastToIndices(long timeout, boolean shutdown, Method method, int shardArrayIndex, String[] indices, Object... args) throws ChokException {
-        return broadcastToIndices(new ResultCompletePolicy<T>(timeout, shutdown), method, shardArrayIndex, indices, args);
+        return broadcastToIndices(new ResultCompletePolicy<>(timeout, shutdown), method, shardArrayIndex, indices, args);
     }
 
     public <T> ClientResult<T> broadcastToIndices(IResultPolicy<T> resultPolicy, Method method, int shardArrayIndex, String[] indices, Object... args) throws ChokException {
@@ -264,7 +262,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
     }
 
     public <T> ClientResult<T> singlecast(long timeout, boolean shutdown, Method method, int shardArrayParamIndex, String shard, Object... args) throws ChokException {
-        return singlecast(new ResultCompletePolicy<T>(timeout, shutdown), method, shardArrayParamIndex, shard, args);
+        return singlecast(new ResultCompletePolicy<>(timeout, shutdown), method, shardArrayParamIndex, shard, args);
     }
 
     public <T> ClientResult<T> singlecast(IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, String shard, Object... args) throws ChokException {
@@ -274,7 +272,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
     }
 
     public <T> ClientResult<T> broadcastToShards(long timeout, boolean shutdown, Method method, int shardArrayParamIndex, Iterable<String> shards, Object... args) throws ChokException {
-        return broadcastToShards(new ResultCompletePolicy<T>(timeout, shutdown), method, shardArrayParamIndex, shards, args);
+        return broadcastToShards(new ResultCompletePolicy<>(timeout, shutdown), method, shardArrayParamIndex, shards, args);
     }
 
     public <T> ClientResult<T> broadcastToShards(IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, Iterable<String> shards, Object... args) throws ChokException {

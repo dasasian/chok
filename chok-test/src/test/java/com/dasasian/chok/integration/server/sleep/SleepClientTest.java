@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import static org.fest.assertions.Assertions.assertThat;
 import static org.junit.Assert.*;
 
 /**
@@ -119,17 +118,15 @@ public class SleepClientTest extends AbstractTest {
         long startTime = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
             final Random rand2 = new Random(rand.nextInt());
-            Thread t = new Thread(new Runnable() {
-                public void run() {
-                    for (int j = 0; j < 50; j++) {
-                        int n = rand2.nextInt(20);
-                        try {
-                            client.sleepIndices(n, INDEXES_ARRAY);
-                        } catch (Exception e) {
-                            System.err.println(e);
-                            exceptions.add(e);
-                            break;
-                        }
+            Thread t = new Thread(() -> {
+                for (int j = 0; j < 50; j++) {
+                    int n = rand2.nextInt(20);
+                    try {
+                        client.sleepIndices(n, INDEXES_ARRAY);
+                    } catch (Exception e) {
+                        LOG.error("Exception thrown:", e);
+                        exceptions.add(e);
+                        break;
                     }
                 }
             });

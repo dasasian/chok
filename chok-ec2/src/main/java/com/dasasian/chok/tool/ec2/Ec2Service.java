@@ -51,7 +51,7 @@ public abstract class Ec2Service {
     public Set<String> list() throws IOException {
         HashSet<String> set = new HashSet<>();
         try {
-            List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<String>());
+            List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<>());
             for (ReservationDescription reservation : reservations) {
                 List<Instance> instances = reservation.getInstances();
                 for (Instance instance : instances) {
@@ -90,7 +90,7 @@ public abstract class Ec2Service {
 
             List<String> toTerminate = new ArrayList<>();
             List<ReservationDescription> describeInstances;
-            describeInstances = _ec2.describeInstances(new ArrayList<String>());
+            describeInstances = _ec2.describeInstances(new ArrayList<>());
             for (ReservationDescription description : describeInstances) {
                 List<Instance> instances = description.getInstances();
                 for (Instance instance : instances) {
@@ -231,7 +231,7 @@ public abstract class Ec2Service {
 
     private boolean masterAlreadyRunning(String clusterMaster) throws IOException {
         try {
-            List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<String>());
+            List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<>());
             for (ReservationDescription reservation : reservations) {
                 if (reservation.getGroups().contains(clusterMaster)) {
                     List<Instance> instances = reservation.getInstances();
@@ -256,7 +256,7 @@ public abstract class Ec2Service {
             while (pending && System.currentTimeMillis() < end) {
                 pending = false;
                 ArrayList<Ec2Instance> list = new ArrayList<>();
-                List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<String>());
+                List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<>());
                 for (ReservationDescription reservation : reservations) {
                     if (reservation.getGroups().contains(cluster) || reservation.getGroups().contains(clusterMaster)) {
                         List<Instance> instances = reservation.getInstances();

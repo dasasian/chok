@@ -34,7 +34,7 @@ public interface INodeProxyManager {
      * @param establishIfNoExists ???
      * @return a dynamic proxy standing in for the node.
      */
-    public VersionedProtocol getProxy(String node, boolean establishIfNoExists);
+    VersionedProtocol getProxy(String node, boolean establishIfNoExists);
 
     /**
      * Notifies the proxy-manager that a a proxy invocation failed.
@@ -42,13 +42,13 @@ public interface INodeProxyManager {
      * @param node Which node had a problem.
      * @param t    The error that occurred (currently unused).
      */
-    public void reportNodeCommunicationFailure(String node, Throwable t);
+    void reportNodeCommunicationFailure(String node, Throwable t);
 
     /**
      * Notifies the proxy-manager that a a proxy invocation succeeded.
      * @param node the name of the node
      */
-    public void reportNodeCommunicationSuccess(String node);
+    void reportNodeCommunicationSuccess(String node);
 
     /**
      * After an error the NodeInteraction computes a reduced node shard map, but
@@ -62,8 +62,8 @@ public interface INodeProxyManager {
      * @return A node to shard map with one occurrence of each shard.
      * @throws ShardAccessException if the node selection policy had an error.
      */
-    public Map<String, List<String>> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException;
+    Map<String, List<String>> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException;
 
-    public void shutdown();
+    void shutdown();
 
 }

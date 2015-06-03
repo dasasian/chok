@@ -23,8 +23,8 @@ import com.dasasian.chok.util.NodeConfiguration;
  */
 public interface NodeConfigurationFactory {
 
-    public NodeConfiguration getConfiguration();
+    NodeConfiguration getConfiguration();
 
-    public NodeConfiguration getConfiguration(int nodeStartPort);
+    NodeConfiguration getConfiguration(int nodeStartPort);
 
 }

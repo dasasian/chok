@@ -36,6 +36,6 @@ public interface IMapFileServer extends VersionedProtocol {
      * @return The list of Text results.
      * @throws IOException If an error occurs.
      */
-    public TextArrayWritable get(Text key, String[] shards) throws IOException;
+    TextArrayWritable get(Text key, String[] shards) throws IOException;
 
 }

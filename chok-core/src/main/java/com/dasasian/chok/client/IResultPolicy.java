@@ -31,6 +31,6 @@ public interface IResultPolicy<T> {
      * If 0, return the result immediately.
      * if &lt; 0, shutdown the WorkQueue, close the result, and return it immediately.
      */
-    public long waitTime(ClientResult<T> result);
+    long waitTime(ClientResult<T> result);
 
 }

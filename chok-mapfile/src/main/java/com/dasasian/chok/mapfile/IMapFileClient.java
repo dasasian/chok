@@ -32,11 +32,11 @@ public interface IMapFileClient {
      * @return All the entries with the given key.
      * @throws com.dasasian.chok.util.ChokException if an error occurs
      */
-    public List<String> get(String key, final String[] indexNames) throws ChokException;
+    List<String> get(String key, final String[] indexNames) throws ChokException;
 
     /**
      * Closes down the client.
      */
-    public void close();
+    void close();
 
 }

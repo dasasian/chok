@@ -33,12 +33,6 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
-import static org.fest.assertions.Assertions.assertThat;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.spy;
-
 public class ClientIntegrationTest extends AbstractTest {
 
     @ClassRule

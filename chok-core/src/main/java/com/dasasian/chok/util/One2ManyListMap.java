@@ -28,7 +28,7 @@ public class One2ManyListMap<K, V> implements Serializable {
     protected final Map<K, List<V>> _map;
 
     public One2ManyListMap() {
-        this(new HashMap<K, List<V>>());
+        this(new HashMap<>());
     }
 
     public One2ManyListMap(Map<K, List<V>> map) {

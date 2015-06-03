@@ -26,9 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.notNull;
 import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.when;
 
 public class ShardRedeployOperationTest extends AbstractNodeOperationMockTest {
 

@@ -162,7 +162,7 @@ public class ZkConfiguration implements Serializable {
         private final String[] _pathParts;
         private final boolean _vip;// very-important-path
 
-        private PathDef(String description, boolean vip, String... pathParts) {
+        PathDef(String description, boolean vip, String... pathParts) {
             _description = description;
             _vip = vip;
             _pathParts = pathParts;

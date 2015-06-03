@@ -15,6 +15,7 @@
  */
 package com.dasasian.chok.command;
 
+import com.dasasian.chok.protocol.metadata.Version;
 import com.dasasian.chok.util.ZkConfiguration;
 
 /**
@@ -29,9 +30,9 @@ public class VersionCommand extends Command {
 
     @Override
     public void execute(ZkConfiguration zkConf) throws Exception {
-        com.dasasian.chok.protocol.metadata.Version versionInfo = com.dasasian.chok.protocol.metadata.Version.readFromJar();
+        Version versionInfo = Version.readFromJar();
         System.out.println("Chok '" + versionInfo.getNumber() + "'");
         System.out.println("Git-Revision '" + versionInfo.getRevision() + "'");
-        System.out.println("Compiled by '" + versionInfo.getCompiledBy() + "' on '" + versionInfo.getCompileTime() + "'");
+        System.out.println("Compiled by '" + versionInfo.getCreatedBy() + "' on '" + versionInfo.getCompileTime() + "'");
     }
 }

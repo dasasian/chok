@@ -138,7 +138,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
         final Map<String, List<String>> currentNodeToShardsMap = CollectionUtil.invertListMap(currentShard2NodesMap);
         for (String node : liveNodes) {
             if (!currentNodeToShardsMap.containsKey(node)) {
-                currentNodeToShardsMap.put(node, new ArrayList<String>(3));
+                currentNodeToShardsMap.put(node, new ArrayList<>(3));
             }
         }
         return currentNodeToShardsMap;

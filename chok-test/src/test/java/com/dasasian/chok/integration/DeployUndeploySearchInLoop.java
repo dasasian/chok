@@ -16,10 +16,12 @@
 package com.dasasian.chok.integration;
 
 import com.dasasian.chok.client.DeployClient;
+import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.testutil.TestZkConfiguration;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestClient;
 import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
+import org.I0Itec.zkclient.ZkClient;
 import org.slf4j.Logger;
 import org.junit.Ignore;
 import org.slf4j.LoggerFactory;
@@ -34,11 +36,14 @@ public class DeployUndeploySearchInLoop {
 
     private static Logger LOG = LoggerFactory.getLogger(DeployUndeploySearchInLoop.class);
 
+    // todo need to run this somehow
     public static void main(String[] args) throws Exception {
-        SimpleTestClient testClient = new SimpleTestClient();
+        final SimpleTestClient testClient = new SimpleTestClient();
         // todo fix at some point
-        ZkConfiguration zkConfig = TestZkConfiguration.getTestConfiguration(null);
-        DeployClient deployClient = new DeployClient(ZkChokUtil.startZkClient(zkConfig, 60000), zkConfig);
+        final ZkConfiguration zkConfig = TestZkConfiguration.getTestConfiguration(null);
+        final ZkClient zkClient = ZkChokUtil.startZkClient(zkConfig, 60000);
+        final InteractionProtocol interactionProtocol = new InteractionProtocol(zkClient, zkConfig);
+        DeployClient deployClient = new DeployClient(interactionProtocol);
 
         int runThroughs = 2;
         while (true) {

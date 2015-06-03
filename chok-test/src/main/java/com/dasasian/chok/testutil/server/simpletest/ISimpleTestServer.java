@@ -25,6 +25,6 @@ import java.io.IOException;
  */
 public interface ISimpleTestServer extends VersionedProtocol {
 
-    public String testRequest(String query, String[] shardNames) throws IOException;
+    String testRequest(String query, String[] shardNames) throws IOException;
 
 }

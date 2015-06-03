@@ -38,7 +38,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return A list of hits from the search.
      * @throws IOException If the search had a problem reading files.
      */
-    public HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout) throws IOException;
+    HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout) throws IOException;
 
 
     /**
@@ -50,7 +50,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return A list of hits from the search.
      * @throws IOException If the search had a problem reading files.
      */
-    public HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count) throws IOException;
+    HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count) throws IOException;
 
     /**
      * Sorts the returned hits based on the sort parameter.
@@ -64,7 +64,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return A list of hits from the search.
      * @throws IOException If the search had a problem reading files.
      */
-    public HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count, SortWritable sort) throws IOException;
+    HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count, SortWritable sort) throws IOException;
 
     /**
      * Sorts the returned hits based on the sort parameter.
@@ -78,7 +78,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return A list of hits from the search.
      * @throws IOException If the search had a problem reading files.
      */
-    public HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count, FilterWritable filter) throws IOException;
+    HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count, FilterWritable filter) throws IOException;
 
     /**
      * Sorts the returned hits based on the sort parameter.
@@ -93,7 +93,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return A list of hits from the search.
      * @throws IOException If the search had a problem reading files.
      */
-    public HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count, SortWritable sort, FilterWritable filter) throws IOException;
+    HitsMapWritable search(QueryWritable query, DocumentFrequencyWritable freqs, String[] shardNames, long timeout, int count, SortWritable sort, FilterWritable filter) throws IOException;
 
 
     /**
@@ -107,7 +107,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return A list of hits from the search.
      * @throws IOException If the search had a problem reading files.
      */
-    public DocumentFrequencyWritable getDocFreqs(QueryWritable input, String[] shards) throws IOException;
+    DocumentFrequencyWritable getDocFreqs(QueryWritable input, String[] shards) throws IOException;
 
     /**
      * Returns only the requested fields of a lucene document.  The fields are returned
@@ -119,7 +119,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return details of the document
      * @throws IOException when and error occurs
      */
-    public MapWritable getDetails(String[] shards, int docId, String[] fields) throws IOException;
+    MapWritable getDetails(String[] shards, int docId, String[] fields) throws IOException;
 
     /**
      * Returns the lucene document. Each field:value tuple of the lucene document
@@ -132,7 +132,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return details of the document
      * @throws IOException when and error occurs
      */
-    public MapWritable getDetails(String[] shards, int docId) throws IOException;
+    MapWritable getDetails(String[] shards, int docId) throws IOException;
 
     /**
      * Returns the number of documents that match the given query. This the
@@ -145,7 +145,7 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return number of documents
      * @throws IOException when and error occurs
      */
-    public int getResultCount(QueryWritable query, String[] shards, long timeout) throws IOException;
+    int getResultCount(QueryWritable query, String[] shards, long timeout) throws IOException;
 
     /**
      * Returns the number of documents that match the given query. This the
@@ -159,5 +159,5 @@ public interface ILuceneServer extends VersionedProtocol {
      * @return number of documents
      * @throws IOException when and error occurs
      */
-    public int getResultCount(QueryWritable query, FilterWritable filter, String[] shards, long timeout) throws IOException;
+    int getResultCount(QueryWritable query, FilterWritable filter, String[] shards, long timeout) throws IOException;
 }

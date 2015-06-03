@@ -21,10 +21,6 @@ import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-
 public class JmxMonitorTest extends AbstractTest {
 
     @Test
@@ -34,6 +30,6 @@ public class JmxMonitorTest extends AbstractTest {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         monitor.startMonitoring(nodeId, protocol);
         Thread.sleep(1200);
-        Mockito.verify(protocol, Mockito.atLeastOnce()).setMetric(Matchers.eq(nodeId), (MetricsRecord) Matchers.anyObject());
+        Mockito.verify(protocol, Mockito.atLeastOnce()).setMetric(Matchers.eq(nodeId), Matchers.anyObject());
     }
 }

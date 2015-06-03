@@ -115,7 +115,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
         this.nodeName = nodeName;
         searcherFactory = ClassUtil.newInstance(luceneNodeConfiguration.getSearcherFactorClass());
         timeoutPercentage = luceneNodeConfiguration.getTimeoutPercentage();
-        threadPool = new ThreadPoolExecutor(luceneNodeConfiguration.getThreadPoolCoreSize(), luceneNodeConfiguration.getThreadPoolMaxSize(), 100L, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>());
+        threadPool = new ThreadPoolExecutor(luceneNodeConfiguration.getThreadPoolCoreSize(), luceneNodeConfiguration.getThreadPoolMaxSize(), 100L, TimeUnit.MINUTES, new LinkedBlockingQueue<>());
 
         if (luceneNodeConfiguration.isFilterCacheEnabled()) {
             filterCache = CacheBuilder.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).maximumSize(luceneNodeConfiguration.isFilterCacheMaxSize()).build();

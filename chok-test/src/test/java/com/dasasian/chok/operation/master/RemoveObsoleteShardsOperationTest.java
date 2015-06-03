@@ -35,9 +35,6 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.notNull;
-import static org.mockito.Mockito.*;
 
 public class RemoveObsoleteShardsOperationTest {
 
@@ -74,7 +71,7 @@ public class RemoveObsoleteShardsOperationTest {
         Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(Arrays.asList(someOldShard));
 
         RemoveObsoleteShardsOperation operation = new RemoveObsoleteShardsOperation(nodeName);
-        operation.execute(context, new ArrayList<MasterOperation>(Arrays.asList(new IndexDeployOperation(indexName, "path", 1))));
+        operation.execute(context, new ArrayList<>(Arrays.asList(new IndexDeployOperation(indexName, "path", 1))));
 
         Mockito.verify(protocol, Mockito.times(0)).addNodeOperation(Matchers.eq(nodeName), (NodeOperation) Matchers.notNull());
     }

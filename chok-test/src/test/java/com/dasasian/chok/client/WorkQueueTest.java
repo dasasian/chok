@@ -39,11 +39,7 @@ public class WorkQueueTest extends AbstractTest {
      * Returns an interaction factory that ignores all calls and does nothing.
      */
     public static <T> INodeInteractionFactory<T> nullFactory() {
-        return new INodeInteractionFactory<T>() {
-            public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results) {
-                return null;
-            }
-        };
+        return (method, args, shardArrayParamIndex, node, nodeShardMap, tryCount, maxTryCount, shardManager, nodeExecutor, results) -> null;
     }
 
     protected static void sleep(long msec) {
@@ -185,11 +181,9 @@ public class WorkQueueTest extends AbstractTest {
        * Simulate the user polling then eventually closing the result.
        */
             final long start = System.currentTimeMillis();
-            new Thread(new Runnable() {
-                public void run() {
-                    sleep(100);
-                    result.close();
-                }
+            new Thread(() -> {
+                sleep(100);
+                result.close();
             }).start();
       /*
        * Now block on results.
@@ -289,7 +283,7 @@ public class WorkQueueTest extends AbstractTest {
     }
 
     public interface ProxyProvider {
-        public VersionedProtocol getProxy(String node);
+        VersionedProtocol getProxy(String node);
     }
 
     public static class TestShardManager implements INodeProxyManager {
@@ -407,17 +401,15 @@ public class WorkQueueTest extends AbstractTest {
             final long additionalSleepTime2 = additionalSleepTime;
             final TestServer server = new TestServer(maxSleep);
             final List<String> shards = nodeShardMap.get(node);
-            return new Runnable() {
-                public void run() {
-                    if (additionalSleepTime2 > 0) {
-                        sleep(additionalSleepTime2);
-                    }
-                    int n = (Integer) args[0];
-                    int r = server.doSomething(n);
-                    // System.out.printf("Test interaction, node=%s, f(%d)=%d, shards=%s\n",
-                    // node, n, r, shards);
-                    results.addResult(r, shards);
+            return () -> {
+                if (additionalSleepTime2 > 0) {
+                    sleep(additionalSleepTime2);
                 }
+                int n = (Integer) args[0];
+                int r = server.doSomething(n);
+                // System.out.printf("Test interaction, node=%s, f(%d)=%d, shards=%s\n",
+                // node, n, r, shards);
+                results.addResult(r, shards);
             };
         }
 

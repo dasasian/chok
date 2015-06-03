@@ -96,12 +96,9 @@ public class BlockingQueue<T extends Serializable> {
     @SuppressWarnings("unchecked")
     protected Element<T> getFirstElement() throws InterruptedException {
         final Object mutex = new Object();
-        IZkChildListener notifyListener = new IZkChildListener() {
-            @Override
-            public void handleChildChange(String parentPath, List<String> currentChilds) throws Exception {
-                synchronized (mutex) {
-                    mutex.notify();
-                }
+        IZkChildListener notifyListener = (parentPath, currentChilds) -> {
+            synchronized (mutex) {
+                mutex.notify();
             }
         };
         try {

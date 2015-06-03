@@ -285,11 +285,11 @@ public class NodeInteractionTest extends AbstractTest {
     }
 
     public interface ITestServer extends VersionedProtocol {
-        public String testMethod(String param, String[] shards);
+        String testMethod(String param, String[] shards);
 
-        public String testMethodNoShards(String param);
+        String testMethodNoShards(String param);
 
-        public String failingMethod(String param, String[] shards);
+        String failingMethod(String param, String[] shards);
     }
 
     protected static class TestNodeExecutor implements INodeExecutor {

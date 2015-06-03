@@ -29,11 +29,7 @@ import java.util.zip.ZipOutputStream;
 
 public class FileUtil {
 
-    public static final FilenameFilter VISIBLE_FILES_FILTER = new FilenameFilter() {
-        public boolean accept(final File dir, final String name) {
-            return !name.startsWith(".");
-        }
-    };
+    public static final FilenameFilter VISIBLE_FILES_FILTER = (dir, name) -> !name.startsWith(".");
     private final static Logger LOG = LoggerFactory.getLogger(FileUtil.class);
     private static final int BUFFER = 4096;
 

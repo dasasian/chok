@@ -39,38 +39,38 @@ public class Version implements Serializable {
     /**
      * The version of Chok.
      */
-    private final String _number;
-    private final String _revision;
-    private final String _compiledBy;
-    private final String _compileTime;
+    private final String number;
+    private final String revision;
+    private final String createdBy;
+    private final String compileTime;
 
-    public Version(String number, String revision, String compiledBy, String compileTime) {
-        _number = number;
-        _revision = revision;
-        _compiledBy = compiledBy;
-        _compileTime = compileTime;
+    public Version(String number, String revision, String createdBy, String compileTime) {
+        this.number = number;
+        this.revision = revision;
+        this.createdBy = createdBy;
+        this.compileTime = compileTime;
     }
 
     public static Version readFromJar() {
         String jar = findContainingJar(Version.class);
         String number = "Unknown";
         String revision = "Unknown";
-        String compiledBy = "Unknown";
+        String createdBy = "Unknown";
         String compileTime = "Unknown";
         if (jar != null) {
             LOG.debug("load version info from '" + jar + "'");
             final Manifest manifest = getManifest(jar);
 
             final Map<String, Attributes> attrs = manifest.getEntries();
-            Attributes attr = attrs.get("net/sf/chok");
+            Attributes attr = attrs.get("com.dasasian.chok");
             if (attr != null) {
                 number = attr.getValue("Implementation-Version");
                 revision = attr.getValue("Git-Revision");
-                compiledBy = attr.getValue("Compiled-By");
+                createdBy = attr.getValue("Built--By");
                 compileTime = attr.getValue("Compile-Time");
             }
         }
-        return new Version(number, revision, compiledBy, compileTime);
+        return new Version(number, revision, createdBy, compileTime);
     }
 
     private static String findContainingJar(Class<?> clazz) {
@@ -104,27 +104,27 @@ public class Version implements Serializable {
     }
 
     public String getNumber() {
-        return _number;
+        return number;
     }
 
     public String getRevision() {
-        return _revision;
+        return revision;
     }
 
-    public String getCompiledBy() {
-        return _compiledBy;
+    public String getCreatedBy() {
+        return createdBy;
     }
 
     public String getCompileTime() {
-        return _compileTime;
+        return compileTime;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((_number == null) ? 0 : _number.hashCode());
-        result = prime * result + ((_revision == null) ? 0 : _revision.hashCode());
+        result = prime * result + ((number == null) ? 0 : number.hashCode());
+        result = prime * result + ((revision == null) ? 0 : revision.hashCode());
         return result;
     }
 
@@ -137,21 +137,21 @@ public class Version implements Serializable {
         if (getClass() != obj.getClass())
             return false;
         Version other = (Version) obj;
-        if (_number == null) {
-            if (other._number != null)
+        if (number == null) {
+            if (other.number != null)
                 return false;
-        } else if (!_number.equals(other._number))
+        } else if (!number.equals(other.number))
             return false;
-        if (_revision == null) {
-            if (other._revision != null)
+        if (revision == null) {
+            if (other.revision != null)
                 return false;
-        } else if (!_revision.equals(other._revision))
+        } else if (!revision.equals(other.revision))
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return getNumber() + " | " + getRevision() + " | " + getCompileTime() + " | by " + getCompiledBy();
+        return getNumber() + " | " + getRevision() + " | " + getCompileTime() + " | by " + getCreatedBy();
     }
 }

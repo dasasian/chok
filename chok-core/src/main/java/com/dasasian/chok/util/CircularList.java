@@ -41,7 +41,7 @@ public class CircularList<E> {
      * @param initialCapacity initial capacity of the list
      */
     public CircularList(int initialCapacity) {
-        this(new ArrayList<E>(initialCapacity));
+        this(new ArrayList<>(initialCapacity));
     }
 
     /**

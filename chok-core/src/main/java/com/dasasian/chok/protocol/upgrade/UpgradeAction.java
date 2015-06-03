@@ -19,6 +19,6 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 
 public interface UpgradeAction {
 
-    public void upgrade(InteractionProtocol protocol);
+    void upgrade(InteractionProtocol protocol);
 
 }

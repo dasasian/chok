@@ -38,7 +38,7 @@ public class SleepClient implements ISleepClient {
     private static final int SLEEP_METHOD_SHARD_ARG_IDX = 2;
     static {
         try {
-            SLEEP_METHOD = ISleepServer.class.getMethod("sleep", new Class[]{Long.TYPE, Integer.TYPE, String[].class});
+            SLEEP_METHOD = ISleepServer.class.getMethod("sleep", Long.TYPE, Integer.TYPE, String[].class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Could not find method sleep() in ISleepServer!");
         }

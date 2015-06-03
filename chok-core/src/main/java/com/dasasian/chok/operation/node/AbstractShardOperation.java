@@ -29,7 +29,7 @@ public abstract class AbstractShardOperation implements NodeOperation {
     private static final long serialVersionUID = 1L;
     private final static Logger LOG = LoggerFactory.getLogger(AbstractShardOperation.class);
 
-    private Map<String, String> shardPathsByShardNames = new LinkedHashMap<>(3);
+    private final Map<String, String> shardPathsByShardNames = new LinkedHashMap<>(3);
 
     public Set<String> getShardNames() {
         return shardPathsByShardNames.keySet();

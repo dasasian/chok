@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dasasian.chok.command;
+package com.dasasian.chok;
+
+import com.dasasian.chok.command.*;
 
 /**
  * Provides command line access to a Chok cluster.
  */
-public class LuceneCommandLineInterface extends CommandLineInterface {
+public class ChokMap extends CommandLineInterface {
 
     static {
-        addCommand(new StartLuceneNodeCommand());
-        addCommand(new SearchCommand());
+        addCommand(new StartMapFileNodeCommand());
     }
 
 }

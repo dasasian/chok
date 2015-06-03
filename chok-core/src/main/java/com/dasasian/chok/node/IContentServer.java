@@ -41,7 +41,7 @@ public interface IContentServer extends VersionedProtocol {
      * integer. The units depend on the type of data in the shard. Reporting the
      * shard size is optional.
      */
-    public static final String SHARD_SIZE_KEY = "shard-size";
+    String SHARD_SIZE_KEY = "shard-size";
 
     /**
      * Initializes the content-server after the instance has been created. Passes
@@ -53,7 +53,7 @@ public interface IContentServer extends VersionedProtocol {
      * @param nodeConfiguration chok.node.properties which may contain custom properties for the
      *                          content-server
      */
-    public void init(String nodeName, NodeConfiguration nodeConfiguration);
+    void init(String nodeName, NodeConfiguration nodeConfiguration);
 
     /**
      * Include the shard (directory of data) when computing results. The shard is
@@ -64,7 +64,7 @@ public interface IContentServer extends VersionedProtocol {
      * @param shardDir  The directory where the shard data is.
      * @throws Exception when an error occurs
      */
-    public void addShard(String shardName, File shardDir) throws Exception;
+    void addShard(String shardName, File shardDir) throws Exception;
 
     /**
      * Stop including the shard (directory of data). After this call returns, the
@@ -74,12 +74,12 @@ public interface IContentServer extends VersionedProtocol {
      *                  addShard().
      * @throws Exception when an error occurs
      */
-    public void removeShard(String shardName) throws Exception;
+    void removeShard(String shardName) throws Exception;
 
     /**
      * @return all included shards
      */
-    public Collection<String> getShards();
+    Collection<String> getShards();
 
     /**
      * Returns data about a shard. Currently the only standard key is
@@ -92,13 +92,13 @@ public interface IContentServer extends VersionedProtocol {
      * @return a map of key/value pairs which describe the shard.
      * @throws Exception when an error occurs
      */
-    public Map<String, String> getShardMetaData(String shardName) throws Exception;
+    Map<String, String> getShardMetaData(String shardName) throws Exception;
 
     /**
      * Release all resources. No further calls will happen after this call.
      *
      * @throws Exception when an error occurs
      */
-    public void shutdown() throws Exception;
+    void shutdown() throws Exception;
 
 }

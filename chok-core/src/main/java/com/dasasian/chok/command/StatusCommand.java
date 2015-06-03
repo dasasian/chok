@@ -28,7 +28,6 @@ import java.util.List;
  */
 public class StatusCommand extends ProtocolCommand {
 
-    // todo
     private boolean detailedView;
 
     public StatusCommand() {

@@ -27,7 +27,6 @@ import org.I0Itec.zkclient.ExceptionUtil;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,11 +71,7 @@ public class IndexDeployOperation extends AbstractIndexOperation {
             if (!fileSystem.exists(indexPath)) {
                 throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "index path '" + uri + "' does not exists");
             }
-            final FileStatus[] listStatus = fileSystem.listStatus(indexPath, new PathFilter() {
-                public boolean accept(final Path aPath) {
-                    return !aPath.getName().startsWith(".");
-                }
-            });
+            final FileStatus[] listStatus = fileSystem.listStatus(indexPath, aPath -> !aPath.getName().startsWith("."));
             for (final FileStatus fileStatus : listStatus) {
                 String shardPath = fileStatus.getPath().toString();
                 if (fileStatus.isDir() || shardPath.endsWith(".zip")) {

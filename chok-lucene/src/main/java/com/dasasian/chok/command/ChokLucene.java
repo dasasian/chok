@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dasasian.chok.testutil;
+package com.dasasian.chok.command;
 
 /**
- * User: damith.chandrasekara
- * Date: 7/2/13
+ * Provides command line access to a Chok cluster.
  */
-public interface IndexGenerator<T> {
-    void createIndex(TestIndex testIndex);
+public class ChokLucene extends CommandLineInterface {
+
+    static {
+        addCommand(new StartLuceneNodeCommand());
+        addCommand(new SearchCommand());
+    }
+
 }

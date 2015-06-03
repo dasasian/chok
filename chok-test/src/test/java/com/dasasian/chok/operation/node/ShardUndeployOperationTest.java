@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 
 public class ShardUndeployOperationTest extends AbstractNodeOperationMockTest {

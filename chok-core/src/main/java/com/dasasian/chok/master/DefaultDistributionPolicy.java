@@ -66,13 +66,10 @@ public class DefaultDistributionPolicy implements IDeployPolicy {
     }
 
     private void sortAfterFreeCapacity(List<String> aliveNodes, final Map<String, List<String>> node2ShardsMap) {
-        Collections.sort(aliveNodes, new Comparator<String>() {
-            @Override
-            public int compare(String node1, String node2) {
-                int size1 = node2ShardsMap.get(node1).size();
-                int size2 = node2ShardsMap.get(node2).size();
-                return (size1 < size2 ? -1 : (size1 == size2 ? 0 : 1));
-            }
+        Collections.sort(aliveNodes, (node1, node2) -> {
+            int size1 = node2ShardsMap.get(node1).size();
+            int size2 = node2ShardsMap.get(node2).size();
+            return (size1 < size2 ? -1 : (size1 == size2 ? 0 : 1));
         });
     }
 

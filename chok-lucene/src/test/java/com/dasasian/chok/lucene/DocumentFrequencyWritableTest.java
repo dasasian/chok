@@ -28,12 +28,9 @@ public class DocumentFrequencyWritableTest extends AbstractTest {
     @Test
     public void testAddNumDocsMultiThreading() throws InterruptedException {
         final DocumentFrequencyWritable writable = new DocumentFrequencyWritable();
-        runThreads(10, new Runnable() {
-            @Override
-            public void run() {
-                for (int j = 0; j < 100000; j++) {
-                    writable.addNumDocs(1);
-                }
+        runThreads(10, () -> {
+            for (int j = 0; j < 100000; j++) {
+                writable.addNumDocs(1);
             }
         });
 
@@ -43,12 +40,9 @@ public class DocumentFrequencyWritableTest extends AbstractTest {
     @Test
     public void testAddFrequencies() throws InterruptedException {
         final DocumentFrequencyWritable writable = new DocumentFrequencyWritable();
-        runThreads(10, new Runnable() {
-            @Override
-            public void run() {
-                for (int j = 0; j < 10000; j++) {
-                    writable.put("field", "term", 1);
-                }
+        runThreads(10, () -> {
+            for (int j = 0; j < 10000; j++) {
+                writable.put("field", "term", 1);
             }
         });
 

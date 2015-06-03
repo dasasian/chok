@@ -17,7 +17,6 @@ package com.dasasian.chok.protocol.metadata;
 
 import com.dasasian.chok.util.One2ManyListMap;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 
 import java.io.Serializable;
@@ -72,7 +71,7 @@ public class IndexDeployError implements Serializable {
         return MoreObjects.toStringHelper(this).addValue(indexName).addValue(errorType).addValue(getErrorMessage()).toString();
     }
 
-    public static enum ErrorType {
+    public enum ErrorType {
         NO_NODES_AVAILIBLE, INDEX_NOT_ACCESSIBLE, SHARDS_NOT_DEPLOYABLE, UNKNOWN
     }
 }
