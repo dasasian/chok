@@ -29,6 +29,7 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
 import com.dasasian.chok.util.CollectionUtil;
 import com.dasasian.chok.util.One2ManyListMap;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
     public static final char INDEX_SHARD_NAME_SEPARATOR = '#';
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
-    private Map<String, List<String>> _newShardsByNodeMap = new HashMap<>();
+    private Map<String, List<String>> newShardsByNodeMap = new HashMap<>();
 
     public static String createShardName(String indexName, String shardPath) {
         int lastIndexOf = shardPath.lastIndexOf("/");
@@ -100,12 +101,12 @@ public abstract class AbstractIndexOperation implements MasterOperation {
                 operationIds.add(operationId);
             }
         }
-        _newShardsByNodeMap = newShardsByNode.asMap();
+        newShardsByNodeMap = newShardsByNode.asMap();
         return operationIds;
     }
 
     protected Map<String, List<String>> getNewShardsByNodeMap() {
-        return _newShardsByNodeMap;
+        return newShardsByNodeMap;
     }
 
     private void addRunningDeployments(Map<String, List<String>> currentNode2ShardsMap, List<MasterOperation> runningOperations) {
@@ -136,11 +137,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
 
     private Map<String, List<String>> getCurrentNode2ShardMap(Collection<String> liveNodes, final Map<String, List<String>> currentShard2NodesMap) {
         final Map<String, List<String>> currentNodeToShardsMap = CollectionUtil.invertListMap(currentShard2NodesMap);
-        for (String node : liveNodes) {
-            if (!currentNodeToShardsMap.containsKey(node)) {
-                currentNodeToShardsMap.put(node, new ArrayList<>(3));
-            }
-        }
+        liveNodes.stream().filter(node -> !currentNodeToShardsMap.containsKey(node)).forEach(node -> currentNodeToShardsMap.put(node, Lists.newArrayListWithCapacity(3)));
         return currentNodeToShardsMap;
     }
 
@@ -184,14 +181,13 @@ public abstract class AbstractIndexOperation implements MasterOperation {
             }
         } else {
             IndexDeployError deployError = new IndexDeployError(indexMD.getName(), ErrorType.SHARDS_NOT_DEPLOYABLE);
-            for (OperationResult operationResult : results) {
-                if (operationResult != null) {// node-crashed produces null
-                    DeployResult deployResult = (DeployResult) operationResult;
-                    for (Entry<String, Exception> entry : deployResult.getShardExceptions().entrySet()) {
-                        deployError.addShardError(entry.getKey(), entry.getValue());
-                    }
+            // node-crashed produces null
+            results.stream().filter(operationResult -> operationResult != null).forEach(operationResult -> {// node-crashed produces null
+                DeployResult deployResult = (DeployResult) operationResult;
+                for (Entry<String, Exception> entry : deployResult.getShardExceptions().entrySet()) {
+                    deployError.addShardError(entry.getKey(), entry.getValue());
                 }
-            }
+            });
             indexMD.setDeployError(deployError);
         }
         if (newIndex) {

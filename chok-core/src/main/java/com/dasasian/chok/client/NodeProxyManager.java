@@ -113,7 +113,8 @@ public class NodeProxyManager implements INodeProxyManager {
         }
     }
 
-    private boolean exceptionContains(Throwable t, Class<? extends Throwable>... exceptionClasses) {
+    @SafeVarargs
+    private final boolean exceptionContains(Throwable t, Class<? extends Throwable>... exceptionClasses) {
         while (t != null) {
             for (Class<? extends Throwable> exceptionClass : exceptionClasses) {
                 if (t.getClass().equals(exceptionClass)) {
@@ -145,9 +146,7 @@ public class NodeProxyManager implements INodeProxyManager {
     @Override
     public void shutdown() {
         Collection<VersionedProtocol> proxies = node2ProxyMap.values();
-        for (VersionedProtocol search : proxies) {
-            RPC.stopProxy(search);
-        }
+        proxies.forEach(RPC::stopProxy);
     }
 
 }

@@ -29,9 +29,7 @@ public class ShardRedeployOperation extends AbstractShardOperation {
     private static final long serialVersionUID = 1L;
 
     public ShardRedeployOperation(Collection<String> installedShards) {
-        for (String shardName : installedShards) {
-            addShard(shardName);
-        }
+        installedShards.forEach(this::addShard);
     }
 
     @Override

@@ -22,7 +22,7 @@ import java.util.List;
 public class MetricsRecord implements Serializable {
     private static final long serialVersionUID = 1832158671826263268L;
     private final String _serverId;
-    private List<Record> _records = new ArrayList<>();
+    private final List<Record> _records = new ArrayList<>();
 
     public MetricsRecord(String serverId) {
         _serverId = serverId;

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class Client implements ConnectedComponent, AutoCloseable {
 
@@ -76,10 +77,9 @@ public class Client implements ConnectedComponent, AutoCloseable {
     public Client(Class<? extends VersionedProtocol> serverClass, final INodeSelectionPolicy policy, final InteractionProtocol protocol, ClientConfiguration clientConfiguration) {
         Set<String> keys = ImmutableSet.copyOf(clientConfiguration.getKeys());
         Configuration hadoopConf = new Configuration();
-        synchronized (Configuration.class) {// fix for CHOK-146
+        synchronized (Configuration.class) {
             for (String key : keys) {
-                // simply set all properties / adding non-hadoop properties shouldn't
-                // hurt
+                // simply set all properties / adding non-hadoop properties shouldn't hurt
                 hadoopConf.set(key, clientConfiguration.getProperty(key));
             }
         }
@@ -122,9 +122,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
     }
 
     protected void removeIndexes(List<String> indexes) {
-        for (String index : indexes) {
-            removeIndex(index);
-        }
+        indexes.forEach(this::removeIndex);
     }
 
     protected void removeIndex(String index) {
@@ -177,10 +175,8 @@ public class Client implements ConnectedComponent, AutoCloseable {
 
     protected void addIndexForSearching(IndexMetaData indexMD) {
         final Set<Shard> shards = indexMD.getShards();
-        List<String> shardNames = Lists.newArrayList();
-        for (Shard shard : shards) {
-            shardNames.add(shard.getName());
-        }
+        List<String> shardNames = shards.stream().map(Shard::getName).collect(Collectors.toList());
+
         for (final String shardName : shardNames) {
             List<String> nodes = protocol.registerChildListener(this, PathDef.SHARD_TO_NODES, shardName, new IAddRemoveListener() {
                 @Override
@@ -373,9 +369,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
         Collection<String> allShards = Sets.newHashSet();
         for (String index : indexNames) {
             if ("*".equals(index)) {
-                for (Collection<String> shardsOfIndex : ImmutableSet.copyOf(indexToShards.values())) {
-                    allShards.addAll(shardsOfIndex);
-                }
+                ImmutableSet.copyOf(indexToShards.values()).forEach(allShards::addAll);
                 break;
             }
             List<String> shardsForIndex = indexToShards.get(index);

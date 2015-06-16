@@ -20,8 +20,6 @@ import com.dasasian.chok.operation.master.IndexDeployOperation;
 import com.dasasian.chok.operation.master.IndexUndeployOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
-import com.dasasian.chok.util.ZkConfiguration;
-import org.I0Itec.zkclient.ZkClient;
 
 import java.util.List;
 

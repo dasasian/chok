@@ -19,6 +19,7 @@ import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.FileUtil;
 import com.dasasian.chok.util.ThrottledInputStream;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
+import com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -32,7 +33,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 public class ShardManager {
 
@@ -76,7 +76,7 @@ public class ShardManager {
     public Collection<String> getInstalledShards() {
         String[] folderList = shardsFolder.list(FileUtil.VISIBLE_FILES_FILTER);
         if (folderList == null) {
-            return Collections.EMPTY_LIST;
+            return ImmutableList.of();
         }
         return Arrays.asList(folderList);
     }

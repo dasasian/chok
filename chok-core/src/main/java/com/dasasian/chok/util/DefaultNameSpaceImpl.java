@@ -29,7 +29,7 @@ public class DefaultNameSpaceImpl implements IDefaultNameSpace {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultNameSpaceImpl.class);
 
-    private ZkConfiguration _conf;
+    private final ZkConfiguration _conf;
 
     public DefaultNameSpaceImpl(ZkConfiguration conf) {
         _conf = conf;

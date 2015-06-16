@@ -22,8 +22,8 @@ public class DeployResult extends OperationResult {
 
     private static final long serialVersionUID = 1L;
 
-    private Map<String, Exception> exceptionByShard = new HashMap<>(3);
-    private Map<String, Map<String, String>> metadataMapByShard = new HashMap<>(3);
+    private final Map<String, Exception> exceptionByShard = new HashMap<>(3);
+    private final Map<String, Map<String, String>> metadataMapByShard = new HashMap<>(3);
 
     public DeployResult(String nodeName) {
         super(nodeName);

@@ -26,7 +26,7 @@ import java.util.List;
 
 public class MasterQueue extends BlockingQueue<MasterOperation> {
 
-    private String _watchdogsPath;
+    private final String _watchdogsPath;
 
     public MasterQueue(ZkClient zkClient, String rootPath) {
         super(zkClient, rootPath);

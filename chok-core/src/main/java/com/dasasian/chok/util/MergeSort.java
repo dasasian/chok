@@ -48,6 +48,7 @@ public class MergeSort {
         // 19)));
     }
 
+    @SafeVarargs
     public static <T extends Comparable<T>> List<T> merge(final List<T>... sortedLists) {
         final List<Iterator<T>> iterators = new ArrayList<>();
 

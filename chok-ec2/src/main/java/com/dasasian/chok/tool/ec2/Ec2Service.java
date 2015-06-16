@@ -29,18 +29,18 @@ import java.util.Set;
 
 public abstract class Ec2Service {
 
-    private Jec2 _ec2;
-    private String _awsAccountId;
-    private String _startAIM;
-    private String _keyName;
-    private String _keyPath;
+    private Jec2 ec2;
+    private String awsAccountId;
+    private String startAIM;
+    private String keyName;
+    private String keyPath;
 
     public Ec2Service(String awsAccountId, String accessKeyId, String secretAccessKey, String aim, String keyName, String keyPath) {
-        _ec2 = new Jec2(accessKeyId, secretAccessKey);
-        _awsAccountId = awsAccountId;
-        _startAIM = aim;
-        _keyName = keyName;
-        _keyPath = keyPath;
+        ec2 = new Jec2(accessKeyId, secretAccessKey);
+        this.awsAccountId = awsAccountId;
+        startAIM = aim;
+        this.keyName = keyName;
+        this.keyPath = keyPath;
     }
 
     /**
@@ -51,7 +51,7 @@ public abstract class Ec2Service {
     public Set<String> list() throws IOException {
         HashSet<String> set = new HashSet<>();
         try {
-            List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<>());
+            List<ReservationDescription> reservations = ec2.describeInstances(new ArrayList<>());
             for (ReservationDescription reservation : reservations) {
                 List<Instance> instances = reservation.getInstances();
                 for (Instance instance : instances) {
@@ -90,7 +90,7 @@ public abstract class Ec2Service {
 
             List<String> toTerminate = new ArrayList<>();
             List<ReservationDescription> describeInstances;
-            describeInstances = _ec2.describeInstances(new ArrayList<>());
+            describeInstances = ec2.describeInstances(new ArrayList<>());
             for (ReservationDescription description : describeInstances) {
                 List<Instance> instances = description.getInstances();
                 for (Instance instance : instances) {
@@ -99,19 +99,19 @@ public abstract class Ec2Service {
                     }
                 }
             }
-            _ec2.terminateInstances(toTerminate);
+            ec2.terminateInstances(toTerminate);
 
             // ec2-revoke $CLUSTER_MASTER -o $CLUSTER -u $AWS_ACCOUNT_ID
-            _ec2.revokeSecurityGroupIngress(clusterMaster, cluster, _awsAccountId);
+            ec2.revokeSecurityGroupIngress(clusterMaster, cluster, awsAccountId);
 
             // ec2-revoke $CLUSTER -o $CLUSTER_MASTER -u $AWS_ACCOUNT_ID
-            _ec2.revokeSecurityGroupIngress(cluster, clusterMaster, _awsAccountId);
+            ec2.revokeSecurityGroupIngress(cluster, clusterMaster, awsAccountId);
 
             // ec2-delete-group $CLUSTER_MASTER
-            _ec2.deleteSecurityGroup(clusterMaster);
+            ec2.deleteSecurityGroup(clusterMaster);
 
             // ec2-delete-group $CLUSTER
-            _ec2.deleteSecurityGroup(cluster);
+            ec2.deleteSecurityGroup(cluster);
 
         } catch (EC2Exception e) {
             throw new IOException("Unable to terminate instances.", e);
@@ -128,25 +128,25 @@ public abstract class Ec2Service {
         try {
             // creating group cluster master
             if (!groupExists(masterGroupName)) {
-                _ec2.createSecurityGroup(masterGroupName, "Group for Hadoop Master.");
-                _ec2.authorizeSecurityGroupIngress(masterGroupName, masterGroupName, _awsAccountId);
-                _ec2.authorizeSecurityGroupIngress(masterGroupName, "tcp", 22, 22, "0.0.0.0/0");
+                ec2.createSecurityGroup(masterGroupName, "Group for Hadoop Master.");
+                ec2.authorizeSecurityGroupIngress(masterGroupName, masterGroupName, awsAccountId);
+                ec2.authorizeSecurityGroupIngress(masterGroupName, "tcp", 22, 22, "0.0.0.0/0");
 
             }
             // create group cluster
             if (!groupExists(nodeGroupName)) {
-                _ec2.createSecurityGroup(nodeGroupName, "Group for Hadoop Slaves.");
-                _ec2.authorizeSecurityGroupIngress(nodeGroupName, nodeGroupName, _awsAccountId);
-                _ec2.authorizeSecurityGroupIngress(nodeGroupName, "tcp", 22, 22, "0.0.0.0/0");
+                ec2.createSecurityGroup(nodeGroupName, "Group for Hadoop Slaves.");
+                ec2.authorizeSecurityGroupIngress(nodeGroupName, nodeGroupName, awsAccountId);
+                ec2.authorizeSecurityGroupIngress(nodeGroupName, "tcp", 22, 22, "0.0.0.0/0");
                 // couple groups with each other
-                _ec2.authorizeSecurityGroupIngress(masterGroupName, nodeGroupName, _awsAccountId);
-                _ec2.authorizeSecurityGroupIngress(nodeGroupName, masterGroupName, _awsAccountId);
+                ec2.authorizeSecurityGroupIngress(masterGroupName, nodeGroupName, awsAccountId);
+                ec2.authorizeSecurityGroupIngress(nodeGroupName, masterGroupName, awsAccountId);
             }
             // launch master
             List<String> groupSet = new ArrayList<>();
             groupSet.add(masterGroupName);
 
-            ReservationDescription master = _ec2.runInstances(_startAIM, 1, 1, groupSet, null, _keyName);
+            ReservationDescription master = ec2.runInstances(startAIM, 1, 1, groupSet, null, keyName);
 
             // polling until started wait at least 5 min
             Ec2Instance masterInfo = waitForMaster(master, 5 * 60 * 1000);
@@ -159,15 +159,15 @@ public abstract class Ec2Service {
                 if (end < System.currentTimeMillis()) {
                     throw new IOException("Unable to ssh into master within 3 min.");
                 }
-                if (SshUtil.sshRemoteCommand(masterInfo.getExternalHost(), "echo \"hello\"", _keyPath)) {
+                if (SshUtil.sshRemoteCommand(masterInfo.getExternalHost(), "echo \"hello\"", keyPath)) {
                     break;
                 }
             }
 
             // scp private key to server
-            SshUtil.scp(_keyPath, _keyPath, masterInfo.getExternalHost(), "/root/.ssh/id_rsa");
+            SshUtil.scp(keyPath, keyPath, masterInfo.getExternalHost(), "/root/.ssh/id_rsa");
             // change mod of keyfile
-            SshUtil.sshRemoteCommand(masterInfo.getExternalHost(), "chmod 600 /root/.ssh/id_rsa", _keyPath);
+            SshUtil.sshRemoteCommand(masterInfo.getExternalHost(), "chmod 600 /root/.ssh/id_rsa", keyPath);
 
             return masterInfo;
         } catch (EC2Exception e) {
@@ -180,7 +180,7 @@ public abstract class Ec2Service {
         try {
             List<String> groupSet = new ArrayList<>();
             groupSet.add(cluster);
-            _ec2.runInstances(_startAIM, numOfSlaves, numOfSlaves, groupSet, null, _keyName);
+            ec2.runInstances(startAIM, numOfSlaves, numOfSlaves, groupSet, null, keyName);
             return waitUntilStarted(cluster, 5 * 60 * 1000);
         } catch (EC2Exception e) {
             throw new IOException("Unable to create slaves", e);
@@ -202,7 +202,7 @@ public abstract class Ec2Service {
         }
 
         while (System.currentTimeMillis() < end) {
-            List<ReservationDescription> describeInstances = _ec2.describeInstances(instanceIds);
+            List<ReservationDescription> describeInstances = ec2.describeInstances(instanceIds);
             for (ReservationDescription reservationDescription : describeInstances) {
                 List<Instance> startingInstances = reservationDescription.getInstances();
                 for (Instance instance : startingInstances) {
@@ -217,7 +217,7 @@ public abstract class Ec2Service {
 
     private boolean groupExists(String name) {
         try {
-            List<GroupDescription> groups = _ec2.describeSecurityGroups(new String[]{});
+            List<GroupDescription> groups = ec2.describeSecurityGroups(new String[]{});
             for (GroupDescription groupDescription : groups) {
                 if (groupDescription.getName().equals(name)) {
                     return true;
@@ -231,7 +231,7 @@ public abstract class Ec2Service {
 
     private boolean masterAlreadyRunning(String clusterMaster) throws IOException {
         try {
-            List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<>());
+            List<ReservationDescription> reservations = ec2.describeInstances(new ArrayList<>());
             for (ReservationDescription reservation : reservations) {
                 if (reservation.getGroups().contains(clusterMaster)) {
                     List<Instance> instances = reservation.getInstances();
@@ -256,7 +256,7 @@ public abstract class Ec2Service {
             while (pending && System.currentTimeMillis() < end) {
                 pending = false;
                 ArrayList<Ec2Instance> list = new ArrayList<>();
-                List<ReservationDescription> reservations = _ec2.describeInstances(new ArrayList<>());
+                List<ReservationDescription> reservations = ec2.describeInstances(new ArrayList<>());
                 for (ReservationDescription reservation : reservations) {
                     if (reservation.getGroups().contains(cluster) || reservation.getGroups().contains(clusterMaster)) {
                         List<Instance> instances = reservation.getInstances();

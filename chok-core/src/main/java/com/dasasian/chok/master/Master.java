@@ -22,8 +22,6 @@ import com.dasasian.chok.protocol.IAddRemoveListener;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.metadata.Version;
-import com.dasasian.chok.protocol.upgrade.UpgradeAction;
-import com.dasasian.chok.protocol.upgrade.UpgradeRegistry;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.MasterConfiguration;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
@@ -40,13 +38,14 @@ import java.util.UUID;
 public class Master implements ConnectedComponent {
 
     protected final static Logger LOG = LoggerFactory.getLogger(Master.class);
+
     protected volatile OperatorThread operatorThread;
     protected InteractionProtocol protocol;
-    private String masterName;
+    private final String masterName;
     private ZkServer zkServer;
-    private boolean shutdownClient;
-    private IDeployPolicy deployPolicy;
-    private long safeModeMaxTime;
+    private final boolean shutdownClient;
+    private final IDeployPolicy deployPolicy;
+    private final long safeModeMaxTime;
 
     public Master(MasterConfiguration masterConfiguration, InteractionProtocol protocol, ZkServer zkServer, boolean shutdownClient) throws ChokException {
         this(masterConfiguration, protocol, shutdownClient);
@@ -55,7 +54,7 @@ public class Master implements ConnectedComponent {
 
     public Master(MasterConfiguration masterConfiguration, InteractionProtocol protocol, boolean shutdownClient) throws ChokException {
         this.protocol = protocol;
-        masterName = NetworkUtil.getLocalhostName() + "_" + UUID.randomUUID().toString();
+        this.masterName = NetworkUtil.getLocalhostName() + "_" + UUID.randomUUID().toString();
         this.shutdownClient = shutdownClient;
         protocol.registerComponent(this);
         deployPolicy = masterConfiguration.getDeployPolicy();
@@ -63,7 +62,7 @@ public class Master implements ConnectedComponent {
     }
 
     public synchronized void start() {
-        Preconditions.checkState(!isShutdown(), "master was already shut-down");
+        Preconditions.checkState(!isShutdown(), "master was already started");
         becomePrimaryOrSecondaryMaster();
     }
 
@@ -93,10 +92,6 @@ public class Master implements ConnectedComponent {
         }
         MasterQueue queue = protocol.publishMaster(this);
         if (queue != null) {
-            UpgradeAction upgradeAction = UpgradeRegistry.findUpgradeAction(protocol, Version.readFromJar());
-            if (upgradeAction != null) {
-                upgradeAction.upgrade(protocol);
-            }
             protocol.setVersion(Version.readFromJar());
             LOG.info(getMasterName() + " became master with " + queue.size() + " waiting master operations");
             startNodeManagement();
@@ -107,10 +102,7 @@ public class Master implements ConnectedComponent {
     }
 
     public synchronized boolean isInSafeMode() {
-        if (!isMaster()) {
-            return true;
-        }
-        return operatorThread.isInSafeMode();
+        return !isMaster() || operatorThread.isInSafeMode();
     }
 
     public Collection<String> getConnectedNodes() {

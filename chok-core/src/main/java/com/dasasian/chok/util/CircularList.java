@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class CircularList<E> {
 
-    private List<E> elements;
+    private final List<E> elements;
 
     private int currentPos = 0;
 

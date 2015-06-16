@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 public class IndexDeployFuture implements IIndexDeployFuture, IZkDataListener, ConnectedComponent {
 
-    private static Logger LOG = LoggerFactory.getLogger(IndexDeployFuture.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IndexDeployFuture.class);
 
     private final InteractionProtocol protocol;
     private final String indexName;

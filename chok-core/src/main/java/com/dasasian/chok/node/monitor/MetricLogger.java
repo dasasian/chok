@@ -50,9 +50,7 @@ public class MetricLogger implements IZkDataListener, ConnectedComponent {
                 subscribeDataUpdates(name);
             }
         });
-        for (String node : children) {
-            subscribeDataUpdates(node);
-        }
+        children.forEach(this::subscribeDataUpdates);
         lock = new ReentrantLock();
         lock.lock();
     }

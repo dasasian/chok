@@ -28,9 +28,9 @@ public class ChokConfiguration implements Serializable {
 
     public static final String CHOK_CONFIGURATION_HOME = "chok.configuration.home";
     @SuppressWarnings("unused")
-    private final static Logger LOG = LoggerFactory.getLogger(ChokConfiguration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ChokConfiguration.class);
     private static final long serialVersionUID = 1L;
-    protected Properties properties;
+    protected final Properties properties;
 
     public ChokConfiguration(final String path) {
         String chokPropertyHome = System.getProperty(CHOK_CONFIGURATION_HOME, "");

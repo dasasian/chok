@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dasasian.chok.tool;
+package com.dasasian.chok.util;
 
-import com.dasasian.chok.util.ZkChokUtil;
-import com.dasasian.chok.util.ZkConfiguration;
-import com.dasasian.chok.util.ZkConfigurationLoader;
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.commons.cli.*;
 
@@ -26,7 +23,7 @@ import java.util.List;
 
 public class ZkTool {
 
-    private ZkClient zkClient;
+    private final ZkClient zkClient;
 
     public ZkTool() {
         zkClient = ZkChokUtil.startZkClient(ZkConfigurationLoader.loadConfiguration(), 5000);

@@ -26,7 +26,7 @@ import java.util.List;
 
 public class NodeQueue extends BlockingQueue<NodeOperation> {
 
-    private String _resultsPath;
+    private final String _resultsPath;
 
     public NodeQueue(ZkClient zkClient, String rootPath) {
         super(zkClient, rootPath);

@@ -398,7 +398,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
 
         final ScoreDoc[][] scoreDocs = new ScoreDoc[shardsCount][];
         ScoreDoc scoreDocExample = null;
-        for (int i = 0; i < shardsCount; i++) {
+        for (String shard : shards) {
             try {
                 final SearchResult searchResult = csSearch.take().get();
                 final int callIndex = searchResult.getSearchCallIndex();

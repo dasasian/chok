@@ -130,8 +130,8 @@ public class BlockingQueue<T extends Serializable> {
     }
 
     protected static class Element<T> {
-        private String name;
-        private T data;
+        private final String name;
+        private final T data;
 
         public Element(String name, T data) {
             this.name = name;

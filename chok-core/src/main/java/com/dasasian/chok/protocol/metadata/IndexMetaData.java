@@ -15,7 +15,6 @@
  */
 package com.dasasian.chok.protocol.metadata;
 
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -111,7 +110,7 @@ public class IndexMetaData implements Serializable {
         }
 
         public static List<String> getShardNames(Collection<Shard> shards) {
-            return ImmutableList.copyOf(Iterables.transform(shards, shard -> shard.getName()));
+            return ImmutableList.copyOf(Iterables.transform(shards, Shard::getName));
         }
 
         public String getName() {

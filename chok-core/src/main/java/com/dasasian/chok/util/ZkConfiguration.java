@@ -33,8 +33,8 @@ public class ZkConfiguration implements Serializable {
     private final String dataDir;
     private final String logDataDir;
     private final String rootPath;
-    private int snapRetainCount;
-    private int purgeInterval;
+    private final int snapRetainCount;
+    private final int purgeInterval;
 
     public ZkConfiguration(boolean embedded, String servers, int timeOut, int tickTime, int initLimit, int syncLimit, String dataDir, String logDataDir, String rootPath, int snapRetainCount, int purgeInterval) {
         this.embedded = embedded;

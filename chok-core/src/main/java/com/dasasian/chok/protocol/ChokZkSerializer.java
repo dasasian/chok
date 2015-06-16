@@ -21,6 +21,8 @@ import org.I0Itec.zkclient.serialize.ZkSerializer;
 import java.io.*;
 
 /**
+ * Used to serialize/deserialize objects.
+ *
  * Created by damith.chandrasekara on 5/11/15.
  */
 public class ChokZkSerializer implements ZkSerializer {
@@ -29,8 +31,7 @@ public class ChokZkSerializer implements ZkSerializer {
     public Object deserialize(byte[] bytes) throws ZkMarshallingError {
         try {
             ObjectInputStream inputStream = new ChokTcclAwareObjectIputStream(new ByteArrayInputStream(bytes));
-            Object object = inputStream.readObject();
-            return object;
+            return inputStream.readObject();
         } catch (ClassNotFoundException e) {
             throw new ZkMarshallingError("Unable to find object class.", e);
         } catch (IOException e) {

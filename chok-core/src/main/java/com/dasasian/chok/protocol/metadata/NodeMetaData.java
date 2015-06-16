@@ -25,7 +25,7 @@ public class NodeMetaData implements Serializable {
 
     private String _name;
     private float _queriesPerMinute = 0f;
-    private long _startTimeStamp = System.currentTimeMillis();
+    private final long _startTimeStamp = System.currentTimeMillis();
 
     // with node execution
 

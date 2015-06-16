@@ -42,7 +42,7 @@ public class IndexDeployOperation extends AbstractIndexOperation {
     private final static Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
     private final String indexName;
     private final String indexPath;
-    protected IndexMetaData indexMetaData;
+    protected final IndexMetaData indexMetaData;
 
     public IndexDeployOperation(String indexName, String indexPath, int replicationLevel) {
         indexMetaData = new IndexMetaData(indexName, indexPath, replicationLevel);
@@ -62,7 +62,7 @@ public class IndexDeployOperation extends AbstractIndexOperation {
         try {
             fileSystem = HadoopUtil.getFileSystem(new Path(uri.toString()));
         } catch (final IOException e) {
-            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to retrive file system for index path '" + indexPathString + "', make sure your path starts with hadoop support prefix like file:// or hdfs://", e);
+            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to retrieve file system for index path '" + indexPathString + "', make sure your path starts with hadoop support prefix like file:// or hdfs://", e);
         }
 
         List<Shard> shards = new ArrayList<>();

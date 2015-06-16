@@ -64,10 +64,10 @@ public class InteractionProtocol {
     protected volatile boolean connected = true;
     // we govern the various listener and ephemerals to remove burden from
     // listener-users to unregister/delete them
-    protected One2ManyListMap<ConnectedComponent, ListenerAdapter> zkListenerByComponent = new One2ManyListMap<>();
-    private SetMultimap<ConnectedComponent, String> zkEphemeralPublishesByComponent = HashMultimap.create();
+    protected final One2ManyListMap<ConnectedComponent, ListenerAdapter> zkListenerByComponent = new One2ManyListMap<>();
+    private final SetMultimap<ConnectedComponent, String> zkEphemeralPublishesByComponent = HashMultimap.create();
 
-    private IZkStateListener stateListener = new IZkStateListener() {
+    private final IZkStateListener stateListener = new IZkStateListener() {
         @Override
         public void handleStateChanged(KeeperState state) throws Exception {
             Set<ConnectedComponent> components = new HashSet<>(zkListenerByComponent.keySet());
@@ -75,17 +75,13 @@ public class InteractionProtocol {
                 case Disconnected:
                 case Expired:
                     if (connected) { // disconnected & expired can come after each other
-                        for (ConnectedComponent component : components) {
-                            component.disconnect();
-                        }
+                        components.forEach(com.dasasian.chok.protocol.ConnectedComponent::disconnect);
                         connected = false;
                     }
                     break;
                 case SyncConnected:
                     connected = true;
-                    for (ConnectedComponent chokComponent : components) {
-                        chokComponent.reconnect();
-                    }
+                    components.forEach(com.dasasian.chok.protocol.ConnectedComponent::reconnect);
                     break;
                 default:
                     throw new IllegalStateException("state " + state + " not handled");
@@ -133,9 +129,7 @@ public class InteractionProtocol {
 
         // way, but if this does not work, it shouldn't be too bad
         Collection<String> zkPublishes = zkEphemeralPublishesByComponent.removeAll(component);
-        for (String zkPath : zkPublishes) {
-            zkClient.delete(zkPath);
-        }
+        zkPublishes.forEach(zkClient::delete);
 
         if (zkListenerByComponent.size() == 0) {
             zkClient.unsubscribeStateChanges(stateListener);
@@ -595,22 +589,22 @@ public class InteractionProtocol {
 
     static class AddRemoveListenerAdapter extends ListenerAdapter implements IZkChildListener {
 
-        private final IAddRemoveListener _listener;
-        private List<String> _cachedChilds;
+        private final IAddRemoveListener listener;
+        private List<String> cachedChilds;
 
         public AddRemoveListenerAdapter(String path, IAddRemoveListener listener) {
             super(path);
-            _listener = listener;
+            this.listener = listener;
         }
 
         public List<String> getCachedChilds() {
-            return _cachedChilds;
+            return cachedChilds;
         }
 
         public void setCachedChilds(List<String> cachedChilds) {
-            _cachedChilds = cachedChilds;
-            if (_cachedChilds == null) {
-                _cachedChilds = Collections.emptyList();
+            this.cachedChilds = cachedChilds;
+            if (this.cachedChilds == null) {
+                this.cachedChilds = Collections.emptyList();
             }
         }
 
@@ -619,15 +613,11 @@ public class InteractionProtocol {
             if (currentChilds == null) {
                 currentChilds = Collections.emptyList();
             }
-            List<String> addedChilds = CollectionUtil.getListOfAdded(_cachedChilds, currentChilds);
-            List<String> removedChilds = CollectionUtil.getListOfRemoved(_cachedChilds, currentChilds);
-            for (String addedChild : addedChilds) {
-                _listener.added(addedChild);
-            }
-            for (String removedChild : removedChilds) {
-                _listener.removed(removedChild);
-            }
-            _cachedChilds = currentChilds;
+            List<String> addedChilds = CollectionUtil.getListOfAdded(cachedChilds, currentChilds);
+            List<String> removedChilds = CollectionUtil.getListOfRemoved(cachedChilds, currentChilds);
+            addedChilds.forEach(listener::added);
+            removedChilds.forEach(listener::removed);
+            cachedChilds = currentChilds;
         }
     }
 

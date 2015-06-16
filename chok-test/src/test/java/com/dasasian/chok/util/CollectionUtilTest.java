@@ -16,6 +16,7 @@
 package com.dasasian.chok.util;
 
 import com.dasasian.chok.testutil.AbstractTest;
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 import java.util.*;
@@ -56,7 +57,7 @@ public class CollectionUtilTest extends AbstractTest {
     @Test
     public void testInvertListMap_EmptyValues() throws Exception {
         Map<String, List<Integer>> map = new HashMap<>();
-        map.put("a", Collections.EMPTY_LIST);
+        map.put("a", ImmutableList.of());
         map.put("b", Arrays.asList(2, 4));
 
         Map<Integer, List<String>> invertMap = CollectionUtil.invertListMap(map);

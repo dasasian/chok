@@ -22,11 +22,11 @@ import java.io.File;
 
 public class NodeConfiguration {
 
-    private int startPort;
-    private File shardFolder;
-    private int shardDeployThrottle;
-    private Class<? extends IMonitor> monitorClass;
-    private int rpcHandlerCount;
+    private final int startPort;
+    private final File shardFolder;
+    private final int shardDeployThrottle;
+    private final Class<? extends IMonitor> monitorClass;
+    private final int rpcHandlerCount;
 
     public NodeConfiguration(int startPort, File shardFolder) {
         this(startPort, shardFolder, 0, JmxMonitor.class, 25);

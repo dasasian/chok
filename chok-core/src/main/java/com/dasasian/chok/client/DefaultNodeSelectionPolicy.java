@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DefaultNodeSelectionPolicy implements INodeSelectionPolicy {
 
-    private Map<String, CircularList<String>> shardsToNodeMap = new ConcurrentHashMap<>();
+    private final Map<String, CircularList<String>> shardsToNodeMap = new ConcurrentHashMap<>();
 
     @Override
     public void update(String shard, Iterable<String> nodes) {

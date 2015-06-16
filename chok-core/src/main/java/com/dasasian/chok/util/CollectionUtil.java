@@ -16,6 +16,7 @@
 package com.dasasian.chok.util;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class CollectionUtil {
 
@@ -32,43 +33,20 @@ public class CollectionUtil {
     }
 
     public static List<String> getListOfAdded(final Collection<String> oldList, final Collection<String> updatedList) {
-        final List<String> addedEntriesList = new ArrayList<>();
-        extractAddedEntries(oldList, updatedList, addedEntriesList);
-        return addedEntriesList;
+        return updatedList.stream().filter(entry -> !oldList.contains(entry)).collect(Collectors.toList());
     }
 
+
     public static Set<String> getSetOfAdded(final Collection<String> oldSet, final Collection<String> updatedSet) {
-        final Set<String> addedEntriesSet = new HashSet<>();
-        extractAddedEntries(oldSet, updatedSet, addedEntriesSet);
-        return addedEntriesSet;
+        return updatedSet.stream().filter(entry -> !oldSet.contains(entry)).collect(Collectors.toSet());
     }
 
     public static List<String> getListOfRemoved(final Collection<String> oldList, final Collection<String> updatedList) {
-        final List<String> removedEntriesList = new ArrayList<>();
-        extractRemovedEntries(oldList, updatedList, removedEntriesList);
-        return removedEntriesList;
+        return oldList.stream().filter(string -> !updatedList.contains(string)).collect(Collectors.toList());
     }
 
     public static Set<String> getSetOfRemoved(final Collection<String> oldSet, final Collection<String> updatedSet) {
-        final Set<String> removedEntriesSet = new HashSet<>();
-        extractRemovedEntries(oldSet, updatedSet, removedEntriesSet);
-        return removedEntriesSet;
-    }
-
-    private static void extractAddedEntries(final Collection<String> oldCollection, final Collection<String> updatedCollection, final Collection<String> addedEntriesCollection) {
-        for (final String entry : updatedCollection) {
-            if (!oldCollection.contains(entry)) {
-                addedEntriesCollection.add(entry);
-            }
-        }
-    }
-
-    private static void extractRemovedEntries(final Collection<String> oldCollection, final Collection<String> updatedCollection, final Collection<String> removedEntriesCollection) {
-        for (final String string : oldCollection) {
-            if (!updatedCollection.contains(string)) {
-                removedEntriesCollection.add(string);
-            }
-        }
+        return oldSet.stream().filter(string -> !updatedSet.contains(string)).collect(Collectors.toSet());
     }
 
 }

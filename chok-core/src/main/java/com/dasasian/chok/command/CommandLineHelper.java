@@ -225,7 +225,7 @@ public class CommandLineHelper {
 
     public static class CounterMap<K> {
 
-        private Map<K, AtomicInteger> counterMap = new HashMap<>();
+        private final Map<K, AtomicInteger> counterMap = new HashMap<>();
 
         public CounterMap() {
             super();

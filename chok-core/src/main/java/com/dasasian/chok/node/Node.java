@@ -44,7 +44,7 @@ public class Node implements ConnectedComponent {
     protected final static Logger LOG = LoggerFactory.getLogger(Node.class);
     private final NodeConfiguration nodeConfiguration;
     private final IContentServer contentServer;
-    protected InteractionProtocol protocol;
+    protected final InteractionProtocol protocol;
     protected NodeContext context;
     protected String nodeName;
     private Server rpcServer;

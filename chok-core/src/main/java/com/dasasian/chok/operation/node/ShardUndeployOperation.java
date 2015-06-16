@@ -24,9 +24,7 @@ public class ShardUndeployOperation extends AbstractShardOperation {
     private static final long serialVersionUID = 1L;
 
     public ShardUndeployOperation(List<String> shards) {
-        for (String shard : shards) {
-            addShard(shard);
-        }
+        shards.forEach(this::addShard);
     }
 
     @Override

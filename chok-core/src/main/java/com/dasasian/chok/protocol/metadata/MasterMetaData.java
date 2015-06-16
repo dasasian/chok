@@ -23,8 +23,8 @@ public class MasterMetaData implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String _masterName;
-    private long _startTime;
+    private final String _masterName;
+    private final long _startTime;
 
     public MasterMetaData(final String masterName, final long startTime) {
         _masterName = masterName;

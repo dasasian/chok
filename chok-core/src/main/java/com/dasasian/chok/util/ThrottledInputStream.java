@@ -45,59 +45,59 @@ import java.io.InterruptedIOException;
  */
 public class ThrottledInputStream extends InputStream implements PositionedReadable, Seekable {
 
-    private final InputStream _inputStream;
-    private final ThrottleSemaphore _semaphore;
+    private final InputStream inputStream;
+    private final ThrottleSemaphore semaphore;
 
     public ThrottledInputStream(InputStream inputStream, ThrottleSemaphore semaphore) {
-        _inputStream = inputStream;
-        _semaphore = semaphore;
+        this.inputStream = inputStream;
+        this.semaphore = semaphore;
     }
 
     @Override
     public int read() throws IOException {
-        _semaphore.aquireBytes(1);
-        return _inputStream.read();
+        semaphore.aquireBytes(1);
+        return inputStream.read();
     }
 
     @Override
     public int read(byte[] b, int off, int len) throws IOException {
-        len = _semaphore.aquireBytes(len);
-        return _inputStream.read(b, off, len);
+        len = semaphore.aquireBytes(len);
+        return inputStream.read(b, off, len);
     }
 
     @Override
     public void close() throws IOException {
-        _inputStream.close();
+        inputStream.close();
     }
 
     @Override
     public int read(long arg0, byte[] arg1, int arg2, int arg3) throws IOException {
-        return ((PositionedReadable) _inputStream).read(arg0, arg1, arg2, arg3);
+        return ((PositionedReadable) inputStream).read(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public void readFully(long arg0, byte[] arg1) throws IOException {
-        ((PositionedReadable) _inputStream).readFully(arg0, arg1);
+        ((PositionedReadable) inputStream).readFully(arg0, arg1);
     }
 
     @Override
     public void readFully(long arg0, byte[] arg1, int arg2, int arg3) throws IOException {
-        ((PositionedReadable) _inputStream).readFully(arg0, arg1, arg2, arg3);
+        ((PositionedReadable) inputStream).readFully(arg0, arg1, arg2, arg3);
     }
 
     @Override
     public long getPos() throws IOException {
-        return ((Seekable) _inputStream).getPos();
+        return ((Seekable) inputStream).getPos();
     }
 
     @Override
     public void seek(long arg0) throws IOException {
-        ((Seekable) _inputStream).seek(arg0);
+        ((Seekable) inputStream).seek(arg0);
     }
 
     @Override
     public boolean seekToNewSource(long arg0) throws IOException {
-        return ((Seekable) _inputStream).seekToNewSource(arg0);
+        return ((Seekable) inputStream).seekToNewSource(arg0);
     }
 
     /**

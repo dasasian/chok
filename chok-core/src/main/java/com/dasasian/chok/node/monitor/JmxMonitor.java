@@ -32,40 +32,41 @@ public class JmxMonitor implements IMonitor {
 
     protected final static Logger LOG = LoggerFactory.getLogger(JmxMonitor.class);
 
-    protected InteractionProtocol _protocol;
-    protected JmxMonitorThread _thread;
-    protected String _serverId;
+    protected InteractionProtocol protocol;
+    protected JmxMonitorThread thread;
+    protected String serverId;
 
     @Override
     public void startMonitoring(String serverId, InteractionProtocol protocol) {
-        _protocol = protocol;
-        if (serverId == null || _protocol == null) {
+        this.protocol = protocol;
+        if (serverId == null || this.protocol == null) {
             throw new IllegalArgumentException("parameters can't be null");
         }
-        _serverId = serverId;
-        _thread = new JmxMonitorThread();
-        _thread.start();
+        this.serverId = serverId;
+        thread = new JmxMonitorThread();
+        thread.start();
     }
 
     @Override
     public void stopMonitoring() {
-        _thread.interrupt();
+        thread.interrupt();
         try {
-            _thread.join();
+            thread.join();
         } catch (InterruptedException e) {
             ExceptionUtil.retainInterruptFlag(e);
         }
     }
 
+    // todo switch to using ExecutorService & scheduled
     class JmxMonitorThread extends Thread {
 
         public void run() {
             // create the node for the first time...
             try {
                 while (true) {
-                    MetricsRecord metrics = new MetricsRecord(_serverId);
+                    MetricsRecord metrics = new MetricsRecord(serverId);
                     gatherMetrics(metrics);
-                    _protocol.setMetric(_serverId, metrics);
+                    protocol.setMetric(serverId, metrics);
                     sleep(1000);
                 }
             } catch (InterruptedException e) {

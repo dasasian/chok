@@ -112,9 +112,7 @@ public class CommandLineInterface {
 
     private static void printUsageAndExit() {
         printUsageHeader();
-        for (Command command : COMMANDS) {
-            printUsage(command);
-        }
+        COMMANDS.forEach(com.dasasian.chok.command.CommandLineInterface::printUsage);
         printUsageFooter();
         System.exit(1);
     }

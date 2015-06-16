@@ -161,13 +161,13 @@ class NodeInteraction<T> implements Runnable {
         builder.append(method.getName());
         builder.append("(");
         String sep = "";
-        for (int i = 0; i < args.length; i++) {
+        for (Object arg : args) {
             builder.append(sep);
-            if (args[i] == null) {
+            if (arg == null) {
                 builder.append("null");
-            } else if (args[i] instanceof String[]) {
+            } else if (arg instanceof String[]) {
                 // TODO: all array types, lists, maps.
-                String[] strs = (String[]) args[i];
+                String[] strs = (String[]) arg;
                 String sep2 = "";
                 builder.append("[");
                 for (String str : strs) {
@@ -176,7 +176,7 @@ class NodeInteraction<T> implements Runnable {
                 }
                 builder.append("]");
             } else {
-                builder.append(args[i].toString());
+                builder.append(arg.toString());
             }
             sep = ", ";
         }
