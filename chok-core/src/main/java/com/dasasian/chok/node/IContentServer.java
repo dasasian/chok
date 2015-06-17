@@ -16,6 +16,7 @@
 package com.dasasian.chok.node;
 
 import com.dasasian.chok.util.NodeConfiguration;
+import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import java.util.Map;
  * <p>
  * Implementations need to have a default constructor.
  */
+@ProtocolInfo(protocolName = "IContentServer", protocolVersion = 0L)
 public interface IContentServer extends VersionedProtocol {
 
     /**

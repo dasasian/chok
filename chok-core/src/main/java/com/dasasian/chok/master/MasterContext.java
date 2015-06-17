@@ -19,10 +19,11 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.HadoopUtil;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import com.dasasian.chok.util.ChokFileSystem;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class MasterContext {
 
@@ -54,8 +55,8 @@ public class MasterContext {
         return masterQueue;
     }
 
-    public FileSystem getFileSystem(IndexMetaData indexMd) throws IOException {
-        return HadoopUtil.getFileSystem(new Path(indexMd.getPath()));
+    public ChokFileSystem getChokFileSystem(IndexMetaData indexMd) throws IOException, URISyntaxException {
+        return HadoopUtil.getChokFileSystem(ChokFileSystem.getURI(indexMd.getPath()));
     }
 
 }

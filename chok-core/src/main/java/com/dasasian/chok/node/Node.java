@@ -71,7 +71,7 @@ public class Node implements ConnectedComponent {
         Server rpcServer = null;
         while (rpcServer == null) {
             try {
-                rpcServer = RPC.getServer(nodeManaged, "0.0.0.0", serverPort, handlerCount, false, new Configuration());
+                rpcServer = new RPC.Builder(new Configuration()).setProtocol(nodeManaged.getClass()).setInstance(nodeManaged).setPort(serverPort).setNumHandlers(handlerCount).setVerbose(false).build();
                 LOG.info(nodeManaged.getClass().getSimpleName() + " server started on : " + hostName + ":" + serverPort);
             } catch (final BindException e) {
                 if (serverPort - startPort < tryCount) {

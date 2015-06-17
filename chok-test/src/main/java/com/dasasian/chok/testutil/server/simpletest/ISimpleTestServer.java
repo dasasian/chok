@@ -15,6 +15,7 @@
  */
 package com.dasasian.chok.testutil.server.simpletest;
 
+import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.io.IOException;
  * The public interface to the back end LuceneServer. These are all the
  * methods that the Hadoop RPC will call.
  */
+@ProtocolInfo(protocolName = "ISimpleTestServer", protocolVersion = 0L)
 public interface ISimpleTestServer extends VersionedProtocol {
 
     String testRequest(String query, String[] shardNames) throws IOException;

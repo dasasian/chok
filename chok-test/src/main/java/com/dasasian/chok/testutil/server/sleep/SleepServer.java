@@ -17,40 +17,50 @@ package com.dasasian.chok.testutil.server.sleep;
 
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.util.NodeConfiguration;
+import org.apache.hadoop.ipc.ProtocolInfo;
+import org.apache.hadoop.ipc.ProtocolSignature;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 /**
  * This class implements the back-end side of a dummy server, to be used for
  * testing. It just sleeps for a while and then returns nothing.
  */
+@ProtocolInfo(protocolName = "SleepServer", protocolVersion = 0L)
 public class SleepServer implements IContentServer, ISleepServer {
 
-    protected final Set<String> _shards = Collections.synchronizedSet(new HashSet<>());
-    protected String _nodeName;
+    protected final Set<String> shards = Collections.synchronizedSet(new HashSet<>());
+    protected String nodeName;
     private Random rand = new Random();
 
+    @Override
     public long getProtocolVersion(final String protocol, final long clientVersion) {
         return 0L;
     }
 
     @Override
+    public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash) throws IOException {
+        return null;
+    }
+
+    @Override
     public void init(String nodeName, NodeConfiguration nodeConfiguration) {
-        _nodeName = nodeName;
+        this.nodeName = nodeName;
     }
 
     public void addShard(final String shardName, final File shardDir) {
-        _shards.add(shardName);
+        shards.add(shardName);
     }
 
     public void removeShard(final String shardName) {
-        _shards.remove(shardName);
+        shards.remove(shardName);
     }
 
     @Override
     public Collection<String> getShards() {
-        return _shards;
+        return shards;
     }
 
     public Map<String, String> getShardMetaData(final String shardName) {
@@ -58,7 +68,7 @@ public class SleepServer implements IContentServer, ISleepServer {
     }
 
     public void shutdown() {
-        _shards.clear();
+        shards.clear();
     }
 
     public int sleep(long msec, int delta, String[] shards) throws IllegalArgumentException {
@@ -66,14 +76,14 @@ public class SleepServer implements IContentServer, ISleepServer {
             String err = "";
             String sep = "";
             for (String shard : shards) {
-                if (!_shards.contains(shard)) {
-                    System.err.println("Node " + _nodeName + " does not have shard " + shard + "!!");
+                if (!this.shards.contains(shard)) {
+                    System.err.println("Node " + nodeName + " does not have shard " + shard + "!!");
                     err += sep + shard;
                     sep = ", ";
                 }
             }
             if (err.length() > 0) {
-                throw new IllegalArgumentException("Node " + _nodeName + " invalid shards: " + err);
+                throw new IllegalArgumentException("Node " + nodeName + " invalid shards: " + err);
             }
         }
         if (delta > 0) {

@@ -18,6 +18,7 @@ package com.dasasian.chok.node;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public class ShardManagerTest extends AbstractTest {
         // measure transfer rate with no throttle
         ShardManager shardManager = new ShardManager(managerFolder);
         long startTime = System.currentTimeMillis();
-        long fileLength = org.apache.hadoop.fs.FileUtil.getDU(_testFile);
+        long fileLength = FileUtils.sizeOf(_testFile);
         for (int i = 0; i < 10; i++) {
             shardManager.installShard(shardName + i, _testFile.getAbsolutePath());
         }

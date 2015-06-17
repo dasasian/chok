@@ -19,6 +19,8 @@ import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.util.NodeConfiguration;
 import com.google.common.collect.ImmutableSet;
+import org.apache.hadoop.ipc.ProtocolInfo;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +38,14 @@ import java.util.Map;
  * frequencies, then pass that back in to search(). This way you get uniform
  * scoring across all the nodes / instances of LuceneServer.
  */
+@ProtocolInfo(protocolName = "SimpleTestServer", protocolVersion = 0L)
 public class SimpleTestServer implements IContentServer, ISimpleTestServer {
 
     private final static Logger LOG = LoggerFactory.getLogger(SimpleTestServer.class);
 
-    protected String _nodeName;
+    protected String nodeName;
+
+    public static final long versionID = 0L;
 
     public SimpleTestServer() {
         // default way of initializing an IContentServer
@@ -48,16 +53,21 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
 
     @Override
     public long getProtocolVersion(final String protocol, final long clientVersion) throws IOException {
-        return 0L;
+        return versionID;
+    }
+
+    @Override
+    public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash) throws IOException {
+        return null;
     }
 
     @Override
     public void init(String nodeName, NodeConfiguration nodeConfiguration) {
-        _nodeName = nodeName;
+        this.nodeName = nodeName;
     }
 
     public String getNodeName() {
-        return _nodeName;
+        return nodeName;
     }
 
     /**
@@ -70,7 +80,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
      */
     @Override
     public void addShard(final String shardName, final File shardDir) throws IOException {
-        LOG.info("TestServer " + _nodeName + " got shard " + shardName);
+        LOG.info("TestServer " + nodeName + " got shard " + shardName);
         File dataFile = new File(shardDir, TestIndex.DATA_FILE_NAME);
         if (!dataFile.exists()) {
             throw new IOException("File " + dataFile + " not found");
@@ -83,7 +93,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
      */
     @Override
     public void removeShard(final String shardName) {
-        LOG.info("TestServer " + _nodeName + " removing shard " + shardName);
+        LOG.info("TestServer " + nodeName + " removing shard " + shardName);
     }
 
     @Override

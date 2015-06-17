@@ -15,12 +15,14 @@
  */
 package com.dasasian.chok.testutil.server.sleep;
 
+import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 /**
  * The public interface for the back end of a dummy server that just
  * sleeps for a while then returns null. Used for testing.
  */
+@ProtocolInfo(protocolName = "ISleepServer", protocolVersion = 0L)
 public interface ISleepServer extends VersionedProtocol {
 
     /**

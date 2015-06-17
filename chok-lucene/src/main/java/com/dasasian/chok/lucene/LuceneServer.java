@@ -25,6 +25,8 @@ import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.ipc.ProtocolInfo;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.slf4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
@@ -51,6 +53,7 @@ import java.util.concurrent.*;
  * frequencies, then pass that back in to search(). This way you get uniform
  * scoring across all the nodes / instances of LuceneServer.
  */
+@ProtocolInfo(protocolName = "LuceneServer", protocolVersion = 0L)
 public class LuceneServer implements IContentServer, ILuceneServer {
 
     private final static Logger LOG = LoggerFactory.getLogger(LuceneServer.class);
@@ -107,6 +110,11 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     @Override
     public long getProtocolVersion(final String protocol, final long clientVersion) throws IOException {
         return 0L;
+    }
+
+    @Override
+    public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash) throws IOException {
+        return null;
     }
 
     @Override

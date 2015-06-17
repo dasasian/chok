@@ -17,13 +17,13 @@ package com.dasasian.chok.util;
 
 import com.dasasian.chok.testutil.AbstractTest;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.channels.Channels;
 import java.nio.channels.Pipe;
 import java.nio.channels.Pipe.SinkChannel;
@@ -42,7 +42,7 @@ public class FileUtilTest extends AbstractTest {
 
     @Test
     public void testUnzipFileFile() throws IOException {
-        // FileSystem fileSystem = FileSystem.get(configuration);
+        // ChokFileSystem fileSystem = ChokFileSystem.get(configuration);
         File targetFolder = temporaryFolder.newFolder("unpacked1");
         FileUtil.unzip(testZipFile, targetFolder);
 
@@ -51,13 +51,13 @@ public class FileUtilTest extends AbstractTest {
     }
 
     @Test
-    public void testUnzipPathFileFileSystemBoolean() throws IOException {
+    public void testUnzipPathFileChokFileSystemBoolean() throws IOException, URISyntaxException {
         Configuration configuration = new Configuration();
-        FileSystem fileSystem = FileSystem.getLocal(configuration);
+        ChokFileSystem fileSystem = ChokFileSystem.getLocal(configuration);
 
         // Test the unspooled case
         File targetFolder = temporaryFolder.newFolder("unpacked2");
-        Path zipPath = new Path(testZipFile.getAbsolutePath());
+        URI zipPath = testZipFile.toURI();
         FileUtil.unzip(zipPath, targetFolder, fileSystem, false);
         File segment = new File(targetFolder, INDEX_TXT);
         assertTrue("Unzipped local zip directly to target", segment.exists());
@@ -65,7 +65,7 @@ public class FileUtilTest extends AbstractTest {
         // Test the spooled case
 
         targetFolder = temporaryFolder.newFolder("unpacked3");
-        zipPath = new Path(testZipFile.getAbsolutePath());
+        zipPath = testZipFile.toURI();
         FileUtil.unzip(zipPath, targetFolder, fileSystem, true);
         segment = new File(targetFolder, INDEX_TXT);
         assertTrue("Unzipped spooled local zip to target", segment.exists());

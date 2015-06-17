@@ -16,10 +16,12 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.testutil.AbstractTest;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.ipc.VersionedProtocol;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -364,8 +366,14 @@ public class NodeInteractionTest extends AbstractTest {
             return _node + ":" + _param + ":" + (_shards != null ? shards.toString() : "null");
         }
 
+        @Override
         public long getProtocolVersion(String arg0, long arg1) {
             return 0;
+        }
+
+        @Override
+        public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash) throws IOException {
+            return null;
         }
 
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {

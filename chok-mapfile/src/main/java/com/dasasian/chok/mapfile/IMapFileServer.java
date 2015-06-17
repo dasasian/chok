@@ -16,6 +16,7 @@
 package com.dasasian.chok.mapfile;
 
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 import java.io.IOException;
@@ -25,6 +26,7 @@ import java.io.IOException;
  * <p>
  * This server looks up Text entries from MapFiles using Text keys.
  */
+@ProtocolInfo(protocolName = "IMapFileServer", protocolVersion = 0L)
 public interface IMapFileServer extends VersionedProtocol {
 
     /**

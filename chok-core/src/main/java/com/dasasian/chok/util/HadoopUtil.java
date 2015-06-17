@@ -16,17 +16,16 @@
 package com.dasasian.chok.util;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
+import java.net.URI;
 
 public class HadoopUtil {
 
-    public static FileSystem getFileSystem(Path path) throws IOException {
-        synchronized (FileSystem.class) {
+    public static ChokFileSystem getChokFileSystem(URI uri) throws IOException {
+        synchronized (ChokFileSystem.class) {
             // had once a ConcurrentModificationException
-            return FileSystem.get(path.toUri(), new Configuration());
+            return ChokFileSystem.get(uri, new Configuration());
         }
     }
 }

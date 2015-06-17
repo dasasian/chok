@@ -21,11 +21,11 @@ import com.dasasian.chok.operation.node.OperationResult;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import org.I0Itec.zkclient.ExceptionUtil;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import com.dasasian.chok.util.ChokFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.util.List;
 
 public class BalanceIndexOperation extends AbstractIndexOperation {
@@ -51,8 +51,8 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
             return null;
         }
         try {
-            FileSystem fileSystem = context.getFileSystem(indexMD);
-            Path path = new Path(indexMD.getPath());
+            ChokFileSystem fileSystem = context.getChokFileSystem(indexMD);
+            URI path = ChokFileSystem.getURI(indexMD.getPath());
             if (!fileSystem.exists(path)) {
                 LOG.warn("skip balancing for index '" + _indexName + "' cause source '" + path + "' does not exists anymore");
                 return null;

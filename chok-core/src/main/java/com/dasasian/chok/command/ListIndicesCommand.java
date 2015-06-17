@@ -21,10 +21,10 @@ import com.dasasian.chok.protocol.ReplicationReport;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import com.dasasian.chok.util.ChokFileSystem;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -120,14 +120,13 @@ public class ListIndicesCommand extends ProtocolCommand {
     }
 
     private long calculateIndexDiskUsage(String index) {
-        Path indexPath = new Path(index);
-        URI indexUri = indexPath.toUri();
         try {
-            FileSystem fileSystem = FileSystem.get(indexUri, new Configuration());
-            if (!fileSystem.exists(indexPath)) {
+            URI indexUri = ChokFileSystem.getURI(index);
+            ChokFileSystem fileSystem = ChokFileSystem.get(indexUri, new Configuration());
+            if (!fileSystem.exists(indexUri)) {
                 return -1;
             }
-            return fileSystem.getContentSummary(indexPath).getLength();
+            return fileSystem.size(indexUri);
         } catch (Exception e) {
             return -1;
         }

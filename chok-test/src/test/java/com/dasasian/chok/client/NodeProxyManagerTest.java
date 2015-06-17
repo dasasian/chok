@@ -20,6 +20,7 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.server.simpletest.ISimpleTestServer;
 import org.apache.hadoop.conf.Configuration;
 import org.fest.assertions.Assertions;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -97,7 +98,8 @@ public class NodeProxyManagerTest extends AbstractTest {
         try {
             proxyManagerSpy.reportNodeCommunicationFailure(nodeName, exception);
         } catch (IllegalArgumentException e) {
-            Assertions.assertThat(e).hasMessage("not a proxy instance");
+            Assert.assertTrue(e.getMessage().startsWith("Cannot close proxy - is not Closeable or does not provide closeable invocation handler class com.dasasian.chok.node.IContentServer"));
+//            Assertions.assertThat(e).hasMessage("Cannot close proxy");
         }
     }
 }

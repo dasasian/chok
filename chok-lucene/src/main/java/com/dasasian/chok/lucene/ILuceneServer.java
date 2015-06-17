@@ -16,6 +16,7 @@
 package com.dasasian.chok.lucene;
 
 import org.apache.hadoop.io.MapWritable;
+import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ import java.io.IOException;
  * The public interface to the back end LuceneServer. These are all the
  * methods that the Hadoop RPC will call.
  */
+@ProtocolInfo(protocolName = "ILuceneServer", protocolVersion = 0L)
 public interface ILuceneServer extends VersionedProtocol {
 
     /**

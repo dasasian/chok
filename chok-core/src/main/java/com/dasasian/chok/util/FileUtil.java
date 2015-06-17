@@ -15,14 +15,16 @@
  */
 package com.dasasian.chok.util;
 
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+//import com.dasasian.chok.util.FSDataInputStream;
+//import com.dasasian.chok.util.FSDataOutputStream;
+//import com.dasasian.chok.util.ChokFileSystem;
+//import com.dasasian.chok.util.Path;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URI;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -35,9 +37,10 @@ public class FileUtil {
 
     public static void deleteFolder(File folder) {
         try {
-            org.apache.hadoop.fs.FileUtil.fullyDelete(folder);
+            FileUtils.forceDelete(folder);
+        } catch (FileNotFoundException ignore) {
         } catch (IOException e) {
-            throw new RuntimeException("could not delete folder '" + folder + "'");
+            throw new RuntimeException("could not delete folder '" + folder + "'", e);
         }
     }
 
@@ -80,7 +83,7 @@ public class FileUtil {
      *                     being unzipped. The name used is <code>targetFolder.zip</code>. If
      *                     false, the unzip is streamed.
      */
-    public static void unzip(final Path sourceZip, final File targetFolder, final FileSystem fileSystem, final boolean localSpool) {
+    public static void unzip(final URI sourceZip, final File targetFolder, final ChokFileSystem fileSystem, final boolean localSpool) {
         try {
             if (localSpool) {
                 targetFolder.mkdirs();
@@ -90,13 +93,13 @@ public class FileUtil {
                     shardZipLocal.delete();
                 }
                 try {
-                    fileSystem.copyToLocalFile(sourceZip, new Path(shardZipLocal.getAbsolutePath()));
+                    fileSystem.copyToLocalFile(sourceZip, shardZipLocal.toURI());
                     FileUtil.unzip(shardZipLocal, targetFolder);
                 } finally {
                     shardZipLocal.delete();
                 }
             } else {
-                FSDataInputStream fis = fileSystem.open(sourceZip);
+                InputStream fis = fileSystem.open(sourceZip);
                 try {
                     ZipInputStream zis = new ZipInputStream(fis);
                     unzip(zis, targetFolder);
@@ -110,14 +113,14 @@ public class FileUtil {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("unable to expand upgrade files for " + sourceZip + " to " + targetFolder, e);
         }
 
     }
 
     /**
-     * Unpack a zip stream to a directory usually called by {@link #unzip(File, File)} or {@link #unzip(Path, File, FileSystem, boolean)}.
+     * Unpack a zip stream to a directory usually called by {@link #unzip(File, File)} or {@link #unzip(URI, File, ChokFileSystem, boolean)}.
      *
      * @param zis          Zip data strip to unpack
      * @param targetFolder The folder to unpack to. This directory and path is created if needed.
@@ -156,73 +159,74 @@ public class FileUtil {
 
     }
 
-    public static void zip(final File inputFolder, final File outputFile) throws IOException {
-        final FileOutputStream fileWriter = new FileOutputStream(outputFile);
-        final ZipOutputStream zip = new ZipOutputStream(fileWriter);
-        addFolderToZip("", inputFolder, zip);
-        zip.flush();
-        zip.close();
-    }
+//    public static void zip(final File inputFolder, final File outputFile) throws IOException {
+//        final FileOutputStream fileWriter = new FileOutputStream(outputFile);
+//        final ZipOutputStream zip = new ZipOutputStream(fileWriter);
+//        addFolderToZip("", inputFolder, zip);
+//        zip.flush();
+//        zip.close();
+//    }
+//
+//    private static void addFolderToZip(final String path, final File folder, final ZipOutputStream zip) throws IOException {
+//        final String zipEnry = path + (path.equals("") ? "" : File.separator) + folder.getName();
+//        final File[] listFiles = folder.listFiles();
+//        for (final File file : listFiles) {
+//            if (file.isDirectory()) {
+//                addFolderToZip(zipEnry, file, zip);
+//            } else {
+//                addFileToZip(zipEnry, file, zip);
+//            }
+//        }
+//    }
+//
+//    private static void addFileToZip(final String path, final File file, final ZipOutputStream zip) throws IOException {
+//        final byte[] buffer = new byte[1024];
+//        int read;
+//        try (FileInputStream in = new FileInputStream(file)) {
+//            final String zipEntry = path + File.separator + file.getName();
+//            LOG.debug("add zip entry: " + zipEntry);
+//            zip.putNextEntry(new ZipEntry(zipEntry));
+//            while ((read = in.read(buffer)) > -1) {
+//                zip.write(buffer, 0, read);
+//            }
+//        }
+//    }
 
-    private static void addFolderToZip(final String path, final File folder, final ZipOutputStream zip) throws IOException {
-        final String zipEnry = path + (path.equals("") ? "" : File.separator) + folder.getName();
-        final File[] listFiles = folder.listFiles();
-        for (final File file : listFiles) {
-            if (file.isDirectory()) {
-                addFolderToZip(zipEnry, file, zip);
-            } else {
-                addFileToZip(zipEnry, file, zip);
-            }
-        }
-    }
+//    public static void unzipInDfs(ChokFileSystem fileSystem, final URI source, final URI target) {
+//        try {
+//            FSDataInputStream dfsInputStream = fileSystem.open(source);
+//            fileSystem.mkdirs(target);
+//            final ZipInputStream zipInputStream = new ZipInputStream(dfsInputStream);
+//            ZipEntry entry;
+//
+//            while ((entry = zipInputStream.getNextEntry()) != null) {
+//                final String entryPath = entry.getName();
+//                final int indexOf = entryPath.indexOf("/");
+//                final String cleanUpPath = entryPath.substring(indexOf + 1, entryPath.length());
+//                Path path = target;
+//                if (!cleanUpPath.equals("")) {
+//                    path = new Path(target, cleanUpPath);
+//                }
+//                LOG.info("Extracting: " + entry + " to " + path);
+//                if (entry.isDirectory()) {
+//                    fileSystem.mkdirs(path);
+//                } else {
+//                    int count;
+//                    final byte data[] = new byte[4096];
+//                    FSDataOutputStream fsDataOutputStream = fileSystem.create(path);
+//                    while ((count = zipInputStream.read(data, 0, 4096)) != -1) {
+//                        fsDataOutputStream.write(data, 0, count);
+//                    }
+//                    fsDataOutputStream.flush();
+//                    fsDataOutputStream.close();
+//                }
+//            }
+//            zipInputStream.close();
+//        } catch (final Exception e) {
+//            LOG.error("can not open zip file", e);
+//            throw new RuntimeException("unable to expand upgrade files", e);
+//        }
+//
+//    }
 
-    private static void addFileToZip(final String path, final File file, final ZipOutputStream zip) throws IOException {
-        final byte[] buffer = new byte[1024];
-        int read;
-        try (FileInputStream in = new FileInputStream(file)) {
-            final String zipEntry = path + File.separator + file.getName();
-            LOG.debug("add zip entry: " + zipEntry);
-            zip.putNextEntry(new ZipEntry(zipEntry));
-            while ((read = in.read(buffer)) > -1) {
-                zip.write(buffer, 0, read);
-            }
-        }
-    }
-
-    public static void unzipInDfs(FileSystem fileSystem, final Path source, final Path target) {
-        try {
-            FSDataInputStream dfsInputStream = fileSystem.open(source);
-            fileSystem.mkdirs(target);
-            final ZipInputStream zipInputStream = new ZipInputStream(dfsInputStream);
-            ZipEntry entry;
-
-            while ((entry = zipInputStream.getNextEntry()) != null) {
-                final String entryPath = entry.getName();
-                final int indexOf = entryPath.indexOf("/");
-                final String cleanUpPath = entryPath.substring(indexOf + 1, entryPath.length());
-                Path path = target;
-                if (!cleanUpPath.equals("")) {
-                    path = new Path(target, cleanUpPath);
-                }
-                LOG.info("Extracting: " + entry + " to " + path);
-                if (entry.isDirectory()) {
-                    fileSystem.mkdirs(path);
-                } else {
-                    int count;
-                    final byte data[] = new byte[4096];
-                    FSDataOutputStream fsDataOutputStream = fileSystem.create(path);
-                    while ((count = zipInputStream.read(data, 0, 4096)) != -1) {
-                        fsDataOutputStream.write(data, 0, count);
-                    }
-                    fsDataOutputStream.flush();
-                    fsDataOutputStream.close();
-                }
-            }
-            zipInputStream.close();
-        } catch (final Exception e) {
-            LOG.error("can not open zip file", e);
-            throw new RuntimeException("unable to expand upgrade files", e);
-        }
-
-    }
 }

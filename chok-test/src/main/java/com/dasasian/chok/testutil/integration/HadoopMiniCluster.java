@@ -15,65 +15,66 @@
  */
 package com.dasasian.chok.testutil.integration;
 
-import com.dasasian.chok.util.IHadoopConstants;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.hdfs.server.common.HdfsConstants.StartupOption;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MiniMRCluster;
-import org.slf4j.Logger;
+//import com.dasasian.chok.util.IHadoopConstants;
+//import org.apache.hadoop.conf.Configuration;
+//import org.apache.hadoop.hdfs.MiniDFSCluster;
+//import org.apache.hadoop.hdfs.server.common.HdfsConstants.StartupOption;
+//import org.apache.hadoop.mapred.JobConf;
+//import org.apache.hadoop.mapred.MiniMRCluster;
+//import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class HadoopMiniCluster {
 
-    private static final Logger LOG = LoggerFactory.getLogger(HadoopMiniCluster.class);
-    private final int _namenodePort;
-    private final int _jobtrackerPort;
-    private final int _datanodeCount;
-    private final int _tasktrackerCount;
-
-    private MiniDFSCluster _dfsCluster;
-    private MiniMRCluster _mrCluster;
-
-    public HadoopMiniCluster(int namenodePort, int jobtrackerPort, int datanodeCount, int tasktrackerCount) {
-        _namenodePort = namenodePort;
-        _jobtrackerPort = jobtrackerPort;
-        _datanodeCount = datanodeCount;
-        _tasktrackerCount = tasktrackerCount;
-    }
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        HadoopMiniCluster hadoopCluster = new HadoopMiniCluster(9000, 9001, 2, 4);
-        hadoopCluster.start();
-        Thread.sleep(2000);
-        hadoopCluster.stop();
-    }
-
-    public void start() throws IOException {
-        LOG.info("starting hadoop cluster...");
-        Configuration conf = new Configuration();
-        System.setProperty("test.build.data", "build");
-        System.setProperty("hadoop.log.dir", "build/logs");
-
-        _dfsCluster = new MiniDFSCluster(_namenodePort, conf, _datanodeCount, true, true, StartupOption.REGULAR, null);
-        LOG.info("started namnode on " + conf.get(IHadoopConstants.NAMENODE));
-
-        _mrCluster = new MiniMRCluster(_jobtrackerPort, 0, _tasktrackerCount, conf.get(IHadoopConstants.NAMENODE), 1);
-        LOG.info("started jobtracker on " + _mrCluster.createJobConf().get(IHadoopConstants.JOBTRACKER));
-    }
-
-    public JobConf createJobConf() {
-        if (_mrCluster == null) {
-            throw new IllegalStateException("cluster is not started yet...");
-        }
-        return _mrCluster.createJobConf();
-    }
-
-    public void stop() {
-        LOG.info("stopping hadoop cluster...");
-        _mrCluster.shutdown();
-        _dfsCluster.shutdown();
-    }
+    // todo fix
+//    private static final Logger LOG = LoggerFactory.getLogger(HadoopMiniCluster.class);
+//    private final int _namenodePort;
+//    private final int _jobtrackerPort;
+//    private final int _datanodeCount;
+//    private final int _tasktrackerCount;
+//
+//    private MiniDFSCluster _dfsCluster;
+//    private MiniMRCluster _mrCluster;
+//
+//    public HadoopMiniCluster(int namenodePort, int jobtrackerPort, int datanodeCount, int tasktrackerCount) {
+//        _namenodePort = namenodePort;
+//        _jobtrackerPort = jobtrackerPort;
+//        _datanodeCount = datanodeCount;
+//        _tasktrackerCount = tasktrackerCount;
+//    }
+//
+//    public static void main(String[] args) throws IOException, InterruptedException {
+//        HadoopMiniCluster hadoopCluster = new HadoopMiniCluster(9000, 9001, 2, 4);
+//        hadoopCluster.start();
+//        Thread.sleep(2000);
+//        hadoopCluster.stop();
+//    }
+//
+//    public void start() throws IOException {
+//        LOG.info("starting hadoop cluster...");
+//        Configuration conf = new Configuration();
+//        System.setProperty("test.build.data", "build");
+//        System.setProperty("hadoop.log.dir", "build/logs");
+//
+//        _dfsCluster = new MiniDFSCluster(_namenodePort, conf, _datanodeCount, true, true, StartupOption.REGULAR, null);
+//        LOG.info("started namnode on " + conf.get(IHadoopConstants.NAMENODE));
+//
+//        _mrCluster = new MiniMRCluster(_jobtrackerPort, 0, _tasktrackerCount, conf.get(IHadoopConstants.NAMENODE), 1);
+//        LOG.info("started jobtracker on " + _mrCluster.createJobConf().get(IHadoopConstants.JOBTRACKER));
+//    }
+//
+//    public JobConf createJobConf() {
+//        if (_mrCluster == null) {
+//            throw new IllegalStateException("cluster is not started yet...");
+//        }
+//        return _mrCluster.createJobConf();
+//    }
+//
+//    public void stop() {
+//        LOG.info("stopping hadoop cluster...");
+//        _mrCluster.shutdown();
+//        _dfsCluster.shutdown();
+//    }
 }

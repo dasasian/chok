@@ -23,12 +23,12 @@ import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.Mocks;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import com.dasasian.chok.util.ChokFileSystem;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -190,10 +190,10 @@ public class BalanceIndexOperationTest extends AbstractMasterNodeZkTest {
         NodeQueue nodeQueue3 = Mocks.publishNode(getInteractionProtocol(), node3);
         assertEquals(0, nodeQueue3.size());
         BalanceIndexOperation balanceOperation = new BalanceIndexOperation(testIndex.getIndexName());
-        FileSystem fileSystem = Mockito.mock(FileSystem.class);
-        Mockito.when(fileSystem.exists(Matchers.any(Path.class))).thenReturn(false);
+        ChokFileSystem fileSystem = Mockito.mock(ChokFileSystem.class);
+        Mockito.when(fileSystem.exists(Matchers.any(URI.class))).thenReturn(false);
         MasterContext spiedContext = spy(masterContext);
-        Mockito.doReturn(fileSystem).when(spiedContext).getFileSystem(Matchers.any(IndexMetaData.class));
+        Mockito.doReturn(fileSystem).when(spiedContext).getChokFileSystem(Matchers.any(IndexMetaData.class));
         List<OperationId> nodeOperations = balanceOperation.execute(spiedContext, EMPTY_LIST);
         assertEquals(null, nodeOperations);
     }
@@ -217,7 +217,7 @@ public class BalanceIndexOperationTest extends AbstractMasterNodeZkTest {
         assertEquals(0, nodeQueue3.size());
         BalanceIndexOperation balanceOperation = new BalanceIndexOperation(testIndex.getIndexName());
         MasterContext spiedContext = spy(masterContext);
-        Mockito.doThrow(new RuntimeException("test-exception")).when(spiedContext).getFileSystem(Matchers.any(IndexMetaData.class));
+        Mockito.doThrow(new RuntimeException("test-exception")).when(spiedContext).getChokFileSystem(Matchers.any(IndexMetaData.class));
         List<OperationId> nodeOperations = balanceOperation.execute(spiedContext, EMPTY_LIST);
         assertEquals(null, nodeOperations);
     }

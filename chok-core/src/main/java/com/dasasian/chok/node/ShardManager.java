@@ -17,18 +17,14 @@ package com.dasasian.chok.node;
 
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.FileUtil;
-import com.dasasian.chok.util.ThrottledInputStream;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
 import com.google.common.collect.ImmutableList;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
-import org.apache.hadoop.fs.permission.FsPermission;
-import org.apache.hadoop.util.Progressable;
+import com.dasasian.chok.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -103,13 +99,13 @@ public class ShardManager {
         for (int i = 0; i < maxTries; i++) {
             URI uri;
             try {
-                uri = new URI(shardPath);
-                FileSystem fileSystem = FileSystem.get(uri, new Configuration());
-                if (throttleSemaphore != null) {
-                    fileSystem = new ThrottledFileSystem(fileSystem, throttleSemaphore);
-                }
-                final Path path = new Path(shardPath);
-                boolean isZip = fileSystem.isFile(path) && shardPath.endsWith(".zip");
+                uri = ChokFileSystem.getURI(shardPath);
+                ChokFileSystem fileSystem = (throttleSemaphore != null) ?
+                        ChokFileSystem.getThrottled(uri, new Configuration(), throttleSemaphore) :
+                        ChokFileSystem.get(uri, new Configuration());
+
+//                final Path path = new Path(shardPath);
+                boolean isZip = fileSystem.isFile(uri) && shardPath.endsWith(".zip");
 
                 File shardTmpFolder = new File(localShardFolder.getAbsolutePath() + "_tmp");
                 try {
@@ -117,9 +113,9 @@ public class ShardManager {
                     FileUtil.deleteFolder(shardTmpFolder);
 
                     if (isZip) {
-                        FileUtil.unzip(path, shardTmpFolder, fileSystem, "true".equalsIgnoreCase(System.getProperty("chok.spool.zip.shards", "false")));
+                        FileUtil.unzip(uri, shardTmpFolder, fileSystem, "true".equalsIgnoreCase(System.getProperty("chok.spool.zip.shards", "false")));
                     } else {
-                        fileSystem.copyToLocalFile(path, new Path(shardTmpFolder.getAbsolutePath()));
+                        fileSystem.copyToLocalFile(uri, shardTmpFolder.toURI());
                     }
                     shardTmpFolder.renameTo(localShardFolder);
                 } finally {
@@ -142,81 +138,4 @@ public class ShardManager {
         }
     }
 
-    @SuppressWarnings("deprecation")
-    private static class ThrottledFileSystem extends FileSystem {
-
-        private final FileSystem fileSystemDelegate;
-        private final ThrottleSemaphore throttleSemaphore;
-
-        public ThrottledFileSystem(FileSystem fileSystem, ThrottleSemaphore throttleSemaphore) {
-            fileSystemDelegate = fileSystem;
-            this.throttleSemaphore = throttleSemaphore;
-        }
-
-        @Override
-        public FSDataOutputStream append(Path arg0, int arg1, Progressable arg2) throws IOException {
-            return fileSystemDelegate.append(arg0, arg1, arg2);
-        }
-
-        @Override
-        public FSDataOutputStream create(Path arg0, FsPermission arg1, boolean arg2, int arg3, short arg4, long arg5, Progressable arg6) throws IOException {
-            return fileSystemDelegate.create(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
-        }
-
-        @Override
-        public boolean delete(Path arg0) throws IOException {
-            return fileSystemDelegate.delete(arg0);
-        }
-
-        @Override
-        public boolean delete(Path arg0, boolean arg1) throws IOException {
-            return fileSystemDelegate.delete(arg0, arg1);
-        }
-
-        @Override
-        public FileStatus getFileStatus(Path arg0) throws IOException {
-            return fileSystemDelegate.getFileStatus(arg0);
-        }
-
-        @Override
-        public URI getUri() {
-            return fileSystemDelegate.getUri();
-        }
-
-        @Override
-        public Path getWorkingDirectory() {
-            return fileSystemDelegate.getWorkingDirectory();
-        }
-
-        @Override
-        public void setWorkingDirectory(Path arg0) {
-            fileSystemDelegate.setWorkingDirectory(arg0);
-        }
-
-        @Override
-        public FileStatus[] listStatus(Path arg0) throws IOException {
-            return fileSystemDelegate.listStatus(arg0);
-        }
-
-        @Override
-        public boolean mkdirs(Path arg0, FsPermission arg1) throws IOException {
-            return fileSystemDelegate.mkdirs(arg0, arg1);
-        }
-
-        @Override
-        public FSDataInputStream open(Path path, int bufferSize) throws IOException {
-            ThrottledInputStream throttledInputStream = new ThrottledInputStream(fileSystemDelegate.open(path, bufferSize), throttleSemaphore);
-            return new FSDataInputStream(throttledInputStream);
-        }
-
-        @Override
-        public boolean rename(Path arg0, Path arg1) throws IOException {
-            return fileSystemDelegate.rename(arg0, arg1);
-        }
-
-        @Override
-        public Configuration getConf() {
-            return fileSystemDelegate.getConf();
-        }
-    }
 }

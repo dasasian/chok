@@ -24,6 +24,8 @@ import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
+import org.apache.hadoop.ipc.ProtocolInfo;
+import org.apache.hadoop.ipc.ProtocolSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,7 @@ import java.util.concurrent.*;
 /**
  * Implements search over a set of Hadoop <code>MapFile</code>s.
  */
+@ProtocolInfo(protocolName = "MapFileServer", protocolVersion = 0L)
 public class MapFileServer implements IContentServer, IMapFileServer {
 
     private final static Logger LOG = LoggerFactory.getLogger(MapFileServer.class);
@@ -48,8 +51,14 @@ public class MapFileServer implements IContentServer, IMapFileServer {
         fileSystem = FileSystem.getLocal(conf);
     }
 
+    @Override
     public long getProtocolVersion(final String protocol, final long clientVersion) throws IOException {
         return 0L;
+    }
+
+    @Override
+    public ProtocolSignature getProtocolSignature(String protocol, long clientVersion, int clientMethodsHash) throws IOException {
+        return null;
     }
 
     @Override
