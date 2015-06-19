@@ -15,29 +15,62 @@
  */
 package com.dasasian.chok.util;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Created by damith.chandrasekara on 6/15/15.
  */
-public class ThrottledFileSystem extends ChokFileSystem {
+public class ThrottledFileSystem implements ChokFileSystem {
     // todo fix
 
+    private final ChokFileSystem chokFileSystem;
     private final ThrottledInputStream.ThrottleSemaphore throttleSemaphore;
 
-    public ThrottledFileSystem(FileSystem fileSystem, Configuration configuration, ThrottledInputStream.ThrottleSemaphore throttleSemaphore) {
-        super(fileSystem, configuration);
+    public ThrottledFileSystem(ChokFileSystem chokFileSystem, ThrottledInputStream.ThrottleSemaphore throttleSemaphore) {
+        this.chokFileSystem = chokFileSystem;
         this.throttleSemaphore = throttleSemaphore;
     }
 
     @Override
+    public boolean exists(URI uri) throws IOException {
+        return chokFileSystem.exists(uri);
+    }
+
+    @Override
+    public Iterable<URI> list(URI uri) throws IOException, URISyntaxException {
+        return chokFileSystem.list(uri);
+    }
+
+    @Override
+    public boolean isDir(URI uri) throws IOException {
+        return chokFileSystem.isDir(uri);
+    }
+
+    @Override
+    public long size(URI uri) throws IOException {
+        return chokFileSystem.size(uri);
+    }
+
+    @Override
+    public boolean isFile(URI uri) throws IOException {
+        return chokFileSystem.isFile(uri);
+    }
+
+    @Override
+    public void copyToLocalFile(URI from, URI to) throws IOException {
+        chokFileSystem.copyToLocalFile(from, to);
+    }
+
+    @Override
+    public InputStream open(URI uri) throws IOException {
+        return new ThrottledInputStream(chokFileSystem.open(uri), throttleSemaphore);
+    }
+
+    @Override
     public InputStream open(URI path, int bufferSize) throws IOException {
-        ThrottledInputStream throttledInputStream = new ThrottledInputStream(super.open(path, bufferSize), throttleSemaphore);
-        return throttledInputStream;
+        return new ThrottledInputStream(chokFileSystem.open(path, bufferSize), throttleSemaphore);
     }
 }

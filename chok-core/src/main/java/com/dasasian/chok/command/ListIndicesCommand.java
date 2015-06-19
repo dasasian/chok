@@ -20,11 +20,7 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.ReplicationReport;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.ZkConfiguration;
-import org.apache.hadoop.conf.Configuration;
-import com.dasasian.chok.util.ChokFileSystem;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -71,10 +67,11 @@ public class ListIndicesCommand extends ProtocolCommand {
             final IndexMetaData indexMD = protocol.getIndexMD(index);
             Set<IndexMetaData.Shard> shards = indexMD.getShards();
             String entries = "n/a";
+            String indexBytes = "n/a";
             if (!indexMD.hasDeployError()) {
                 entries = "" + calculateIndexEntries(shards);
+                indexBytes = "" + calculateIndexDiskUsage(shards);
             }
-            long indexBytes = calculateIndexDiskUsage(indexMD.getPath());
             String state = "DEPLOYED";
             String replicationState = "BALANCED";
             if (indexMD.hasDeployError()) {
@@ -119,16 +116,18 @@ public class ListIndicesCommand extends ProtocolCommand {
         return docCount;
     }
 
-    private long calculateIndexDiskUsage(String index) {
-        try {
-            URI indexUri = ChokFileSystem.getURI(index);
-            ChokFileSystem fileSystem = ChokFileSystem.get(indexUri, new Configuration());
-            if (!fileSystem.exists(indexUri)) {
-                return -1;
+    private long calculateIndexDiskUsage(Set<IndexMetaData.Shard> shards) {
+        long diskUsage = 0;
+        for (IndexMetaData.Shard shard : shards) {
+            Map<String, String> metaData = shard.getMetaDataMap();
+            if (metaData != null) {
+                try {
+                    diskUsage += Long.parseLong(metaData.get(IContentServer.SHARD_DISK_USAGE_KEY));
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
             }
-            return fileSystem.size(indexUri);
-        } catch (Exception e) {
-            return -1;
         }
+        return diskUsage;
     }
 }

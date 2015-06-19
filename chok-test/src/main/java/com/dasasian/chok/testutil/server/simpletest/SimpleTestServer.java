@@ -112,6 +112,15 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
     }
 
     /**
+     * Returns the disk used by the shard.
+     *
+     * @param shardName the shard name
+     * @return the disk usage of the shard.
+     */
+    protected int shardDiskUsage(String shardName) {
+        return 0;
+    }
+    /**
      * Returns data about a shard. Currently the only standard key is
      * SHARD_SIZE_KEY. This value will be reported by the listIndexes command. The
      * units depend on the type of server. It is OK to return an empty map or
@@ -126,6 +135,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
     public Map<String, String> getShardMetaData(String shardName) throws Exception {
         Map<String, String> metaData = new HashMap<>();
         metaData.put(SHARD_SIZE_KEY, Integer.toString(shardSize(shardName)));
+        metaData.put(SHARD_DISK_USAGE_KEY, Integer.toString(shardDiskUsage(shardName)));
         return metaData;
     }
 

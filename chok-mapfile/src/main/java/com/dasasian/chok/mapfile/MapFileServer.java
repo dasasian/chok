@@ -16,6 +16,8 @@
 package com.dasasian.chok.mapfile;
 
 import com.dasasian.chok.node.IContentServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.HDFSChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -45,6 +48,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
     private final Configuration conf = new Configuration();
     private final FileSystem fileSystem;
     private final Map<String, MapFile.Reader> readerByShard = new ConcurrentHashMap<>();
+    private final Map<String, File> fileByShard = new ConcurrentHashMap<>();
     private String nodeName;
 
     public MapFileServer() throws IOException {
@@ -83,10 +87,9 @@ public class MapFileServer implements IContentServer, IMapFileServer {
             throw new IOException("Can not read shard " + shardName + " dir " + shardDir.getAbsolutePath() + "!");
         }
         try {
+            fileByShard.put(shardName, shardDir);
             final MapFile.Reader reader = new MapFile.Reader(fileSystem, shardDir.getAbsolutePath(), conf);
-            synchronized (readerByShard) {
-                readerByShard.put(shardName, reader);
-            }
+            readerByShard.put(shardName, reader);
         } catch (IOException e) {
             LOG.error("Error opening shard " + shardName + " " + shardDir.getAbsolutePath(), e);
             throw e;
@@ -104,6 +107,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
     public void removeShard(final String shardName) throws IOException {
         LOG.debug("LuceneServer " + nodeName + " removing shard " + shardName);
         synchronized (readerByShard) {
+            final File file = fileByShard.get(shardName);
             final MapFile.Reader reader = readerByShard.get(shardName);
             if (reader != null) {
                 try {
@@ -120,6 +124,31 @@ public class MapFileServer implements IContentServer, IMapFileServer {
     }
 
     /**
+     * Returns the number of documents a shard has.
+     *
+     * @param shardName name of the shard
+     * @return the amount of disk used by the shard
+     */
+    protected long shardDiskUsage(String shardName) {
+        File shardDir = fileByShard.get(shardName);
+        if (shardDir != null) {
+            try{
+                URI indexUri = shardDir.toURI();
+                ChokFileSystem fileSystem = new HDFSChokFileSystem(indexUri);
+                if (fileSystem.exists(indexUri)) {
+                    final long size = fileSystem.size(indexUri);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Shard '" + shardName + "' has " + size + " docs.");
+                    }
+                    return size;
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        throw new IllegalArgumentException("Shard '" + shardName + "' unknown");
+    }
+
+    /**
      * Returns data about a shard. Currently the only standard key is
      * SHARD_SIZE_KEY. This value will be reported by the listIndexes command. The
      * units depend on the type of server. It is OK to return an empty map or
@@ -131,7 +160,14 @@ public class MapFileServer implements IContentServer, IMapFileServer {
      * @throws Exception when and error occurs
      */
     public Map<String, String> getShardMetaData(String shardName) throws Exception {
-        final MapFile.Reader reader = readerByShard.get(shardName);
+        Map<String, String> metaData = new HashMap<>();
+        metaData.put(SHARD_SIZE_KEY, Integer.toString(shardSize(shardName)));
+        metaData.put(SHARD_DISK_USAGE_KEY, Long.toString(shardDiskUsage(shardName)));
+        return metaData;
+    }
+
+    private int shardSize(String shardName) throws IOException, InstantiationException, IllegalAccessException {
+        final Reader reader = readerByShard.get(shardName);
         if (reader != null) {
             int count = 0;
             synchronized (reader) {
@@ -142,12 +178,9 @@ public class MapFileServer implements IContentServer, IMapFileServer {
                     count++;
                 }
             }
-            Map<String, String> metaData = new HashMap<>();
-            metaData.put(SHARD_SIZE_KEY, Integer.toString(count));
-            return metaData;
+            return count;
         }
-        LOG.warn("Shard " + shardName + " not found!");
-        throw new IllegalArgumentException("Shard " + shardName + " unknown");
+        throw new IllegalArgumentException("Shard '" + shardName + "' unknown");
     }
 
     /**

@@ -99,12 +99,13 @@ public class ShardManager {
         for (int i = 0; i < maxTries; i++) {
             URI uri;
             try {
-                uri = ChokFileSystem.getURI(shardPath);
-                ChokFileSystem fileSystem = (throttleSemaphore != null) ?
-                        ChokFileSystem.getThrottled(uri, new Configuration(), throttleSemaphore) :
-                        ChokFileSystem.get(uri, new Configuration());
+                uri = HDFSChokFileSystem.getURI(shardPath);
+                ChokFileSystem fileSystem = new HDFSChokFileSystem(uri);
 
-//                final Path path = new Path(shardPath);
+                if(throttleSemaphore != null) {
+                    fileSystem = new ThrottledFileSystem(fileSystem, throttleSemaphore);
+                }
+
                 boolean isZip = fileSystem.isFile(uri) && shardPath.endsWith(".zip");
 
                 File shardTmpFolder = new File(localShardFolder.getAbsolutePath() + "_tmp");

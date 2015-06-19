@@ -16,9 +16,7 @@
 package com.dasasian.chok.lucene;
 
 import com.dasasian.chok.node.IContentServer;
-import com.dasasian.chok.util.ClassUtil;
-import com.dasasian.chok.util.NodeConfiguration;
-import com.dasasian.chok.util.WritableType;
+import com.dasasian.chok.util.*;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.hadoop.io.BytesWritable;
@@ -27,7 +25,6 @@ import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.ProtocolSignature;
-import org.slf4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.document.Fieldable;
@@ -38,10 +35,12 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.search.TimeLimitingCollector.TimeExceededException;
 import org.apache.lucene.util.Counter;
 import org.apache.lucene.util.PriorityQueue;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -59,6 +58,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     private final static Logger LOG = LoggerFactory.getLogger(LuceneServer.class);
 
     protected final Map<String, IndexSearcher> searcherByShard = new ConcurrentHashMap<>();
+    protected final Map<String, File> fileByShard = new ConcurrentHashMap<>();
     protected Cache<Filter, CachingWrapperFilter> filterCache;
     protected ExecutorService threadPool;
 
@@ -160,6 +160,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
         try {
             IndexSearcher indexSearcher = searcherFactory.createSearcher(shardName, shardDir);
             searcherByShard.put(shardName, indexSearcher);
+            fileByShard.put(shardName, shardDir);
         } catch (CorruptIndexException e) {
             LOG.error("Error building index for shard " + shardName, e);
             throw e;
@@ -173,7 +174,8 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     public void removeShard(final String shardName) {
         LOG.info("LuceneServer " + nodeName + " removing shard " + shardName);
         final IndexSearcher remove = searcherByShard.remove(shardName);
-        if (remove == null) {
+        final File shardDir = fileByShard.remove(shardName);
+        if (remove == null || shardDir == null) {
             return; // nothing to do.
         }
         try {
@@ -207,10 +209,35 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     }
 
     /**
+     * Returns the number of documents a shard has.
+     *
+     * @param shardName name of the shard
+     * @return the amount of disk used by the shard
+     */
+    protected long shardDiskUsage(String shardName) {
+        File shardDir = fileByShard.get(shardName);
+        if (shardDir != null) {
+            try{
+                URI indexUri = shardDir.toURI();
+                ChokFileSystem fileSystem = new HDFSChokFileSystem(indexUri);
+                if (fileSystem.exists(indexUri)) {
+                    final long size = fileSystem.size(indexUri);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Shard '" + shardName + "' has " + size + " docs.");
+                    }
+                    return size;
+                }
+            } catch (Exception ignore) {
+            }
+        }
+        throw new IllegalArgumentException("Shard '" + shardName + "' unknown");
+    }
+
+    /**
      * Returns data about a shard. Currently the only standard key is
-     * SHARD_SIZE_KEY. This value will be reported by the listIndexes command. The
-     * units depend on the type of server. It is OK to return an empty map or
-     * null.
+     * SHARD_SIZE_KEY and SHARD_DISK_USAGE_KEY. These values will be reported
+     * by the listIndexes command. The units depend on the type of server.
+     * It is OK to return an empty map or null.
      *
      * @param shardName The name of the shard to measure. This was the name provided in
      *                  addShard().
@@ -221,6 +248,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     public Map<String, String> getShardMetaData(String shardName) throws Exception {
         Map<String, String> metaData = new HashMap<>();
         metaData.put(SHARD_SIZE_KEY, Integer.toString(shardSize(shardName)));
+        metaData.put(SHARD_DISK_USAGE_KEY, Long.toString(shardDiskUsage(shardName)));
         return metaData;
     }
 

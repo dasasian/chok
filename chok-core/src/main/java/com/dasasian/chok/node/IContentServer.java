@@ -46,6 +46,14 @@ public interface IContentServer extends VersionedProtocol {
     String SHARD_SIZE_KEY = "shard-size";
 
     /**
+     * The key fetched from getShardMetadata() which in order to report the size
+     * of the shard in the listIndexes command. The value must be parsable as an
+     * integer. The units depend on the type of data in the shard. Reporting the
+     * shard size is optional.
+     */
+    String SHARD_DISK_USAGE_KEY = "shard-disk-usage";
+
+    /**
      * Initializes the content-server after the instance has been created. Passes
      * the node-name.
      *

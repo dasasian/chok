@@ -18,8 +18,8 @@ package com.dasasian.chok.master;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
-import com.dasasian.chok.util.HadoopUtil;
 import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.HDFSChokFileSystem;
 
 import java.io.IOException;
 import java.net.URI;
@@ -56,7 +56,7 @@ public class MasterContext {
     }
 
     public ChokFileSystem getChokFileSystem(IndexMetaData indexMd) throws IOException, URISyntaxException {
-        return HadoopUtil.getChokFileSystem(ChokFileSystem.getURI(indexMd.getPath()));
+        return new HDFSChokFileSystem(new URI(indexMd.getPath()));
     }
 
 }

@@ -55,6 +55,7 @@ public class MapFileServerTest extends AbstractTest {
         server.addShard(SHARD_A_1, new File(MapFileTestResources.MAP_FILE_A, "a1"));
         assertNotNull(server.getShardMetaData(SHARD_A_1));
         assertEquals("3", server.getShardMetaData(SHARD_A_1).get(IContentServer.SHARD_SIZE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_1).get(IContentServer.SHARD_DISK_USAGE_KEY));
         String[] shards = new String[]{SHARD_A_1};
         assertEquals("This is a test", getOneResult(server, "a.txt", shards));
         assertMissing(server, "d.html", shards);
@@ -70,6 +71,7 @@ public class MapFileServerTest extends AbstractTest {
         server.init(NODE_NAME, nodeConfigurationFactory.getConfiguration());
         server.addShard(SHARD_A_2, new File(MapFileTestResources.MAP_FILE_A, "a2"));
         assertEquals("3", server.getShardMetaData(SHARD_A_2).get(IContentServer.SHARD_SIZE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_2).get(IContentServer.SHARD_DISK_USAGE_KEY));
         String[] shards = new String[]{SHARD_A_2};
         assertEquals("<b>test</b>", getOneResult(server, "d.html", shards));
         assertMissing(server, "a.txt", shards);
@@ -91,6 +93,10 @@ public class MapFileServerTest extends AbstractTest {
         assertEquals("3", server.getShardMetaData(SHARD_A_2).get(IContentServer.SHARD_SIZE_KEY));
         assertEquals("2", server.getShardMetaData(SHARD_A_3).get(IContentServer.SHARD_SIZE_KEY));
         assertEquals("4", server.getShardMetaData(SHARD_A_4).get(IContentServer.SHARD_SIZE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_1).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_2).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_3).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_4).get(IContentServer.SHARD_DISK_USAGE_KEY));
         String[] shards = new String[]{SHARD_A_1, SHARD_A_2, SHARD_A_3, SHARD_A_4};
         assertEquals("This is a test", getOneResult(server, "a.txt", shards));
         assertEquals("<b>test</b>", getOneResult(server, "d.html", shards));
@@ -106,6 +112,7 @@ public class MapFileServerTest extends AbstractTest {
     public void testBothMapFiles() throws Exception {
         MapFileServer server = new MapFileServer();
         server.init(NODE_NAME, nodeConfigurationFactory.getConfiguration());
+
         server.addShard(SHARD_A_1, new File(MapFileTestResources.MAP_FILE_A, "a1"));
         server.addShard(SHARD_A_2, new File(MapFileTestResources.MAP_FILE_A, "a2"));
         server.addShard(SHARD_A_3, new File(MapFileTestResources.MAP_FILE_A, "a3"));
@@ -118,6 +125,12 @@ public class MapFileServerTest extends AbstractTest {
         assertEquals("4", server.getShardMetaData(SHARD_A_4).get(IContentServer.SHARD_SIZE_KEY));
         assertEquals("3", server.getShardMetaData(SHARD_B_1).get(IContentServer.SHARD_SIZE_KEY));
         assertEquals("3", server.getShardMetaData(SHARD_B_2).get(IContentServer.SHARD_SIZE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_1).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_2).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_3).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_A_4).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_B_1).get(IContentServer.SHARD_DISK_USAGE_KEY));
+        assertEquals("136", server.getShardMetaData(SHARD_B_2).get(IContentServer.SHARD_DISK_USAGE_KEY));
         String[] shards = new String[]{SHARD_A_1, SHARD_A_2, SHARD_A_3, SHARD_A_4, SHARD_B_1, SHARD_B_2};
         String[] mf1Shards = new String[]{SHARD_A_1, SHARD_A_2, SHARD_A_3, SHARD_A_4};
         String[] mf2Shards = new String[]{SHARD_B_1, SHARD_B_2};

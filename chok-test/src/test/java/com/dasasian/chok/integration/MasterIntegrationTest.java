@@ -62,7 +62,7 @@ public class MasterIntegrationTest extends AbstractTest {
         Set<Shard> shards = indexMD.getShards();
         for (Shard shard : shards) {
             Assert.assertEquals(miniCluster.getRunningNodeCount(), protocol.getShardNodes(shard.getName()).size());
-            Assert.assertEquals(1, shard.getMetaDataMap().size());
+            Assert.assertEquals(2, shard.getMetaDataMap().size());
         }
 
         // undeploy

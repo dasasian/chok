@@ -52,8 +52,7 @@ public class FileUtilTest extends AbstractTest {
 
     @Test
     public void testUnzipPathFileChokFileSystemBoolean() throws IOException, URISyntaxException {
-        Configuration configuration = new Configuration();
-        ChokFileSystem fileSystem = ChokFileSystem.getLocal(configuration);
+        ChokFileSystem fileSystem = new HDFSChokFileSystem();
 
         // Test the unspooled case
         File targetFolder = temporaryFolder.newFolder("unpacked2");

@@ -24,6 +24,7 @@ import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.Mocks;
 import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.HDFSChokFileSystem;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;

@@ -20,8 +20,9 @@ import com.dasasian.chok.operation.OperationId;
 import com.dasasian.chok.operation.node.OperationResult;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
-import org.I0Itec.zkclient.ExceptionUtil;
 import com.dasasian.chok.util.ChokFileSystem;
+import org.I0Itec.zkclient.ExceptionUtil;
+import com.dasasian.chok.util.HDFSChokFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,7 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
         }
         try {
             ChokFileSystem fileSystem = context.getChokFileSystem(indexMD);
-            URI path = ChokFileSystem.getURI(indexMD.getPath());
+            URI path = HDFSChokFileSystem.getURI(indexMD.getPath());
             if (!fileSystem.exists(path)) {
                 LOG.warn("skip balancing for index '" + _indexName + "' cause source '" + path + "' does not exists anymore");
                 return null;
