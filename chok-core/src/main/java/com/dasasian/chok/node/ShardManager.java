@@ -15,74 +15,76 @@
  */
 package com.dasasian.chok.node;
 
-import com.dasasian.chok.util.ChokException;
-import com.dasasian.chok.util.FileUtil;
+import com.dasasian.chok.util.*;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
 import com.google.common.collect.ImmutableList;
-import org.apache.hadoop.conf.Configuration;
-import com.dasasian.chok.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Collection;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
 
 public class ShardManager {
 
     protected final static Logger LOG = LoggerFactory.getLogger(ShardManager.class);
-    private final File shardsFolder;
+
+    private final Path shardsFolder;
+    private final ChokFileSystem.Factory chokFileSystemFactory;
     private final ThrottleSemaphore throttleSemaphore;
 
-    public ShardManager(File shardsFolder) {
-        this(shardsFolder, null);
-    }
-
-    public ShardManager(File shardsFolder, ThrottleSemaphore throttleSemaphore) {
+    public ShardManager(Path shardsFolder, ChokFileSystem.Factory chokFileSystemFactory, ThrottleSemaphore throttleSemaphore) {
         this.shardsFolder = shardsFolder;
+        this.chokFileSystemFactory = chokFileSystemFactory;
         this.throttleSemaphore = throttleSemaphore;
-        if (!this.shardsFolder.exists()) {
-            this.shardsFolder.mkdirs();
-        }
-        if (!this.shardsFolder.exists()) {
-            throw new IllegalStateException("could not create local shard folder '" + this.shardsFolder.getAbsolutePath() + "'");
+        if (!Files.exists(this.shardsFolder)) {
+            try {
+                Files.createDirectories(this.shardsFolder);
+            } catch (IOException e) {
+                throw new IllegalStateException("could not create local shard folder '" + this.shardsFolder.toAbsolutePath() + "'", e);
+            }
         }
     }
 
-    public File installShard(String shardName, String shardPath) throws Exception {
-        File localShardFolder = getShardFolder(shardName);
+    public Path installShard(String shardName, URI shardUri) throws Exception {
+        Path localShardFolder = getShardFolder(shardName);
         try {
-            if (!localShardFolder.exists()) {
-                installShard(shardName, shardPath, localShardFolder);
-            }
+            installShard(shardName, shardUri, localShardFolder);
             return localShardFolder;
         } catch (Exception e) {
-            FileUtil.deleteFolder(localShardFolder);
+            // cleanup
+            FileUtil.deleteFolder(localShardFolder.toFile());
             throw e;
         }
     }
 
     public void uninstallShard(String shardName) {
-        File localShardFolder = getShardFolder(shardName);
-        FileUtil.deleteFolder(localShardFolder);
+        Path localShardFolder = getShardFolder(shardName);
+        FileUtil.deleteFolder(localShardFolder.toFile());
     }
 
-    public Collection<String> getInstalledShards() {
-        String[] folderList = shardsFolder.list(FileUtil.VISIBLE_FILES_FILTER);
-        if (folderList == null) {
-            return ImmutableList.of();
+    public List<String> getInstalledShards() {
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(shardsFolder, FileUtil.VISIBLE_PATHS_FILTER)) {
+            for (Path entry: stream) {
+                builder.add(entry.getFileName().toString());
+            }
+        } catch (IOException e) {
+            LOG.error("Error while getting installed shards", e);
         }
-        return Arrays.asList(folderList);
+        return builder.build();
     }
 
-    public File getShardsFolder() {
+    public Path getShardsFolder() {
         return shardsFolder;
     }
 
-    public File getShardFolder(String shardName) {
-        return new File(shardsFolder, shardName);
+    public Path getShardFolder(String shardName) {
+        return shardsFolder.resolve(shardName);
     }
 
     /*
@@ -92,48 +94,44 @@ public class ShardManager {
      * system property chok.spool.zip.shards is true, the zip file is staged to
      * the local disk before being unzipped.
      */
-    private void installShard(String shardName, String shardPath, File localShardFolder) throws ChokException {
-        LOG.info("install shard '" + shardName + "' from " + shardPath);
+    private void installShard(String shardName, URI shardUri, Path localShardFolder) throws ChokException {
+        LOG.info("install shard '" + shardName + "' from " + shardUri);
         // TODO sg: to fix HADOOP-4422 we try to download the shard 5 times
         int maxTries = 5;
         for (int i = 0; i < maxTries; i++) {
-            URI uri;
             try {
-                uri = HDFSChokFileSystem.getURI(shardPath);
-                ChokFileSystem fileSystem = new HDFSChokFileSystem(uri);
+                ChokFileSystem fileSystem = chokFileSystemFactory.create(shardUri);
 
-                if(throttleSemaphore != null) {
+                if (throttleSemaphore != null) {
                     fileSystem = new ThrottledFileSystem(fileSystem, throttleSemaphore);
                 }
 
-                boolean isZip = fileSystem.isFile(uri) && shardPath.endsWith(".zip");
+                boolean isZip = fileSystem.isFile(shardUri) && shardUri.getPath().endsWith(".zip");
 
-                File shardTmpFolder = new File(localShardFolder.getAbsolutePath() + "_tmp");
+                Path shardTmpFolder = Paths.get(localShardFolder.toString() + "_tmp");
                 try {
-                    FileUtil.deleteFolder(localShardFolder);
-                    FileUtil.deleteFolder(shardTmpFolder);
+                    FileUtil.deleteFolder(localShardFolder.toFile());
+                    FileUtil.deleteFolder(shardTmpFolder.toFile());
 
                     if (isZip) {
-                        FileUtil.unzip(uri, shardTmpFolder, fileSystem, "true".equalsIgnoreCase(System.getProperty("chok.spool.zip.shards", "false")));
+                        FileUtil.unzip(shardUri, shardTmpFolder, fileSystem, "true".equalsIgnoreCase(System.getProperty("chok.spool.zip.shards", "false")));
                     } else {
-                        fileSystem.copyToLocalFile(uri, shardTmpFolder.toURI());
+                        fileSystem.copyToLocalFile(shardUri, shardTmpFolder);
                     }
-                    shardTmpFolder.renameTo(localShardFolder);
+                    Files.move(shardTmpFolder, localShardFolder);
                 } finally {
                     // Ensure that the tmp folder is deleted on an error
-                    FileUtil.deleteFolder(shardTmpFolder);
+                    FileUtil.deleteFolder(shardTmpFolder.toFile());
                 }
                 // Looks like we were successful.
                 if (i > 0) {
-                    LOG.error("Loaded shard:" + shardPath);
+                    LOG.error("Loaded shard:" + shardUri);
                 }
                 return;
-            } catch (final URISyntaxException e) {
-                throw new ChokException("Can not parse uri for path: " + shardPath, e);
             } catch (final Exception e) {
-                LOG.error(String.format("Error loading shard: %s (try %d of %d)", shardPath, i, maxTries), e);
+                LOG.error(String.format("Error loading shard: %s (try %d of %d)", shardUri, i, maxTries), e);
                 if (i >= maxTries - 1) {
-                    throw new ChokException("Can not load shard: " + shardPath, e);
+                    throw new ChokException("Cannot load shard: " + shardUri, e);
                 }
             }
         }

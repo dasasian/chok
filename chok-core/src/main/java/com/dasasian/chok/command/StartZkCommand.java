@@ -18,6 +18,7 @@ package com.dasasian.chok.command;
 import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
 import org.I0Itec.zkclient.ZkServer;
+import org.apache.zookeeper.server.DatadirCleanupManager;
 
 /**
  * User: damith.chandrasekara
@@ -32,18 +33,20 @@ public class StartZkCommand extends Command {
     @Override
     public void execute(ZkConfiguration zkConf) throws Exception {
         final ZkServer zkServer = ZkChokUtil.startZkServer(zkConf);
-        synchronized (zkServer) {
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                public void run() {
-                    synchronized (zkServer) {
-                        System.out.println("stopping zookeeper server...");
-                        zkServer.shutdown();
-                        zkServer.notifyAll();
-                    }
+        DatadirCleanupManager datadirCleanupManager = ZkChokUtil.getDatadirCleanupManager(zkConf);
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                synchronized (zkServer) {
+                    System.out.println("stopping zookeeper datadir cleanup...");
+                    datadirCleanupManager.shutdown();
+                    System.out.println("stopping zookeeper server...");
+                    zkServer.shutdown();
+                    zkServer.notifyAll();
                 }
-            });
-            System.out.println("zookeeper server started on port " + zkServer.getPort());
-            zkServer.wait();
-        }
+            }
+        });
+        System.out.println("zookeeper server started on port " + zkServer.getPort());
+        zkServer.wait();
     }
+
 }

@@ -19,20 +19,21 @@ import com.dasasian.chok.node.monitor.IMonitor;
 import com.dasasian.chok.node.monitor.JmxMonitor;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public class NodeConfiguration {
 
     private final int startPort;
-    private final File shardFolder;
+    private final Path shardFolder;
     private final int shardDeployThrottle;
     private final Class<? extends IMonitor> monitorClass;
     private final int rpcHandlerCount;
 
-    public NodeConfiguration(int startPort, File shardFolder) {
+    public NodeConfiguration(int startPort, Path shardFolder) {
         this(startPort, shardFolder, 0, JmxMonitor.class, 25);
     }
 
-    public NodeConfiguration(int startPort, File shardFolder, int shardDeployThrottle, Class<? extends IMonitor> monitorClass, int rpcHandlerCount) {
+    public NodeConfiguration(int startPort, Path shardFolder, int shardDeployThrottle, Class<? extends IMonitor> monitorClass, int rpcHandlerCount) {
         this.startPort = startPort;
         this.shardFolder = shardFolder;
         this.shardDeployThrottle = shardDeployThrottle;
@@ -44,7 +45,7 @@ public class NodeConfiguration {
         return startPort;
     }
 
-    public File getShardFolder() {
+    public Path getShardFolder() {
         return shardFolder;
     }
 

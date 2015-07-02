@@ -21,6 +21,8 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.AbstractZkTest;
 import org.junit.Test;
 
+import java.net.URI;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -32,7 +34,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         IndexDeployFuture deployFuture = new IndexDeployFuture(protocol, indexName);
         assertEquals(IndexState.DEPLOYING, deployFuture.joinDeployment(200));
 
-        protocol.publishIndex(new IndexMetaData(indexName, "path", 1));
+        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1));
         assertEquals(IndexState.DEPLOYED, deployFuture.joinDeployment(200));
     }
 
@@ -42,7 +44,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         IndexDeployFuture deployFuture = new IndexDeployFuture(protocol, indexName);
         assertEquals(IndexState.DEPLOYING, deployFuture.joinDeployment(200));
 
-        IndexMetaData indexMD = new IndexMetaData(indexName, "path", 1);
+        IndexMetaData indexMD = new IndexMetaData(indexName, new URI("path"), 1);
         indexMD.setDeployError(new IndexDeployError(indexName, ErrorType.NO_NODES_AVAILIBLE));
         protocol.publishIndex(indexMD);
         assertEquals(IndexState.ERROR, deployFuture.joinDeployment(200));
@@ -66,7 +68,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         thread.start();
         deployFuture.disconnect();
         deployFuture.reconnect();
-        protocol.publishIndex(new IndexMetaData(indexName, "path", 1));
+        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1));
         thread.join();
     }
 
@@ -76,7 +78,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         IndexDeployFuture deployFuture = new IndexDeployFuture(protocol, indexName);
         assertEquals(IndexState.DEPLOYING, deployFuture.joinDeployment(200));
 
-        protocol.publishIndex(new IndexMetaData(indexName, "path", 1));
+        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1));
         protocol.unpublishIndex(indexName);
         assertEquals(IndexState.DEPLOYED, deployFuture.joinDeployment(200));
     }

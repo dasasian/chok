@@ -39,7 +39,7 @@ public class TestNodeConfigurationFactory implements NodeConfigurationFactory {
 
     public NodeConfiguration getConfiguration(int nodeStartPort) {
         try {
-            return NodeConfigurationLoader.createConfiguration(nodeStartPort, temporaryFolder.newFolder());
+            return NodeConfigurationLoader.createConfiguration(nodeStartPort, temporaryFolder.newFolder().toPath());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

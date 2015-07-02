@@ -18,7 +18,8 @@ package com.dasasian.chok.operation.node;
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.node.NodeContext;
 
-import java.io.File;
+import java.net.URI;
+import java.nio.file.Path;
 import java.util.Map;
 
 public class ShardDeployOperation extends AbstractShardOperation {
@@ -32,8 +33,8 @@ public class ShardDeployOperation extends AbstractShardOperation {
 
     @Override
     protected void execute(NodeContext context, String shardName, DeployResult deployResult) throws Exception {
-        String shardPath = getShardPath(shardName);
-        File localShardFolder = context.getShardManager().installShard(shardName, shardPath);
+        URI shardUri = getShardUri(shardName);
+        Path localShardFolder = context.getShardManager().installShard(shardName, shardUri);
         IContentServer contentServer = context.getContentServer();
         if (!contentServer.getShards().contains(shardName)) {
             contentServer.addShard(shardName, localShardFolder);

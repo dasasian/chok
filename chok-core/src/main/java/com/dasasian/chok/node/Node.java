@@ -23,7 +23,9 @@ import com.dasasian.chok.protocol.ConnectedComponent;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.protocol.metadata.NodeMetaData;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
+import com.dasasian.chok.util.ThrottledInputStream;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
 import org.I0Itec.zkclient.ExceptionUtil;
 import org.I0Itec.zkclient.NetworkUtil;
@@ -37,13 +39,18 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.BindException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 
 public class Node implements ConnectedComponent {
 
     protected final static Logger LOG = LoggerFactory.getLogger(Node.class);
     private final NodeConfiguration nodeConfiguration;
     private final IContentServer contentServer;
+    private final ChokFileSystem.Factory chokFileSystemFactory;
     protected final InteractionProtocol protocol;
     protected NodeContext context;
     protected String nodeName;
@@ -52,13 +59,11 @@ public class Node implements ConnectedComponent {
     private Thread nodeOperatorThread;
     private boolean stopped;
 
-    public Node(InteractionProtocol protocol, final NodeConfiguration configuration, IContentServer contentServer) {
+    public Node(InteractionProtocol protocol, final NodeConfiguration configuration, IContentServer contentServer, ChokFileSystem.Factory chokFileSystemFactory) {
         this.protocol = protocol;
         this.contentServer = contentServer;
-        if (contentServer == null) {
-            throw new IllegalArgumentException("Null server passed to Node()");
-        }
-        nodeConfiguration = configuration;
+        this.nodeConfiguration = configuration;
+        this.chokFileSystemFactory = chokFileSystemFactory;
     }
 
     /*
@@ -103,16 +108,16 @@ public class Node implements ConnectedComponent {
 
         // we add hostName and port to the shardFolder to allow multiple nodes per
         // server with the same configuration
-        File shardsFolder = new File(nodeConfiguration.getShardFolder(), nodeName.replaceAll(":", "_"));
-        LOG.info("local shard folder: " + shardsFolder.getAbsolutePath());
+        // todo is there a better way of doing this?
+        Path shardsFolder = nodeConfiguration.getShardFolder().resolve(nodeName.replaceAll(":", "_"));
+        LOG.info("local shard folder: " + shardsFolder);
         int throttleInKbPerSec = nodeConfiguration.getShardDeployThrottle();
-        final ShardManager shardManager;
+        ThrottleSemaphore throttleSemaphore = null;
         if (throttleInKbPerSec > 0) {
             LOG.info("throttling of shard deployment to " + throttleInKbPerSec + " kilo-bytes per second");
-            shardManager = new ShardManager(shardsFolder, new ThrottleSemaphore(throttleInKbPerSec * 1024));
-        } else {
-            shardManager = new ShardManager(shardsFolder);
+            throttleSemaphore = new ThrottleSemaphore(throttleInKbPerSec * 1024);
         }
+        final ShardManager shardManager  = new ShardManager(shardsFolder, chokFileSystemFactory, throttleSemaphore);
         context = new NodeContext(protocol, this, shardManager, contentServer);
         protocol.registerComponent(this);
 
@@ -157,7 +162,7 @@ public class Node implements ConnectedComponent {
     }
 
     private void redeployInstalledShards() {
-        Collection<String> installedShards = context.getShardManager().getInstalledShards();
+        List<String> installedShards = context.getShardManager().getInstalledShards();
         ShardRedeployOperation redeployOperation = new ShardRedeployOperation(installedShards);
         try {
             redeployOperation.execute(context);

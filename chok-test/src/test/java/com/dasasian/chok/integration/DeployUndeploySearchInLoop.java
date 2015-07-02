@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.junit.Ignore;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+
 /**
  * - start a chok-cluster<br>
  * - deploy one or more indices<br>
@@ -50,7 +52,7 @@ public class DeployUndeploySearchInLoop {
             try {
                 String indexName = "index" + runThroughs;
                 LOG.info("deploying index '" + indexName + "'");
-                deployClient.addIndex(indexName, "/Users/jz/Documents/workspace/ms/katta/src/test/testIndexA", 1).joinDeployment();
+                deployClient.addIndex(indexName, new URI("/Users/jz/Documents/workspace/ms/katta/src/test/testIndexA"), 1).joinDeployment();
             } catch (Exception e) {
                 logException("deploy", e);
             }

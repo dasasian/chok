@@ -19,6 +19,7 @@ import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.util.*;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.MapWritable;
@@ -41,6 +42,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -58,16 +61,13 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     private final static Logger LOG = LoggerFactory.getLogger(LuceneServer.class);
 
     protected final Map<String, IndexSearcher> searcherByShard = new ConcurrentHashMap<>();
-    protected final Map<String, File> fileByShard = new ConcurrentHashMap<>();
+    protected final Map<String, Path> pathByShard = new ConcurrentHashMap<>();
     protected Cache<Filter, CachingWrapperFilter> filterCache;
     protected ExecutorService threadPool;
 
     protected String nodeName;
     private float timeoutPercentage = 0.75f;
     private ISearcherFactory searcherFactory;
-
-    public LuceneServer() {
-    }
 
     /**
      * Merges the already sorted sub-lists to one big sorted list.
@@ -155,12 +155,12 @@ public class LuceneServer implements IContentServer, ILuceneServer {
      * @throws IOException when an error occurs
      */
     @Override
-    public void addShard(final String shardName, final File shardDir) throws IOException {
+    public void addShard(final String shardName, final Path shardDir) throws IOException {
         LOG.info("LuceneServer " + nodeName + " got shard " + shardName);
         try {
             IndexSearcher indexSearcher = searcherFactory.createSearcher(shardName, shardDir);
             searcherByShard.put(shardName, indexSearcher);
-            fileByShard.put(shardName, shardDir);
+            pathByShard.put(shardName, shardDir);
         } catch (CorruptIndexException e) {
             LOG.error("Error building index for shard " + shardName, e);
             throw e;
@@ -174,7 +174,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     public void removeShard(final String shardName) {
         LOG.info("LuceneServer " + nodeName + " removing shard " + shardName);
         final IndexSearcher remove = searcherByShard.remove(shardName);
-        final File shardDir = fileByShard.remove(shardName);
+        final Path shardDir = pathByShard.remove(shardName);
         if (remove == null || shardDir == null) {
             return; // nothing to do.
         }
@@ -215,18 +215,10 @@ public class LuceneServer implements IContentServer, ILuceneServer {
      * @return the amount of disk used by the shard
      */
     protected long shardDiskUsage(String shardName) {
-        File shardDir = fileByShard.get(shardName);
+        Path shardDir = pathByShard.get(shardName);
         if (shardDir != null) {
             try{
-                URI indexUri = shardDir.toURI();
-                ChokFileSystem fileSystem = new HDFSChokFileSystem(indexUri);
-                if (fileSystem.exists(indexUri)) {
-                    final long size = fileSystem.size(indexUri);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Shard '" + shardName + "' has " + size + " docs.");
-                    }
-                    return size;
-                }
+                return FileUtils.sizeOfDirectory(shardDir.toFile());
             } catch (Exception ignore) {
             }
         }

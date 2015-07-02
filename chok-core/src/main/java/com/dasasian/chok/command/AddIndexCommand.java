@@ -18,6 +18,8 @@ package com.dasasian.chok.command;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.ZkConfiguration;
 
+import java.net.URI;
+
 /**
  * User: damith.chandrasekara
  * Date: 7/7/13
@@ -25,17 +27,18 @@ import com.dasasian.chok.util.ZkConfiguration;
 public class AddIndexCommand extends ProtocolCommand {
 
     private String name;
-    private String path;
+    private String uriString;
     private int replicationLevel = 3;
+
     public AddIndexCommand() {
-        super("addIndex", "<index name> <path to index> [<replication level>]", "Add a index to Chok");
+        super("addIndex", "<index name> <uri to index> [<replication level>]", "Add a index to Chok");
     }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
         CommandLineHelper.validateMinArguments(args, 3);
         name = args[1];
-        path = args[2];
+        uriString = args[2];
         if (args.length >= 4) {
             replicationLevel = Integer.parseInt(args[3]);
         }
@@ -43,7 +46,7 @@ public class AddIndexCommand extends ProtocolCommand {
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        CommandLineHelper.addIndex(protocol, name, path, replicationLevel);
+        CommandLineHelper.addIndex(protocol, name, new URI(uriString), replicationLevel);
     }
 
 }

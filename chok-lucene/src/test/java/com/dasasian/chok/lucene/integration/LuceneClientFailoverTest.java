@@ -24,6 +24,10 @@ import com.dasasian.chok.lucene.testutil.LuceneTestResources;
 import com.dasasian.chok.lucene.testutil.TestLuceneNodeConfigurationFactory;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
@@ -36,8 +40,10 @@ import static org.junit.Assert.*;
 
 public class LuceneClientFailoverTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     @Before
     public void deployIndex() throws Exception {

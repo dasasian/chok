@@ -22,6 +22,7 @@ import com.dasasian.chok.util.NodeConfigurationLoader;
 import com.google.common.base.Optional;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * User: damith.chandrasekara
@@ -56,12 +57,12 @@ public class LuceneNodeConfigurationLoader {
         return new LuceneNodeConfiguration(nodeConfiguration, searcherFactoryClass, timeoutPercentage, threadPoolCoreSize, threadPoolMaxSize, filterCacheEnabled, filterCacheMaxSize);
     }
 
-    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<File> overrideShardFolder) throws ClassNotFoundException {
+    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<Path> overrideShardFolder) throws ClassNotFoundException {
         NodeConfiguration nodeConfiguration = NodeConfigurationLoader.loadConfiguration(overrideStartPort, overrideShardFolder);
         return getLuceneNodeConfiguration(nodeConfiguration);
     }
 
-    public static LuceneNodeConfiguration createConfiguration(File file, int startPort, Class<? extends ISearcherFactory> searcherFactoryClass, float timeoutPercentage) throws ClassNotFoundException {
+    public static LuceneNodeConfiguration createConfiguration(Path file, int startPort, Class<? extends ISearcherFactory> searcherFactoryClass, float timeoutPercentage) throws ClassNotFoundException {
         NodeConfiguration nodeConfiguration = NodeConfigurationLoader.createConfiguration(startPort, file);
         return new LuceneNodeConfiguration(nodeConfiguration, searcherFactoryClass, timeoutPercentage, 25, 100, true, 1000);
     }

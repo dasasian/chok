@@ -22,18 +22,24 @@ import com.dasasian.chok.testutil.NodeConfigurationFactory;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.mockito.SerializableCountDownLatchAnswer;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 public class NodeZkTest extends AbstractZkTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     private final NodeConfigurationFactory nodeConfigurationFactory = new TestNodeConfigurationFactory(temporaryFolder);
 
     @Test
     public void testShutdown_shouldCleanupZkClientSubscriptions() {
         int numberOfListeners = zk.getZkClient().numberOfListeners();
-        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer());
+        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer(), injector.getInstance(ChokFileSystem.Factory.class));
         node.start();
         node.shutdown();
         assertEquals(numberOfListeners, zk.getZkClient().numberOfListeners());
@@ -41,16 +47,11 @@ public class NodeZkTest extends AbstractZkTest {
 
     @Test(timeout = 10000)
     public void testNodeOperationPickup() throws Exception {
-        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer());
+        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer(), injector.getInstance(ChokFileSystem.Factory.class));
         node.start();
 
 
         SerializableCountDownLatchAnswer answer = new SerializableCountDownLatchAnswer(2);
-
-//        NodeOperation operation1 = mock(NodeOperation.class, withSettings().serializable());
-//        NodeOperation operation2 = mock(NodeOperation.class, withSettings().serializable());
-//        when(operation1.execute((NodeContext) notNull())).thenAnswer(answer);
-//        when(operation2.execute((NodeContext) notNull())).thenAnswer(answer);
 
         NodeOperation operation1 = new TestNodeOperation(answer);
         NodeOperation operation2 = new TestNodeOperation(answer);
@@ -65,18 +66,13 @@ public class NodeZkTest extends AbstractZkTest {
 
     @Test(timeout = 20000)
     public void testNodeOperationPickup_AfterReconnect() throws Exception {
-        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer());
+        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer(), injector.getInstance(ChokFileSystem.Factory.class));
         node.start();
 
         node.disconnect();
         node.reconnect();
 
         SerializableCountDownLatchAnswer answer = new SerializableCountDownLatchAnswer(2);
-
-//        NodeOperation operation1 = mock(NodeOperation.class, withSettings().serializable());
-//        NodeOperation operation2 = mock(NodeOperation.class, withSettings().serializable());
-//        when(operation1.execute((NodeContext) notNull())).thenAnswer(answer);
-//        when(operation2.execute((NodeContext) notNull())).thenAnswer(answer);
 
         NodeOperation operation1 = new TestNodeOperation(answer);
         NodeOperation operation2 = new TestNodeOperation(answer);
@@ -90,7 +86,7 @@ public class NodeZkTest extends AbstractZkTest {
 
     @Test(timeout = 2000000)
     public void testNodeReconnectWithInterruptSwallowingOperation() throws Exception {
-        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer());
+        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer(), injector.getInstance(ChokFileSystem.Factory.class));
         node.start();
         protocol.addNodeOperation(node.getName(), new InterruptSwallowingOperation());
         Thread.sleep(200);
@@ -102,15 +98,10 @@ public class NodeZkTest extends AbstractZkTest {
 
     @Test(timeout = 10000)
     public void testNodeOperationException() throws Exception {
-        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer());
+        Node node = new Node(protocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer(), injector.getInstance(ChokFileSystem.Factory.class));
         node.start();
 
         SerializableCountDownLatchAnswer answer = new SerializableCountDownLatchAnswer(2);
-
-//        NodeOperation operation1 = mock(NodeOperation.class, withSettings().serializable());
-//        NodeOperation operation2 = mock(NodeOperation.class, withSettings().serializable());
-//        when(operation1.execute((NodeContext) notNull())).thenAnswer(answer);
-//        when(operation2.execute((NodeContext) notNull())).thenAnswer(answer);
 
         NodeOperation operation1 = new TestNodeOperation(answer);
         NodeOperation operation2 = new TestNodeOperation(answer);

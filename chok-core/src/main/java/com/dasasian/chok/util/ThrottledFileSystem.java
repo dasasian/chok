@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 
 /**
  * Created by damith.chandrasekara on 6/15/15.
@@ -50,17 +51,12 @@ public class ThrottledFileSystem implements ChokFileSystem {
     }
 
     @Override
-    public long size(URI uri) throws IOException {
-        return chokFileSystem.size(uri);
-    }
-
-    @Override
     public boolean isFile(URI uri) throws IOException {
         return chokFileSystem.isFile(uri);
     }
 
     @Override
-    public void copyToLocalFile(URI from, URI to) throws IOException {
+    public void copyToLocalFile(URI from, Path to) throws IOException {
         chokFileSystem.copyToLocalFile(from, to);
     }
 
@@ -70,7 +66,13 @@ public class ThrottledFileSystem implements ChokFileSystem {
     }
 
     @Override
-    public InputStream open(URI path, int bufferSize) throws IOException {
-        return new ThrottledInputStream(chokFileSystem.open(path, bufferSize), throttleSemaphore);
+    public long lastModified(URI uri) throws IOException {
+        return chokFileSystem.lastModified(uri);
     }
+
+    @Override
+    public long size(URI uri) throws IOException {
+        return chokFileSystem.size(uri);
+    }
+
 }

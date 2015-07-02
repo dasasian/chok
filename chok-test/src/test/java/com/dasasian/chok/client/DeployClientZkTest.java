@@ -20,6 +20,8 @@ import com.dasasian.chok.testutil.AbstractZkTest;
 import com.dasasian.chok.testutil.TestIndex;
 import org.junit.Test;
 
+import java.net.URI;
+
 import static org.junit.Assert.*;
 
 public class DeployClientZkTest extends AbstractZkTest {
@@ -29,12 +31,12 @@ public class DeployClientZkTest extends AbstractZkTest {
     @Test
     public void testAddIndex() throws Exception {
         DeployClient deployClient = new DeployClient(protocol);
-        deployClient.addIndex(testIndex.getIndexName(), testIndex.getIndexPath(), 1);
+        deployClient.addIndex(testIndex.getIndexName(), testIndex.getIndexUri(), 1);
     }
 
     @Test
     public void testIndexAccess() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("index1", "indexPath", 1);
+        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 1);
         IDeployClient deployClient = new DeployClient(protocol);
 
         assertFalse(deployClient.existsIndex(indexMD.getName()));
@@ -49,7 +51,7 @@ public class DeployClientZkTest extends AbstractZkTest {
 
     @Test
     public void testIndexRemove() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("index1", "indexPath", 1);
+        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 1);
         IDeployClient deployClient = new DeployClient(protocol);
 
         try {

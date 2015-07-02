@@ -20,6 +20,7 @@ import com.dasasian.chok.node.monitor.JmxMonitor;
 import com.google.common.base.Optional;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public class NodeConfigurationLoader {
 
@@ -30,23 +31,23 @@ public class NodeConfigurationLoader {
     private static final String RPC_HANDLER_COUNT = "node.rpc.handler-count";
 
     public static NodeConfiguration loadConfiguration() throws ClassNotFoundException {
-        return loadConfiguration(Optional.<Integer>absent(), Optional.<File>absent(), Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent());
+        return loadConfiguration(Optional.<Integer>absent(), Optional.<Path>absent(), Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent());
     }
 
     public static NodeConfiguration loadConfiguration(int overrideStartPort) throws ClassNotFoundException {
-        return loadConfiguration(Optional.of(overrideStartPort), Optional.<File>absent(), Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent());
+        return loadConfiguration(Optional.of(overrideStartPort), Optional.<Path>absent(), Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent());
     }
 
-    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<File> overrideShardFolder) throws ClassNotFoundException {
+    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<Path> overrideShardFolder) throws ClassNotFoundException {
         return loadConfiguration(overrideStartPort, overrideShardFolder, Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent());
     }
 
-    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<File> overrideShardFolder, Optional<Integer> overrideShardDeployThrottle, Optional<Class<? extends IMonitor>> overrideMonitorClass, Optional<Integer> overrideRPCHandlerCount) throws ClassNotFoundException {
+    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<Path> overrideShardFolder, Optional<Integer> overrideShardDeployThrottle, Optional<Class<? extends IMonitor>> overrideMonitorClass, Optional<Integer> overrideRPCHandlerCount) throws ClassNotFoundException {
         ChokConfiguration chokConfiguration = new ChokConfiguration("/chok.node.properties");
 
         int startPort = overrideStartPort.isPresent() ? overrideStartPort.get() : chokConfiguration.getInt(NODE_SERVER_PORT_START);
 
-        File shardFolder = overrideShardFolder.isPresent() ? overrideShardFolder.get() : chokConfiguration.getFile(SHARD_FOLDER);
+        Path shardFolder = overrideShardFolder.isPresent() ? overrideShardFolder.get() : chokConfiguration.getPath(SHARD_FOLDER);
 
         int shardDeployThrottle = overrideShardDeployThrottle.isPresent() ? overrideShardDeployThrottle.get() : chokConfiguration.getInt(SHARD_DEPLOY_THROTTLE, 0);
 
@@ -57,7 +58,7 @@ public class NodeConfigurationLoader {
         return new NodeConfiguration(startPort, shardFolder, shardDeployThrottle, monitorClass, rpcHandlerCount);
     }
 
-    public static NodeConfiguration createConfiguration(int startPort, File shardFolder) {
+    public static NodeConfiguration createConfiguration(int startPort, Path shardFolder) {
         return new NodeConfiguration(startPort, shardFolder, 0, JmxMonitor.class, 25);
     }
 

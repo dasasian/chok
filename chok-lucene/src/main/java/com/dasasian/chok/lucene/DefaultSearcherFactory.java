@@ -21,6 +21,7 @@ import org.apache.lucene.store.FSDirectory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 public class DefaultSearcherFactory implements ISearcherFactory {
 
@@ -30,8 +31,8 @@ public class DefaultSearcherFactory implements ISearcherFactory {
     }
 
     @Override
-    public IndexSearcher createSearcher(String shardName, File shardDir) throws IOException {
-        return new IndexSearcher(FSDirectory.open(shardDir.getAbsoluteFile()));
+    public IndexSearcher createSearcher(String shardName, Path shardDir) throws IOException {
+        return new IndexSearcher(FSDirectory.open(shardDir.toAbsolutePath().toFile()));
     }
 
 }

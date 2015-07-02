@@ -19,24 +19,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 
 /**
+ * Inteface for filesystem used to access shard (local or remote)
  * Created by damith.chandrasekara on 6/18/15.
  */
 public interface ChokFileSystem {
+
+    interface Factory {
+        ChokFileSystem create(URI uri);
+    }
+
     boolean exists(URI uri) throws IOException;
 
     Iterable<URI> list(URI uri) throws IOException, URISyntaxException;
 
     boolean isDir(URI uri) throws IOException;
 
-    long size(URI uri) throws IOException;
-
     boolean isFile(URI uri) throws IOException;
 
-    void copyToLocalFile(URI from, URI to) throws IOException;
+    void copyToLocalFile(URI from, Path to) throws IOException;
 
     InputStream open(URI source) throws IOException;
 
-    InputStream open(URI source, int bufferSize) throws IOException;
+    long lastModified(URI uri) throws IOException;
+
+    long size(URI uri) throws IOException;
+
 }

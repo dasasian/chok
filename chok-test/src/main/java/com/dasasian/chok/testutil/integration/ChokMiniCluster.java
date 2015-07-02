@@ -26,6 +26,7 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.*;
 import com.dasasian.chok.util.ChokException;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.google.common.collect.ImmutableList;
@@ -35,8 +36,9 @@ import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +55,7 @@ public class ChokMiniCluster extends ExternalResource {
     private final Class<? extends IContentServer> contentServerClass;
     private final int nodeStartPort;
     private final Class<? extends NodeConfigurationFactory> nodeConfigurationFactoryClass;
+    private final ChokFileSystem.Factory chokFileSystemFactory;
     private NodeConfigurationFactory nodeConfigurationFactory;
 
     private Master master;
@@ -66,11 +69,12 @@ public class ChokMiniCluster extends ExternalResource {
     private ZkTestSystem zkTestSystem = null;
     private ZkConfiguration zkConfiguration = null;
 
-    public ChokMiniCluster(Class<? extends IContentServer> nodeServerClass, int nodeCount, int nodeStartPort, Class<? extends NodeConfigurationFactory> nodeConfigurationFactoryClass) {
+    public ChokMiniCluster(Class<? extends IContentServer> nodeServerClass, int nodeCount, int nodeStartPort, Class<? extends NodeConfigurationFactory> nodeConfigurationFactoryClass, ChokFileSystem.Factory chokFileSystemFactory) {
         this.contentServerClass = nodeServerClass;
         this.initialNodeCount = nodeCount;
         this.nodeStartPort = nodeStartPort;
         this.nodeConfigurationFactoryClass = nodeConfigurationFactoryClass;
+        this.chokFileSystemFactory = chokFileSystemFactory;
     }
 
     // executed before every test method
@@ -105,7 +109,7 @@ public class ChokMiniCluster extends ExternalResource {
 
         protocol = new InteractionProtocol(zkClient, zkConfiguration);
 
-        master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, chokFileSystemFactory, false);
         master.start();
 
         for (int i = 0; i < initialNodeCount; i++) {
@@ -121,7 +125,8 @@ public class ChokMiniCluster extends ExternalResource {
     public Node startAdditionalNode() throws Exception {
         // todo ? do I need to calculate the nodeStartPort + startedNodeCount
         NodeConfiguration nodeConfiguration = nodeConfigurationFactory.getConfiguration(nodeStartPort + startedNodes);
-        Node node = new Node(protocol, nodeConfiguration, contentServerClass.newInstance());
+        IContentServer contentServer = contentServerClass.newInstance();
+        Node node = new Node(protocol, nodeConfiguration, contentServer, chokFileSystemFactory);
         nodes.add(node);
         node.start();
         startedNodes++;
@@ -129,14 +134,14 @@ public class ChokMiniCluster extends ExternalResource {
     }
 
     public Master startSecondaryMaster() throws ChokException {
-        secondaryMaster = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        secondaryMaster = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, chokFileSystemFactory, false);
         secondaryMaster.start();
         return secondaryMaster;
     }
 
     public void restartMaster() throws Exception {
         master.shutdown();
-        master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, chokFileSystemFactory, false);
         master.start();
         TestUtil.waitUntilLeaveSafeMode(master);
     }
@@ -195,7 +200,7 @@ public class ChokMiniCluster extends ExternalResource {
         shutdownNode(i);
 
         IContentServer contentServer = shutdownNode.getContext().getContentServer();
-        Node node = new Node(protocol, nodeConfiguration, contentServer);
+        Node node = new Node(protocol, nodeConfiguration, contentServer, chokFileSystemFactory);
         node.start();
         nodes.add(i, node);
         return node;
@@ -211,11 +216,11 @@ public class ChokMiniCluster extends ExternalResource {
         return master;
     }
 
-    public List<String> deployTestIndexes(File indexFile, int replicationCount) throws InterruptedException {
+    public List<String> deployTestIndexes(URI indexUri, int replicationCount) throws InterruptedException {
         List<String> indices = new ArrayList<>();
         IDeployClient deployClient = new DeployClient(protocol);
-        String indexName = indexFile.getName();
-        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexFile.getAbsolutePath(), replicationCount);
+        String indexName = Paths.get(indexUri).getFileName().toString();
+        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexUri, replicationCount);
         indices.add(indexName);
         deployFuture.joinDeployment();
 
@@ -240,19 +245,19 @@ public class ChokMiniCluster extends ExternalResource {
     }
 
     public IndexMetaData deployIndex(TestIndex testIndex, int replication) throws Exception {
-        return deployIndex(testIndex.getIndexName(), testIndex.getIndexFile(), replication);
+        return deployIndex(testIndex.getIndexName(), testIndex.getIndexUri(), replication);
     }
 
     public List<IndexMetaData> deployIndexes(TestIndex testIndex, int indexCount, int replication) throws Exception {
         ImmutableList.Builder<IndexMetaData> builder = ImmutableList.builder();
         for (int i = 0; i < indexCount; i++) {
-            builder.add(deployIndex(testIndex.getIndexName() + i, testIndex.getIndexFile(), replication));
+            builder.add(deployIndex(testIndex.getIndexName() + i, testIndex.getIndexUri(), replication));
         }
         return builder.build();
     }
 
-    public IndexMetaData deployIndex(String indexName, File indexFile, int replication) throws Exception {
-        IndexDeployOperation deployOperation = new IndexDeployOperation(indexName, "file://" + indexFile.getAbsolutePath(), replication);
+    public IndexMetaData deployIndex(String indexName, URI indexUri, int replication) throws Exception {
+        IndexDeployOperation deployOperation = new IndexDeployOperation(indexName, indexUri, replication);
         InteractionProtocol protocol = getProtocol();
         protocol.addMasterOperation(deployOperation);
         TestUtil.waitUntilIndexDeployed(protocol, indexName);

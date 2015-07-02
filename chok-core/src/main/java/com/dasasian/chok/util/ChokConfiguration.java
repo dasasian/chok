@@ -21,6 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Set;
 
@@ -108,8 +110,8 @@ public class ChokConfiguration implements Serializable {
         return Float.parseFloat(getProperty(key, defaultValueStr));
     }
 
-    public File getFile(final String key) {
-        return new File(getProperty(key));
+    public Path getPath(final String key) {
+        return Paths.get(getProperty(key));
     }
 
     public Class<?> getClass(final String key) {

@@ -21,6 +21,7 @@ import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.*;
 
 /**
@@ -30,36 +31,53 @@ public class CommandLineInterface {
 
     private static final Logger LOG = LoggerFactory.getLogger(CommandLineInterface.class);
 
-    private static final Set<String> COMMAND_STRINGS = Sets.newHashSet();
-    private final static List<Command> COMMANDS = Lists.newArrayList();
+    private final Set<String> commandStrings = Sets.newHashSet();
+    private final List<Command> commands = Lists.newArrayList();
 
-    static {
-        addCommand(new StartZkCommand());
-        addCommand(new StartMasterCommand());
-        addCommand(new ListIndicesCommand());
-        addCommand(new ListNodesCommand());
-        addCommand(new ListErrorsCommand());
-        addCommand(new AddIndexCommand());
-        addCommand(new RemoveIndexCommand());
-        addCommand(new RedeployIndexCommand());
-        addCommand(new CheckCommand());
-        addCommand(new VersionCommand());
-        addCommand(new ShowStructureCommand());
-        addCommand(new LogMetricsCommand());
-        addCommand(new RunClassCommand());
-        addCommand(new IndexAutoRepairCommand());
-        addCommand(new StatusCommand());
-        addCommand(new HealthcheckCommand());
+    @Inject protected StartZkCommand startZkCommand;
+    @Inject protected StartMasterCommand startMasterCommand;
+    @Inject protected ListIndicesCommand listIndicesCommand;
+    @Inject protected ListNodesCommand listNodesCommand;
+    @Inject protected ListErrorsCommand listErrorsCommand;
+    @Inject protected AddIndexCommand addIndexCommand;
+    @Inject protected RemoveIndexCommand removeIndexCommand;
+    @Inject protected RedeployIndexCommand redeployIndexCommand;
+    @Inject protected CheckCommand checkCommand;
+    @Inject protected VersionCommand versionCommand;
+    @Inject protected ShowStructureCommand showStructureCommand;
+    @Inject protected LogMetricsCommand logMetricsCommand;
+    @Inject protected RunClassCommand runClassCommand;
+    @Inject protected IndexAutoRepairCommand indexAutoRepairCommand;
+    @Inject protected StatusCommand statusCommand;
+    @Inject protected HealthcheckCommand healthcheckCommand;
+
+    protected void addBaseCommands() {
+        addCommand(startZkCommand);
+        addCommand(startMasterCommand);
+        addCommand(listIndicesCommand);
+        addCommand(listNodesCommand);
+        addCommand(listErrorsCommand);
+        addCommand(addIndexCommand);
+        addCommand(removeIndexCommand);
+        addCommand(redeployIndexCommand);
+        addCommand(checkCommand);
+        addCommand(versionCommand);
+        addCommand(showStructureCommand);
+        addCommand(logMetricsCommand);
+        addCommand(runClassCommand);
+        addCommand(indexAutoRepairCommand);
+        addCommand(statusCommand);
+        addCommand(healthcheckCommand);
     }
 
-    protected static void addCommand(Command command) {
-        if (!COMMAND_STRINGS.add(command.getCommand())) {
+    protected void addCommand(Command command) {
+        if (!commandStrings.add(command.getCommand())) {
             throw new IllegalStateException("duplicated command sting " + command.getCommand());
         }
-        COMMANDS.add(command);
+        commands.add(command);
     }
 
-    public static void main(String[] args) throws Exception {
+    protected void execute(String[] args) {
         if (args.length < 1) {
             printUsageAndExit();
         }
@@ -87,7 +105,7 @@ public class CommandLineInterface {
         }
     }
 
-    private static String[] removeArg(String[] args, String argToRemove) {
+    private String[] removeArg(String[] args, String argToRemove) {
         List<String> newArgs = new ArrayList<>();
         for (String arg : args) {
             if (!arg.equals(argToRemove)) {
@@ -97,8 +115,8 @@ public class CommandLineInterface {
         return newArgs.toArray(new String[newArgs.size()]);
     }
 
-    protected static Command getCommand(String commandString) {
-        for (Command command : COMMANDS) {
+    protected Command getCommand(String commandString) {
+        for (Command command : commands) {
             if (commandString.equalsIgnoreCase(command.getCommand())) {
                 return command;
             }
@@ -106,29 +124,29 @@ public class CommandLineInterface {
         throw new IllegalArgumentException("no command for '" + commandString + "' found");
     }
 
-    private static void printUsage(Command command) {
+    private void printUsage(Command command) {
         System.err.println("  " + StringUtil.fillWithWhiteSpace(command.getCommand() + " " + command.getParameterString(), 60) + " " + command.getDescription());
     }
 
-    private static void printUsageAndExit() {
+    private void printUsageAndExit() {
         printUsageHeader();
-        COMMANDS.forEach(com.dasasian.chok.command.CommandLineInterface::printUsage);
+        commands.forEach((command) -> printUsage(command));
         printUsageFooter();
         System.exit(1);
     }
 
-    private static void printUsageFooter() {
+    private void printUsageFooter() {
         System.err.println();
         System.err.println("Global Options:");
         System.err.println("  -s\t\tshow stacktrace");
         System.err.println();
     }
 
-    private static void printUsageHeader() {
+    private void printUsageHeader() {
         System.err.println("Usage: ");
     }
 
-    protected static Map<String, String> parseOptionMap(final String[] args) {
+    protected Map<String, String> parseOptionMap(final String[] args) {
         Map<String, String> optionMap = new HashMap<>();
         for (int i = 0; i < args.length; i++) {
             if (args[i].startsWith("-")) {
@@ -142,7 +160,7 @@ public class CommandLineInterface {
         return optionMap;
     }
 
-    private static void printError(String errorMsg) {
+    private void printError(String errorMsg) {
         System.err.println("ERROR: " + errorMsg);
     }
 

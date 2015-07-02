@@ -20,6 +20,7 @@ import org.I0Itec.zkclient.ExceptionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,22 +30,22 @@ public abstract class AbstractShardOperation implements NodeOperation {
     private static final long serialVersionUID = 1L;
     private final static Logger LOG = LoggerFactory.getLogger(AbstractShardOperation.class);
 
-    private final Map<String, String> shardPathsByShardNames = new LinkedHashMap<>(3);
+    private final Map<String, URI> shardUrisByShardNames = new LinkedHashMap<>(3);
 
     public Set<String> getShardNames() {
-        return shardPathsByShardNames.keySet();
+        return shardUrisByShardNames.keySet();
     }
 
-    public String getShardPath(String shardName) {
-        return shardPathsByShardNames.get(shardName);
+    public URI getShardUri(String shardName) {
+        return shardUrisByShardNames.get(shardName);
     }
 
-    public void addShard(String shardName, String shardPath) {
-        shardPathsByShardNames.put(shardName, shardPath);
+    public void addShard(String shardName, URI shardUri) {
+        shardUrisByShardNames.put(shardName, shardUri);
     }
 
     public void addShard(String shardName) {
-        shardPathsByShardNames.put(shardName, null);
+        shardUrisByShardNames.put(shardName, null);
     }
 
     @Override

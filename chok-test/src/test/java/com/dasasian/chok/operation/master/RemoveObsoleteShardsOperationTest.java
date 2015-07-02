@@ -22,11 +22,16 @@ import com.dasasian.chok.operation.node.ShardUndeployOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.testutil.Mocks;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,13 +45,15 @@ public class RemoveObsoleteShardsOperationTest {
 
     protected static final List EMPTY_LIST = Collections.EMPTY_LIST;
 
+    protected Injector injector = Guice.createInjector(new UtilModule());
+
     @Test
     public void testMockRemove() throws Exception {
         String nodeName = "nodeA";
         String someOldShard = AbstractIndexOperation.createShardName("someOldIndex", "someOldShard");
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         MasterQueue queue = Mockito.mock(MasterQueue.class);
-        MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue);
+        MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue, injector.getInstance(ChokFileSystem.Factory.class));
         Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(Arrays.asList(someOldShard));
 
         RemoveObsoleteShardsOperation operation = new RemoveObsoleteShardsOperation(nodeName);
@@ -67,11 +74,11 @@ public class RemoveObsoleteShardsOperationTest {
         String someOldShard = AbstractIndexOperation.createShardName(indexName, "someOldShard");
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         MasterQueue queue = Mockito.mock(MasterQueue.class);
-        MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue);
+        MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue, injector.getInstance(ChokFileSystem.Factory.class));
         Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(Arrays.asList(someOldShard));
 
         RemoveObsoleteShardsOperation operation = new RemoveObsoleteShardsOperation(nodeName);
-        operation.execute(context, new ArrayList<>(Arrays.asList(new IndexDeployOperation(indexName, "path", 1))));
+        operation.execute(context, new ArrayList<>(Arrays.asList(new IndexDeployOperation(indexName, new URI("path"), 1))));
 
         Mockito.verify(protocol, Mockito.times(0)).addNodeOperation(Matchers.eq(nodeName), (NodeOperation) Matchers.notNull());
     }

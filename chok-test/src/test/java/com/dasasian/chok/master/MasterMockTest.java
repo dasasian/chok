@@ -26,7 +26,11 @@ import com.dasasian.chok.testutil.TestMasterConfiguration;
 import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.TestZkConfiguration;
 import com.dasasian.chok.testutil.mockito.SleepingAnswer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkServer;
 import org.junit.Before;
@@ -45,6 +49,8 @@ public class MasterMockTest extends AbstractTest {
 
     private InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @Before
     public void setUp() throws IOException {
         Mockito.when(protocol.getZkConfiguration()).thenReturn(TestZkConfiguration.getTestConfiguration(temporaryFolder.newFolder()));
@@ -54,7 +60,7 @@ public class MasterMockTest extends AbstractTest {
 
     @Test
     public void testBecomeMaster() throws Exception {
-        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
 
         MasterQueue masterQueue = mockBlockingOperationQueue();
         Mockito.when(protocol.publishMaster(master)).thenReturn(masterQueue);
@@ -68,7 +74,7 @@ public class MasterMockTest extends AbstractTest {
 
     @Test
     public void testBecomeSecMaster() throws Exception {
-        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
 
         Mockito.when(protocol.publishMaster(master)).thenReturn(null);
         Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
@@ -80,7 +86,7 @@ public class MasterMockTest extends AbstractTest {
 
     @Test
     public void testDisconnectReconnect() throws Exception {
-        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
 
         MasterQueue masterQueue = mockBlockingOperationQueue();
         Mockito.when(protocol.publishMaster(master)).thenReturn(masterQueue);
@@ -118,7 +124,7 @@ public class MasterMockTest extends AbstractTest {
 
     @Test
     public void testRemoveOldNodeShards() throws Exception {
-        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
 
         String nodeName = "node1";
         MasterQueue masterQueue = mockBlockingOperationQueue();
@@ -143,9 +149,9 @@ public class MasterMockTest extends AbstractTest {
     private void checkStartStop(boolean shutdownClient, ZkServer zkServer) throws Exception {
         final Master master;
         if (zkServer != null) {
-            master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, zkServer, false);
+            master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), zkServer, false);
         } else {
-            master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, shutdownClient);
+            master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), shutdownClient);
         }
 
         MasterQueue masterQueue = mockBlockingOperationQueue();

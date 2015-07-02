@@ -28,7 +28,11 @@ import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.util.ChokException;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
 import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
@@ -64,12 +68,14 @@ import static org.junit.Assert.*;
  */
 public class LuceneClientTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     private static final String INDEX1 = "index1";
     private static final String INDEX2 = "index2";
     private static final String INDEX3 = "index3";
     private static Logger LOG = LoggerFactory.getLogger(LuceneClientTest.class);
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     @Test
     public void testAddRemoveIndices() throws Exception {
@@ -82,7 +88,7 @@ public class LuceneClientTest extends AbstractTest {
         for (int i = 0; i < 3; i++) {
             TestIndex testIndex = LuceneIndexGenerator.createTestIndex(temporaryFolder, 2);
             String indexName = testIndex.getIndexName();
-            deployClient.addIndex(indexName, testIndex.getIndexPath(), 1).joinDeployment();
+            deployClient.addIndex(indexName, testIndex.getIndexUri(), 1).joinDeployment();
             indexNames.add(indexName);
         }
 
@@ -185,7 +191,7 @@ public class LuceneClientTest extends AbstractTest {
         indexWriter.addDocument(document);
         indexWriter.close(true);
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        IndexState indexState = deployClient.addIndex(index.getName(), index.getAbsolutePath(), 1).joinDeployment();
+        IndexState indexState = deployClient.addIndex(index.getName(), index.toURI(), 1).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
 
         LuceneClient client = new LuceneClient(miniCluster.createInteractionProtocol());
@@ -266,7 +272,7 @@ public class LuceneClientTest extends AbstractTest {
         indexWriter2.addDocument(document);
         indexWriter2.close();
 
-        miniCluster.deployIndex(indexName, sortIndex, 1);
+        miniCluster.deployIndex(indexName, sortIndex.toURI(), 1);
 
         // query and compare results
         LuceneClient client = new LuceneClient(miniCluster.createInteractionProtocol());
@@ -315,7 +321,7 @@ public class LuceneClientTest extends AbstractTest {
         }
         indexWriter.close(true);
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        IndexState indexState = deployClient.addIndex(sortIndex.getName(), sortIndex.getAbsolutePath(), 1).joinDeployment();
+        IndexState indexState = deployClient.addIndex(sortIndex.getName(), sortIndex.toURI(), 1).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
 
         // query and compare results
@@ -466,7 +472,7 @@ public class LuceneClientTest extends AbstractTest {
         indexWriter.close(true);
 
         DeployClient deployClient = new DeployClient(miniCluster.createInteractionProtocol());
-        IndexState indexState = deployClient.addIndex(filterIndex.getName(), filterIndex.getAbsolutePath(), 1).joinDeployment();
+        IndexState indexState = deployClient.addIndex(filterIndex.getName(), filterIndex.toURI(), 1).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
 
         // build filter for terms in set {i | (i % 10) == 3}.
@@ -503,9 +509,9 @@ public class LuceneClientTest extends AbstractTest {
 
     private void deploy3Indices() throws Exception {
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex(INDEX1, LuceneTestResources.INDEX1.getIndexPath(), 1).joinDeployment();
-        deployClient.addIndex(INDEX2, LuceneTestResources.INDEX1.getIndexPath(), 1).joinDeployment();
-        deployClient.addIndex(INDEX3, LuceneTestResources.INDEX1.getIndexPath(), 1).joinDeployment();
+        deployClient.addIndex(INDEX1, LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
+        deployClient.addIndex(INDEX2, LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
+        deployClient.addIndex(INDEX3, LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
     }
 
 }

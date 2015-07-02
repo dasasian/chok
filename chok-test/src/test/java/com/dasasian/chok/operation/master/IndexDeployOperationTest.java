@@ -29,6 +29,7 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
 import com.dasasian.chok.testutil.Mocks;
 import org.junit.Test;
 
+import java.net.URI;
 import java.util.*;
 
 import static org.junit.Assert.*;
@@ -37,14 +38,14 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
 
     @Test
     public void testDeployError_NoNodes() throws Exception {
-        IndexDeployOperation deployCommand = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), 3);
+        IndexDeployOperation deployCommand = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), 3);
         deployCommand.execute(masterContext, EMPTY_LIST);
         checkDeployError(ErrorType.NO_NODES_AVAILIBLE, testIndex.getShardCount());
     }
 
     @Test
     public void testDeployError_IndexNotAccessable() throws Exception {
-        IndexDeployOperation deployCommand = new IndexDeployOperation(testIndex.getIndexName(), "wrongIndexPath", 3);
+        IndexDeployOperation deployCommand = new IndexDeployOperation(testIndex.getIndexName(), new URI("wrongIndexPath"), 3);
         deployCommand.execute(masterContext, EMPTY_LIST);
         checkDeployError(ErrorType.INDEX_NOT_ACCESSIBLE, 0);
     }
@@ -73,7 +74,7 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
 
         // add index
         int replicationLevel = 3;
-        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), replicationLevel);
+        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), replicationLevel);
         operation.execute(masterContext, EMPTY_LIST);
 
         // now complete the deployment
@@ -89,7 +90,7 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
 
         // add index
         int replicationLevel = 3;
-        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), replicationLevel);
+        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), replicationLevel);
         operation.execute(masterContext, EMPTY_LIST);
 
         // now complete the deployment
@@ -123,7 +124,7 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
 
         // add index
         int replicationLevel = 3;
-        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), replicationLevel);
+        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), replicationLevel);
         operation.execute(masterContext, EMPTY_LIST);
 
         // check results
@@ -160,11 +161,11 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
 
         // add index
         int replicationLevel = 1;
-        IndexDeployOperation operation1 = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), replicationLevel);
+        IndexDeployOperation operation1 = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), replicationLevel);
         operation1.execute(masterContext, EMPTY_LIST);
         List<MasterOperation> runningOps = new ArrayList<>();
         runningOps.add(operation1);
-        IndexDeployOperation operation2 = new IndexDeployOperation(testIndex.getIndexName() + "2", testIndex.getIndexPath(), replicationLevel);
+        IndexDeployOperation operation2 = new IndexDeployOperation(testIndex.getIndexName() + "2", testIndex.getIndexUri(), replicationLevel);
         operation2.execute(masterContext, runningOps);
 
         // check results
@@ -182,7 +183,7 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
         List<Node> nodes = Mocks.mockNodes(3);
         List<NodeQueue> queues = Mocks.publishNodes(getInteractionProtocol(), nodes);
 
-        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), 3);
+        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), 3);
         operation.execute(masterContext, EMPTY_LIST);
         publishShards(nodes, queues);
 
@@ -212,7 +213,7 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
         Mocks.publishNodes(getInteractionProtocol(), nodes);
         List<NodeQueue> queues = Mocks.publishNodes(getInteractionProtocol(), nodes);
 
-        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), 3);
+        IndexDeployOperation operation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), 3);
         operation.execute(masterContext, EMPTY_LIST);
         publishShards(nodes, queues);
 
@@ -243,7 +244,7 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
 
         // add index
         int replicationLevel = 3;
-        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), replicationLevel);
+        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), replicationLevel);
         deployOperation.execute(masterContext, EMPTY_LIST);
 
         // publis only for one node

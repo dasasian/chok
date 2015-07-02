@@ -22,7 +22,6 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.ChokFileSystem;
 import org.I0Itec.zkclient.ExceptionUtil;
-import com.dasasian.chok.util.HDFSChokFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,42 +32,42 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
 
     private static final long serialVersionUID = 1L;
     private final static Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
-    private final String _indexName;
+    private final String indexName;
 
     public BalanceIndexOperation(String indexName) {
-        _indexName = indexName;
+        this.indexName = indexName;
     }
 
     @Override
     public List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception {
         InteractionProtocol protocol = context.getProtocol();
-        IndexMetaData indexMD = protocol.getIndexMD(_indexName);
+        IndexMetaData indexMD = protocol.getIndexMD(indexName);
         if (indexMD == null) {// could be undeployed in meantime
-            LOG.info("skip balancing for index '" + _indexName + "' cause it is already undeployed");
+            LOG.info("skip balancing for index '" + indexName + "' cause it is already undeployed");
             return null;
         }
         if (!canAndShouldRegulateReplication(protocol, indexMD)) {
-            LOG.info("skip balancing for index '" + _indexName + "' cause there is no possible optimization");
+            LOG.info("skip balancing for index '" + indexName + "' cause there is no possible optimization");
             return null;
         }
+        final URI indexUri = indexMD.getUri();
         try {
             ChokFileSystem fileSystem = context.getChokFileSystem(indexMD);
-            URI path = HDFSChokFileSystem.getURI(indexMD.getPath());
-            if (!fileSystem.exists(path)) {
-                LOG.warn("skip balancing for index '" + _indexName + "' cause source '" + path + "' does not exists anymore");
+            if (!fileSystem.exists(indexUri)) {
+                LOG.warn("skip balancing for index '" + indexName + "' cause source '" + indexUri + "' does not exists anymore");
                 return null;
             }
         } catch (Exception e) {
-            LOG.error("skip balancing of index '" + _indexName + "' cause failed to access source '" + indexMD.getPath() + "'", e);
+            LOG.error("skip balancing of index '" + indexName + "' cause failed to access source '" + indexUri + "'", e);
             return null;
         }
 
-        LOG.info("balancing shards for index '" + _indexName + "'");
+        LOG.info("balancing shards for index '" + indexName + "'");
         try {
             return distributeIndexShards(context, indexMD, protocol.getLiveNodes(), runningOperations);
         } catch (Exception e) {
             ExceptionUtil.rethrowInterruptedException(e);
-            LOG.error("failed to deploy balance " + _indexName, e);
+            LOG.error("failed to deploy balance " + indexName, e);
             handleMasterDeployException(protocol, indexMD, e);
             return null;
         }
@@ -76,8 +75,8 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
 
     @Override
     public void nodeOperationsComplete(MasterContext context, List<OperationResult> results) throws Exception {
-        LOG.info("balancing of index " + _indexName + " complete");
-        IndexMetaData indexMD = context.getProtocol().getIndexMD(_indexName);
+        LOG.info("balancing of index " + indexName + " complete");
+        IndexMetaData indexMD = context.getProtocol().getIndexMD(indexName);
         if (indexMD != null) {// could be undeployed in meantime
             handleDeploymentComplete(context, results, indexMD, false);
         }
@@ -86,7 +85,7 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
     @Override
     public ExecutionInstruction getExecutionInstruction(List<MasterOperation> runningOperations) throws Exception {
         for (MasterOperation operation : runningOperations) {
-            if (operation instanceof BalanceIndexOperation && ((BalanceIndexOperation) operation)._indexName.equals(_indexName)) {
+            if (operation instanceof BalanceIndexOperation && ((BalanceIndexOperation) operation).indexName.equals(indexName)) {
                 return ExecutionInstruction.CANCEL;
             }
         }
@@ -95,6 +94,6 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + _indexName;
+        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + indexName;
     }
 }

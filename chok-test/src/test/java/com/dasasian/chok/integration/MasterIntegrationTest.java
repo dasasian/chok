@@ -32,6 +32,10 @@ import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestResources;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,8 +45,10 @@ import java.util.Set;
 
 public class MasterIntegrationTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     @Test(timeout = 20000)
     public void testDeployAndUndeployIndex() throws Exception {
@@ -50,7 +56,7 @@ public class MasterIntegrationTest extends AbstractTest {
 
         TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 2);
 
-        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), "file://" + testIndex.getIndexPath(), miniCluster.getRunningNodeCount());
+        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), miniCluster.getRunningNodeCount());
         protocol.addMasterOperation(deployOperation);
 
         TestUtil.waitUntilIndexDeployed(protocol, testIndex.getIndexName());
@@ -86,7 +92,7 @@ public class MasterIntegrationTest extends AbstractTest {
         String indexName = indexFile.getName();
 
         IDeployClient deployClient = new DeployClient(protocol);
-        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexFile.getAbsolutePath(), 1);
+        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexFile.toURI(), 1);
         deployFuture.joinDeployment();
         TestUtil.waitUntilIndexDeployed(protocol, indexName);
         Assert.assertEquals(1, protocol.getIndices().size());

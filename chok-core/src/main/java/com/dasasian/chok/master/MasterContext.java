@@ -19,7 +19,6 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.ChokFileSystem;
-import com.dasasian.chok.util.HDFSChokFileSystem;
 
 import java.io.IOException;
 import java.net.URI;
@@ -31,12 +30,14 @@ public class MasterContext {
     private final InteractionProtocol protocol;
     private final IDeployPolicy deployPolicy;
     private final MasterQueue masterQueue;
+    private final ChokFileSystem.Factory chokFileSystemFactory;
 
-    public MasterContext(InteractionProtocol protocol, Master master, IDeployPolicy deployPolicy, MasterQueue masterQueue) {
+    public MasterContext(InteractionProtocol protocol, Master master, IDeployPolicy deployPolicy, MasterQueue masterQueue, ChokFileSystem.Factory chokFileSystemFactory) {
         this.protocol = protocol;
         this.master = master;
         this.deployPolicy = deployPolicy;
         this.masterQueue = masterQueue;
+        this.chokFileSystemFactory = chokFileSystemFactory;
     }
 
     public InteractionProtocol getProtocol() {
@@ -56,7 +57,7 @@ public class MasterContext {
     }
 
     public ChokFileSystem getChokFileSystem(IndexMetaData indexMd) throws IOException, URISyntaxException {
-        return new HDFSChokFileSystem(new URI(indexMd.getPath()));
+        return chokFileSystemFactory.create(indexMd.getUri());
     }
 
 }

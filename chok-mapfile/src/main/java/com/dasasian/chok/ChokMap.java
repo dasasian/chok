@@ -16,14 +16,29 @@
 package com.dasasian.chok;
 
 import com.dasasian.chok.command.*;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * Provides command line access to a Chok cluster.
  */
 public class ChokMap extends CommandLineInterface {
 
-    static {
-        addCommand(new StartMapFileNodeCommand());
+    @Inject protected StartMapFileNodeCommand startMapFileNodeCommand;
+
+    public void init() {
+        addBaseCommands();
+        addCommand(startMapFileNodeCommand);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Injector injector = Guice.createInjector(new UtilModule());
+        ChokMap chok = injector.getInstance(ChokMap.class);
+        chok.init();
+        chok.execute(args);
     }
 
 }

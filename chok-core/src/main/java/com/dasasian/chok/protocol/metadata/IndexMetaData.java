@@ -21,6 +21,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,19 +32,19 @@ public class IndexMetaData implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String name;
-    private final String path;
+    private final URI uri;
     private final Set<Shard> shards = Sets.newHashSet();
     private int replicationLevel;
     private IndexDeployError deployError;
 
-    public IndexMetaData(String name, String path, int replicationLevel) {
+    public IndexMetaData(String name, URI uri, int replicationLevel) {
         this.name = name;
-        this.path = path;
+        this.uri = uri;
         this.replicationLevel = replicationLevel;
     }
 
-    public String getPath() {
-        return path;
+    public URI getUri() {
+        return uri;
     }
 
     public int getReplicationLevel() {
@@ -71,13 +72,13 @@ public class IndexMetaData implements Serializable {
         return null;
     }
 
-    public String getShardPath(String shardName) {
-        String shardPath = null;
+    public URI getShardUri(String shardName) {
+        URI shardUri = null;
         Shard shard = getShard(shardName);
         if (shard != null) {
-            shardPath = shard.getPath();
+            shardUri = shard.getURI();
         }
-        return shardPath;
+        return shardUri;
     }
 
     public IndexDeployError getDeployError() {
@@ -94,19 +95,19 @@ public class IndexMetaData implements Serializable {
 
     @Override
     public String toString() {
-        return "name: " + name + ", replication: " + replicationLevel + ", path: " + path;
+        return "name: " + name + ", replication: " + replicationLevel + ", uri: " + uri;
     }
 
     public static class Shard implements Serializable {
 
         private static final long serialVersionUID = IndexMetaData.serialVersionUID;
         private final String name;
-        private final String path;
+        private final URI uri;
         private final Map<String, String> metaDataMap = Maps.newHashMap();
 
-        public Shard(String name, String path) {
+        public Shard(String name, URI uri) {
             this.name = name;
-            this.path = path;
+            this.uri = uri;
         }
 
         public static List<String> getShardNames(Collection<Shard> shards) {
@@ -117,8 +118,8 @@ public class IndexMetaData implements Serializable {
             return name;
         }
 
-        public String getPath() {
-            return path;
+        public URI getURI() {
+            return uri;
         }
 
         public Map<String, String> getMetaDataMap() {

@@ -43,7 +43,7 @@ import java.io.InterruptedIOException;
  * ...
  * </code><br>
  */
-public class ThrottledInputStream extends InputStream { //} implements PositionedReadable, Seekable {
+public class ThrottledInputStream extends InputStream {
 
     private final InputStream inputStream;
     private final ThrottleSemaphore semaphore;
@@ -69,36 +69,6 @@ public class ThrottledInputStream extends InputStream { //} implements Positione
     public void close() throws IOException {
         inputStream.close();
     }
-
-//    @Override
-//    public int read(long arg0, byte[] arg1, int arg2, int arg3) throws IOException {
-//        return ((PositionedReadable) inputStream).read(arg0, arg1, arg2, arg3);
-//    }
-//
-//    @Override
-//    public void readFully(long arg0, byte[] arg1) throws IOException {
-//        ((PositionedReadable) inputStream).readFully(arg0, arg1);
-//    }
-//
-//    @Override
-//    public void readFully(long arg0, byte[] arg1, int arg2, int arg3) throws IOException {
-//        ((PositionedReadable) inputStream).readFully(arg0, arg1, arg2, arg3);
-//    }
-//
-//    @Override
-//    public long getPos() throws IOException {
-//        return ((Seekable) inputStream).getPos();
-//    }
-//
-//    @Override
-//    public void seek(long arg0) throws IOException {
-//        ((Seekable) inputStream).seek(arg0);
-//    }
-//
-//    @Override
-//    public boolean seekToNewSource(long arg0) throws IOException {
-//        return ((Seekable) inputStream).seekToNewSource(arg0);
-//    }
 
     /**
      * This semaphore maintains the permitted bytes in a given timeframe. Each

@@ -24,6 +24,10 @@ import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,8 +37,10 @@ import static org.junit.Assert.assertTrue;
 
 public class IndexAutoRepairTest extends AbstractTest {
 
+    protected Injector injector = Guice.createInjector(new UtilModule());
+
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     @Test
     public void testEnableDisableTest() {

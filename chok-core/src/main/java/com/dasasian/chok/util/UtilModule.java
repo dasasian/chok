@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dasasian.chok.command;
+package com.dasasian.chok.util;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 
 /**
- * Provides command line access to a Chok cluster.
+ * Created by damith.chandrasekara on 6/19/15.
  */
-public class MapFileCommandLineInterface extends CommandLineInterface {
-
-    static {
-        addCommand(new StartMapFileNodeCommand());
+public class UtilModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        install(new FactoryModuleBuilder().implement(ChokFileSystem.class, HDFSChokFileSystem.class).build(ChokFileSystem.Factory.class));
     }
-
 }

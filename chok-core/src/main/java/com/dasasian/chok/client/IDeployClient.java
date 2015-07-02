@@ -17,11 +17,12 @@ package com.dasasian.chok.client;
 
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 
+import java.net.URI;
 import java.util.List;
 
 public interface IDeployClient {
 
-    IIndexDeployFuture addIndex(final String name, final String path, final int replicationLevel);
+    IIndexDeployFuture addIndex(final String name, final URI uri, final int replicationLevel);
 
     void removeIndex(final String name);
 

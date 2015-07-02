@@ -17,13 +17,15 @@ package com.dasasian.chok.command;
 
 import com.dasasian.chok.master.Master;
 import com.dasasian.chok.protocol.InteractionProtocol;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.MasterConfigurationLoader;
 import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration;
+import com.google.inject.Inject;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkServer;
-import org.slf4j.Logger;
 import org.apache.zookeeper.server.DatadirCleanupManager;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -34,9 +36,12 @@ public class StartMasterCommand extends Command {
 
     protected static final Logger LOG = LoggerFactory.getLogger(StartMasterCommand.class);
     private boolean embeddedMode;
+    private final ChokFileSystem.Factory chokFileSystemFactory;
 
-    public StartMasterCommand() {
+    @Inject
+    public StartMasterCommand(ChokFileSystem.Factory chokFileSystemFactory) {
         super("startMaster", "[-e] [-ne]", "Starts a local master. -e & -ne for embedded and non-embedded zk-server (overriding configuration)");
+        this.chokFileSystemFactory = chokFileSystemFactory;
     }
 
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) throws Exception {
@@ -56,34 +61,29 @@ public class StartMasterCommand extends Command {
         if (embeddedMode) {
             LOG.info("starting embedded zookeeper server...");
             ZkServer zkServer = ZkChokUtil.startZkServer(zkConf);
-            master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkServer.getZkClient(), zkConf), zkServer, false);
-            if(zkConf.getPurgeInterval()>0) {
-                datadirCleanupManager = new DatadirCleanupManager(zkConf.getDataDir(), zkConf.getLogDataDir(), zkConf.getSnapRetainCount(), zkConf.getPurgeInterval());
-                datadirCleanupManager.start();
-            }
-            else {
-                datadirCleanupManager = null;
-            }
+            master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkServer.getZkClient(), zkConf), chokFileSystemFactory, zkServer, false);
+            datadirCleanupManager = ZkChokUtil.getDatadirCleanupManager(zkConf);
         } else {
             datadirCleanupManager = null;
             ZkClient zkClient = ZkChokUtil.startZkClient(zkConf, 30000);
-            master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkClient, zkConf), true);
+            master = new Master(MasterConfigurationLoader.loadConfiguration(), new InteractionProtocol(zkClient, zkConf), chokFileSystemFactory, true);
         }
         master.start();
 
-        synchronized (master) {
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                public void run() {
-                    synchronized (master) {
-                        if(datadirCleanupManager!=null) {
-                            datadirCleanupManager.shutdown();
-                        }
-                        master.shutdown();
-                        master.notifyAll();
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                synchronized (master) {
+                    if (datadirCleanupManager != null) {
+                        datadirCleanupManager.shutdown();
                     }
+                    master.shutdown();
+                    master.notifyAll();
                 }
-            });
+            }
+        });
+        synchronized (master) {
             master.wait();
         }
     }
+
 }

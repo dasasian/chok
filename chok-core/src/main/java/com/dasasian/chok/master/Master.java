@@ -23,6 +23,7 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.metadata.Version;
 import com.dasasian.chok.util.ChokException;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.MasterConfiguration;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import com.google.common.base.Preconditions;
@@ -40,20 +41,24 @@ public class Master implements ConnectedComponent {
     protected final static Logger LOG = LoggerFactory.getLogger(Master.class);
 
     protected volatile OperatorThread operatorThread;
+    private final MasterConfiguration masterConfiguration;
     protected InteractionProtocol protocol;
+    private final ChokFileSystem.Factory chokFileSystemFactory;
     private final String masterName;
     private ZkServer zkServer;
     private final boolean shutdownClient;
     private final IDeployPolicy deployPolicy;
     private final long safeModeMaxTime;
 
-    public Master(MasterConfiguration masterConfiguration, InteractionProtocol protocol, ZkServer zkServer, boolean shutdownClient) throws ChokException {
-        this(masterConfiguration, protocol, shutdownClient);
+    public Master(MasterConfiguration masterConfiguration, InteractionProtocol protocol, ChokFileSystem.Factory chokFileSystemFactory, ZkServer zkServer, boolean shutdownClient) throws ChokException {
+        this(masterConfiguration, protocol, chokFileSystemFactory, shutdownClient);
         this.zkServer = zkServer;
     }
 
-    public Master(MasterConfiguration masterConfiguration, InteractionProtocol protocol, boolean shutdownClient) throws ChokException {
+    public Master(MasterConfiguration masterConfiguration, InteractionProtocol protocol, ChokFileSystem.Factory chokFileSystemFactory, boolean shutdownClient) throws ChokException {
+        this.masterConfiguration = masterConfiguration;
         this.protocol = protocol;
+        this.chokFileSystemFactory = chokFileSystemFactory;
         this.masterName = NetworkUtil.getLocalhostName() + "_" + UUID.randomUUID().toString();
         this.shutdownClient = shutdownClient;
         protocol.registerComponent(this);
@@ -95,7 +100,7 @@ public class Master implements ConnectedComponent {
             protocol.setVersion(Version.readFromJar());
             LOG.info(getMasterName() + " became master with " + queue.size() + " waiting master operations");
             startNodeManagement();
-            MasterContext masterContext = new MasterContext(protocol, this, deployPolicy, queue);
+            MasterContext masterContext = new MasterContext(protocol, this, deployPolicy, queue, chokFileSystemFactory);
             operatorThread = new OperatorThread(masterContext, safeModeMaxTime);
             operatorThread.start();
         }

@@ -23,6 +23,7 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,7 +48,7 @@ public class CommandLineHelper {
         return optionMap;
     }
 
-    public static void addIndex(InteractionProtocol protocol, String name, String path, int replicationLevel) {
+    public static void addIndex(InteractionProtocol protocol, String name, URI uri, int replicationLevel) {
         IDeployClient deployClient = new DeployClient(protocol);
         if (name.trim().equals("*")) {
             throw new IllegalArgumentException("Index with name " + name + " isn't allowed.");
@@ -58,7 +59,7 @@ public class CommandLineHelper {
 
         try {
             long startTime = System.currentTimeMillis();
-            IIndexDeployFuture deployFuture = deployClient.addIndex(name, path, replicationLevel);
+            IIndexDeployFuture deployFuture = deployClient.addIndex(name, uri, replicationLevel);
             while (true) {
                 long duration = System.currentTimeMillis() - startTime;
                 if (deployFuture.getState() == IndexState.DEPLOYED) {

@@ -16,11 +16,9 @@
 package com.dasasian.chok.mapfile;
 
 import com.dasasian.chok.node.IContentServer;
-import com.dasasian.chok.util.ChokFileSystem;
-import com.dasasian.chok.util.HDFSChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.Text;
@@ -31,9 +29,9 @@ import org.apache.hadoop.ipc.ProtocolSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -46,14 +44,9 @@ public class MapFileServer implements IContentServer, IMapFileServer {
     private final static Logger LOG = LoggerFactory.getLogger(MapFileServer.class);
 
     private final Configuration conf = new Configuration();
-    private final FileSystem fileSystem;
     private final Map<String, MapFile.Reader> readerByShard = new ConcurrentHashMap<>();
-    private final Map<String, File> fileByShard = new ConcurrentHashMap<>();
+    private final Map<String, Path> pathByShard = new ConcurrentHashMap<>();
     private String nodeName;
-
-    public MapFileServer() throws IOException {
-        fileSystem = FileSystem.getLocal(conf);
-    }
 
     @Override
     public long getProtocolVersion(final String protocol, final long clientVersion) throws IOException {
@@ -78,20 +71,21 @@ public class MapFileServer implements IContentServer, IMapFileServer {
      * @param shardDir the shard dir
      * @throws IOException when an error occurs
      */
-    public void addShard(final String shardName, final File shardDir) throws IOException {
+    @Override
+    public void addShard(final String shardName, final Path shardDir) throws IOException {
         LOG.debug("LuceneServer " + nodeName + " got shard " + shardName);
-        if (!shardDir.exists()) {
-            throw new IOException("Shard " + shardName + " dir " + shardDir.getAbsolutePath() + " does not exist!");
+        if (!Files.exists(shardDir)) {
+            throw new IOException("Shard " + shardName + " dir " + shardDir + " does not exist!");
         }
-        if (!shardDir.canRead()) {
-            throw new IOException("Can not read shard " + shardName + " dir " + shardDir.getAbsolutePath() + "!");
+        if (!Files.isReadable(shardDir)) {
+            throw new IOException("Can not read shard " + shardName + " dir " + shardDir + "!");
         }
         try {
-            fileByShard.put(shardName, shardDir);
-            final MapFile.Reader reader = new MapFile.Reader(fileSystem, shardDir.getAbsolutePath(), conf);
+            pathByShard.put(shardName, shardDir);
+            final MapFile.Reader reader = new MapFile.Reader(new org.apache.hadoop.fs.Path(shardDir.toUri()), conf);
             readerByShard.put(shardName, reader);
         } catch (IOException e) {
-            LOG.error("Error opening shard " + shardName + " " + shardDir.getAbsolutePath(), e);
+            LOG.error("Error opening shard " + shardName + " " + shardDir, e);
             throw e;
         }
     }
@@ -107,7 +101,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
     public void removeShard(final String shardName) throws IOException {
         LOG.debug("LuceneServer " + nodeName + " removing shard " + shardName);
         synchronized (readerByShard) {
-            final File file = fileByShard.get(shardName);
+            pathByShard.remove(shardName);
             final MapFile.Reader reader = readerByShard.get(shardName);
             if (reader != null) {
                 try {
@@ -124,24 +118,16 @@ public class MapFileServer implements IContentServer, IMapFileServer {
     }
 
     /**
-     * Returns the number of documents a shard has.
+     * Returns the amount of disk used by the shard.
      *
      * @param shardName name of the shard
      * @return the amount of disk used by the shard
      */
     protected long shardDiskUsage(String shardName) {
-        File shardDir = fileByShard.get(shardName);
+        Path shardDir = pathByShard.get(shardName);
         if (shardDir != null) {
             try{
-                URI indexUri = shardDir.toURI();
-                ChokFileSystem fileSystem = new HDFSChokFileSystem(indexUri);
-                if (fileSystem.exists(indexUri)) {
-                    final long size = fileSystem.size(indexUri);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Shard '" + shardName + "' has " + size + " docs.");
-                    }
-                    return size;
-                }
+                return FileUtils.sizeOfDirectory(shardDir.toFile());
             } catch (Exception ignore) {
             }
         }

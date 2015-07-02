@@ -27,8 +27,12 @@ import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.sleep.SleepClient;
 import com.dasasian.chok.testutil.server.sleep.SleepServer;
 import com.dasasian.chok.util.ChokException;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.ClassUtil;
+import com.dasasian.chok.util.UtilModule;
 import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.slf4j.Logger;
@@ -58,8 +62,11 @@ public class SleepClientTest extends AbstractTest {
     public static final String INDEX_NAME = "index1";
     protected static final Logger LOG = LoggerFactory.getLogger(SleepClientTest.class);
     private static final String[] INDEXES_ARRAY = new String[]{INDEX_NAME};
+
+    protected Injector injector = Guice.createInjector(new UtilModule());
+
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SleepServer.class, 1, 20000, TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SleepServer.class, 1, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
     private SleepClient client;
 
     @Before
@@ -76,7 +83,7 @@ public class SleepClientTest extends AbstractTest {
 
 
         IDeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex(INDEX_NAME, index1.getAbsolutePath(), 1).joinDeployment();
+        deployClient.addIndex(INDEX_NAME, index1.toURI(), 1).joinDeployment();
         client = new SleepClient(miniCluster.getZkConfiguration());
         // sleep so that the client can update
         TestUtil.waitUntilClientHasIndex(client.getClient(), INDEX_NAME);

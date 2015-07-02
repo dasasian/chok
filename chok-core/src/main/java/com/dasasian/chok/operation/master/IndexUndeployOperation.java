@@ -35,19 +35,19 @@ import java.util.Set;
 public class IndexUndeployOperation implements MasterOperation {
 
     private static final long serialVersionUID = 1L;
-    private final String _indexName;
-    private IndexMetaData _indexMD;
+    private final String indexName;
+    private IndexMetaData indexMD;
 
     public IndexUndeployOperation(String indexName) {
-        _indexName = indexName;
+        this.indexName = indexName;
     }
 
     @Override
     public List<OperationId> execute(MasterContext context, List<MasterOperation> runningOperations) throws Exception {
         InteractionProtocol protocol = context.getProtocol();
-        _indexMD = protocol.getIndexMD(_indexName);
+        indexMD = protocol.getIndexMD(indexName);
 
-        Map<String, List<String>> shard2NodesMap = protocol.getShard2NodesMap(Shard.getShardNames(_indexMD.getShards()));
+        Map<String, List<String>> shard2NodesMap = protocol.getShard2NodesMap(Shard.getShardNames(indexMD.getShards()));
         Map<String, List<String>> node2ShardsMap = CollectionUtil.invertListMap(shard2NodesMap);
         Set<String> nodes = node2ShardsMap.keySet();
         List<OperationId> nodeOperationIds = new ArrayList<>(nodes.size());
@@ -56,7 +56,7 @@ public class IndexUndeployOperation implements MasterOperation {
             OperationId operationId = protocol.addNodeOperation(node, new ShardUndeployOperation(nodeShards));
             nodeOperationIds.add(operationId);
         }
-        protocol.unpublishIndex(_indexName);
+        protocol.unpublishIndex(indexName);
         return nodeOperationIds;
     }
 
@@ -64,7 +64,7 @@ public class IndexUndeployOperation implements MasterOperation {
     public void nodeOperationsComplete(MasterContext context, List<OperationResult> results) throws Exception {
         ZkClient zkClient = context.getProtocol().getZkClient();
         ZkConfiguration zkConf = context.getProtocol().getZkConfiguration();
-        for (Shard shard : _indexMD.getShards()) {
+        for (Shard shard : indexMD.getShards()) {
             zkClient.deleteRecursive(zkConf.getPath(PathDef.SHARD_TO_NODES, shard.getName()));
         }
     }
@@ -72,7 +72,7 @@ public class IndexUndeployOperation implements MasterOperation {
     @Override
     public ExecutionInstruction getExecutionInstruction(List<MasterOperation> runningOperations) throws Exception {
         for (MasterOperation operation : runningOperations) {
-            if (operation instanceof IndexUndeployOperation && ((IndexUndeployOperation) operation)._indexName.equals(_indexName)) {
+            if (operation instanceof IndexUndeployOperation && ((IndexUndeployOperation) operation).indexName.equals(indexName)) {
                 return ExecutionInstruction.CANCEL;
             }
         }
@@ -81,7 +81,7 @@ public class IndexUndeployOperation implements MasterOperation {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + _indexName;
+        return getClass().getSimpleName() + ":" + Integer.toHexString(hashCode()) + ":" + indexName;
     }
 
 }

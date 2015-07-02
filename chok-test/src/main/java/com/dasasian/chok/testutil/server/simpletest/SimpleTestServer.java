@@ -24,8 +24,9 @@ import org.apache.hadoop.ipc.ProtocolSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,10 +47,6 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
     protected String nodeName;
 
     public static final long versionID = 0L;
-
-    public SimpleTestServer() {
-        // default way of initializing an IContentServer
-    }
 
     @Override
     public long getProtocolVersion(final String protocol, final long clientVersion) throws IOException {
@@ -75,14 +72,14 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
      * MultiSearcher search in.
      *
      * @param shardName the shard name
-     * @param shardDir the shard directory
+     * @param shardPath the shard directory
      * @throws java.io.IOException if and error occurs
      */
     @Override
-    public void addShard(final String shardName, final File shardDir) throws IOException {
+    public void addShard(final String shardName, final Path shardPath) throws IOException {
         LOG.info("TestServer " + nodeName + " got shard " + shardName);
-        File dataFile = new File(shardDir, TestIndex.DATA_FILE_NAME);
-        if (!dataFile.exists()) {
+        Path dataFile = shardPath.resolve(TestIndex.DATA_FILE_NAME);
+        if (!Files.exists(dataFile)) {
             throw new IOException("File " + dataFile + " not found");
         }
     }

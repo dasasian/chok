@@ -21,6 +21,7 @@ import com.dasasian.chok.operation.master.IndexUndeployOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 
+import java.net.URI;
 import java.util.List;
 
 public class DeployClient implements IDeployClient {
@@ -32,9 +33,9 @@ public class DeployClient implements IDeployClient {
     }
 
     @Override
-    public IIndexDeployFuture addIndex(String indexName, String indexPath, int replicationLevel) {
+    public IIndexDeployFuture addIndex(String indexName, URI indexUri, int replicationLevel) {
         validateIndexData(indexName, replicationLevel);
-        protocol.addMasterOperation(new IndexDeployOperation(indexName, indexPath, replicationLevel));
+        protocol.addMasterOperation(new IndexDeployOperation(indexName, indexUri, replicationLevel));
         return new IndexDeployFuture(protocol, indexName);
     }
 

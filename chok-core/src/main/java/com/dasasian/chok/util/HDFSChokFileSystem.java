@@ -16,6 +16,8 @@
 package com.dasasian.chok.util;
 
 import com.google.common.collect.Lists;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,6 +30,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 
 /**
+ *
  * Created by damith.chandrasekara on 6/15/15.
  */
 public class HDFSChokFileSystem implements ChokFileSystem {
@@ -39,7 +42,9 @@ public class HDFSChokFileSystem implements ChokFileSystem {
         fileSystem = FileSystem.getLocal(conf);
     }
 
-    public HDFSChokFileSystem(URI indexUri) throws IOException {
+    @SuppressWarnings("unused")
+    @AssistedInject
+    HDFSChokFileSystem(@Assisted URI indexUri) throws IOException {
         conf = new Configuration();
         fileSystem = FileSystem.get(indexUri, conf);
     }
@@ -52,12 +57,9 @@ public class HDFSChokFileSystem implements ChokFileSystem {
     @Override
     public Iterable<URI> list(URI uri) throws IOException, URISyntaxException {
         List<URI> uriList = Lists.newArrayList();
-        for(FileStatus fileStatus : fileSystem.listStatus(new Path(uri), aPath -> !aPath.getName().startsWith("."))) {
+        for (FileStatus fileStatus : fileSystem.listStatus(new Path(uri), aPath -> !aPath.getName().startsWith("."))) {
             String shardPath = fileStatus.getPath().toString();
-            // todo do I need this?
-//            if (fileStatus.isDir() || shardPath.endsWith(".zip")) {
-                uriList.add(HDFSChokFileSystem.getURI(shardPath));
-//            }
+            uriList.add(new URI(shardPath));
         }
         return uriList;
     }
@@ -68,31 +70,28 @@ public class HDFSChokFileSystem implements ChokFileSystem {
     }
 
     @Override
-    public long size(URI uri) throws IOException {
-        return fileSystem.getFileStatus(new Path(uri)).getLen();
-    }
-
-    @Override
     public boolean isFile(URI uri) throws IOException {
         return fileSystem.isFile(new Path(uri));
     }
 
     @Override
-    public void copyToLocalFile(URI from, URI to) throws IOException {
-        fileSystem.copyToLocalFile(new Path(from), new Path(to));
+    public void copyToLocalFile(URI from, java.nio.file.Path to) throws IOException {
+        fileSystem.copyToLocalFile(new Path(from), new Path(to.toUri()));
     }
 
     @Override
     public InputStream open(URI source) throws IOException {
-        return open(source, conf.getInt("io.file.buffer.size", 4096));
+        return fileSystem.open(new Path(source));
     }
 
     @Override
-    public InputStream open(URI source, int bufferSize) throws IOException {
-        return fileSystem.open(new Path(source), bufferSize);
+    public long lastModified(URI uri) throws IOException {
+        return fileSystem.getFileStatus(new Path(uri)).getModificationTime();
     }
 
-    public static URI getURI(String shardPath) throws URISyntaxException {
-        return new URI(shardPath);
+    @Override
+    public long size(URI uri) throws IOException {
+        return fileSystem.getFileStatus(new Path(uri)).getLen();
     }
+
 }

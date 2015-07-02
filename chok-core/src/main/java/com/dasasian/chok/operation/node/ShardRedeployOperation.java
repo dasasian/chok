@@ -18,8 +18,9 @@ package com.dasasian.chok.operation.node;
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.node.NodeContext;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Redeploys shards which are already installed in {@link com.dasasian.chok.node.ShardManager}.
@@ -28,7 +29,7 @@ public class ShardRedeployOperation extends AbstractShardOperation {
 
     private static final long serialVersionUID = 1L;
 
-    public ShardRedeployOperation(Collection<String> installedShards) {
+    public ShardRedeployOperation(Iterable<String> installedShards) {
         installedShards.forEach(this::addShard);
     }
 
@@ -39,7 +40,7 @@ public class ShardRedeployOperation extends AbstractShardOperation {
 
     @Override
     protected void execute(NodeContext context, String shardName, DeployResult deployResult) throws Exception {
-        File localShardFolder = context.getShardManager().getShardFolder(shardName);
+        Path localShardFolder = context.getShardManager().getShardFolder(shardName);
         IContentServer contentServer = context.getContentServer();
         if (!contentServer.getShards().contains(shardName)) {
             contentServer.addShard(shardName, localShardFolder);

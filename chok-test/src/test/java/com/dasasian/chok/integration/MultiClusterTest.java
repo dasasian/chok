@@ -26,8 +26,12 @@ import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.sleep.SleepClient;
 import com.dasasian.chok.testutil.server.sleep.SleepServer;
 import com.dasasian.chok.util.ChokException;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -68,6 +72,8 @@ public class MultiClusterTest extends AbstractTest {
     private static ChokMiniCluster cluster1;
     private static ChokMiniCluster cluster2;
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @BeforeClass
     public static void setUp() throws Exception {
         zk = new ZkTestSystem();
@@ -77,11 +83,11 @@ public class MultiClusterTest extends AbstractTest {
         ZkConfiguration conf2 = zk.getZkConfiguration().rootPath(ZK_ROOT_PATH2);
 
         // start cluster 1
-        cluster1 = new ChokMiniCluster(SleepServer.class, POOL_SIZE_1, 30000, TestNodeConfigurationFactory.class);
+        cluster1 = new ChokMiniCluster(SleepServer.class, POOL_SIZE_1, 30000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
         cluster1.start(zk, ZK_ROOT_PATH1);
 
         // start cluster 1
-        cluster2 = new ChokMiniCluster(SleepServer.class, POOL_SIZE_2, 40000, TestNodeConfigurationFactory.class);
+        cluster2 = new ChokMiniCluster(SleepServer.class, POOL_SIZE_2, 40000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
         cluster2.start(zk, ZK_ROOT_PATH2);
 
         // Create lots of empty shards. SleepServer does not use the directory, but
@@ -128,7 +134,7 @@ public class MultiClusterTest extends AbstractTest {
 
     private static void deployIndex(InteractionProtocol protocol, String indexName, File index) throws InterruptedException {
         DeployClient deployClient1 = new DeployClient(protocol);
-        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, index.getAbsolutePath(), 1);
+        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, index.toURI(), 1);
         LOG.info("Joining deployment on " + deployment.getClass().getName());
         deployment.joinDeployment();
     }

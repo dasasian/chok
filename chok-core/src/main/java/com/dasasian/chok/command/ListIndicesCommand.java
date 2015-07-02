@@ -87,9 +87,9 @@ public class ListIndicesCommand extends ProtocolCommand {
 
             }
             if (!detailedView) {
-                table.addRow(index, state, replicationState, indexMD.getPath(), shards.size(), entries, indexBytes);
+                table.addRow(index, state, replicationState, indexMD.getUri(), shards.size(), entries, indexBytes);
             } else {
-                table.addRow(index, state, replicationState, indexMD.getPath(), shards.size(), entries, indexBytes, indexMD.getReplicationLevel());
+                table.addRow(index, state, replicationState, indexMD.getUri(), shards.size(), entries, indexBytes, indexMD.getReplicationLevel());
             }
         }
         if (!indices.isEmpty()) {

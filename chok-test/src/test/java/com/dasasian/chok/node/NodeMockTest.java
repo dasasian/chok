@@ -24,7 +24,11 @@ import com.dasasian.chok.testutil.NodeConfigurationFactory;
 import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.mockito.SleepingAnswer;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -32,6 +36,7 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -43,8 +48,10 @@ public class NodeMockTest extends AbstractTest {
     private final NodeConfiguration testConfiguration = nodeConfigurationFactory.getConfiguration();
     private InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
     private IContentServer contentServer = Mockito.mock(IContentServer.class);
-    private Node node = new Node(protocol, testConfiguration, contentServer);
+    private Node node = new Node(protocol, testConfiguration, contentServer, injector.getInstance(ChokFileSystem.Factory.class));
     private NodeQueue queue = Mockito.mock(NodeQueue.class);
+
+    protected static Injector injector = Guice.createInjector(new UtilModule());
 
     @Before
     public void setUp() throws IOException {
@@ -105,20 +112,20 @@ public class NodeMockTest extends AbstractTest {
 
         // start and add shard
         node.start();
-        Mockito.verify(contentServer, Mockito.times(0)).addShard(Matchers.anyString(), Matchers.any(File.class));
+        Mockito.verify(contentServer, Mockito.times(0)).addShard(Matchers.anyString(), Matchers.any(Path.class));
 
         File shardFile = testIndex.getShardFiles().get(0);
 
         String shardName = shardFile.getName();
-        node.getContext().getShardManager().installShard(shardName, shardFile.getAbsolutePath());
+        node.getContext().getShardManager().installShard(shardName, shardFile.toURI());
 
         // restart, node should be added
         node.shutdown();
 
-        node = new Node(protocol, testConfiguration, contentServer);
+        node = new Node(protocol, testConfiguration, contentServer, injector.getInstance(ChokFileSystem.Factory.class));
         Mockito.when(protocol.publishNode(Matchers.eq(node), (NodeMetaData) Matchers.notNull())).thenReturn(queue);
         node.start();
-        Mockito.verify(contentServer, Mockito.times(1)).addShard(Matchers.anyString(), Matchers.any(File.class));
+        Mockito.verify(contentServer, Mockito.times(1)).addShard(Matchers.anyString(), Matchers.any(Path.class));
         Mockito.verify(protocol).publishShard(Matchers.eq(node), Matchers.eq(shardName));
         node.shutdown();
     }

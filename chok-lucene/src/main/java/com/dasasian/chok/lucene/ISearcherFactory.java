@@ -18,8 +18,8 @@ package com.dasasian.chok.lucene;
 import com.dasasian.chok.util.NodeConfiguration;
 import org.apache.lucene.search.IndexSearcher;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  * A factory for creating {@link IndexSearcher} on a given shard.
@@ -29,5 +29,5 @@ public interface ISearcherFactory {
 
     void init(NodeConfiguration config);
 
-    IndexSearcher createSearcher(String shardName, File shardDir) throws IOException;
+    IndexSearcher createSearcher(String shardName, Path shardDir) throws IOException;
 }

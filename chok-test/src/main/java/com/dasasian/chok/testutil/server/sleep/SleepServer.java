@@ -20,8 +20,8 @@ import com.dasasian.chok.util.NodeConfiguration;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.ProtocolSignature;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -50,7 +50,8 @@ public class SleepServer implements IContentServer, ISleepServer {
         this.nodeName = nodeName;
     }
 
-    public void addShard(final String shardName, final File shardDir) {
+    @Override
+    public void addShard(final String shardName, final Path shardDir) {
         shards.add(shardName);
     }
 

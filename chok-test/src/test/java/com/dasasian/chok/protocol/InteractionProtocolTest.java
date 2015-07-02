@@ -46,6 +46,7 @@ import org.mockito.InOrder;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -260,8 +261,8 @@ public class InteractionProtocolTest extends AbstractTest {
 
     @Test(timeout = 70000)
     public void testIndexManagement() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("index1", "indexPath", 2);
-        indexMD.getShards().add(new Shard(AbstractIndexOperation.createShardName(indexMD.getName(), "path1"), "path1"));
+        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 2);
+        indexMD.getShards().add(new Shard(AbstractIndexOperation.createShardName(indexMD.getName(), "path1"), new URI("path1")));
         Node node = Mocks.mockNode();
 
         assertNull(protocol.getIndexMD("index1"));

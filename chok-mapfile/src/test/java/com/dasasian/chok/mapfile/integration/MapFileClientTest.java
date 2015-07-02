@@ -25,6 +25,10 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.util.ChokException;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -42,13 +46,15 @@ import static org.junit.Assert.*;
  */
 public class MapFileClientTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     private static final String INDEX1 = "index1";
     private static final String INDEX2 = "index2";
     protected static final String[] INDEX_BOTH = {INDEX1, INDEX2};
     private static final String[] INDEX_1 = {INDEX1};
     private static final String[] INDEX_2 = {INDEX2};
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(MapFileServer.class, 2, 20000, TestNodeConfigurationFactory.class);
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(MapFileServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
     @SuppressWarnings("unused")
     private static Logger LOG = LoggerFactory.getLogger(MapFileClientTest.class);
     private IMapFileClient client;
@@ -56,8 +62,8 @@ public class MapFileClientTest extends AbstractTest {
     @Before
     public void setUp() throws Exception {
         IDeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex(INDEX1, MapFileTestResources.MAP_FILE_A.getAbsolutePath(), 1).joinDeployment();
-        deployClient.addIndex(INDEX2, MapFileTestResources.MAP_FILE_B.getAbsolutePath(), 1).joinDeployment();
+        deployClient.addIndex(INDEX1, MapFileTestResources.MAP_FILE_A.toURI(), 1).joinDeployment();
+        deployClient.addIndex(INDEX2, MapFileTestResources.MAP_FILE_B.toURI(), 1).joinDeployment();
         client = new MapFileClient(miniCluster.getZkConfiguration());
     }
 

@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.net.URL;
 import java.util.Random;
 
@@ -72,6 +73,10 @@ public class TestIndex {
         TestIndex testIndex = new TestIndex(temporaryFolder, shardCount);
         testIndex.createIndex();
         return testIndex;
+    }
+
+    public URI getIndexUri() {
+        return indexFile.toURI();
     }
 
     public File getIndexFile() {

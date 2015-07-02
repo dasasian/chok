@@ -19,7 +19,7 @@ import com.dasasian.chok.util.NodeConfiguration;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 
@@ -74,7 +74,7 @@ public interface IContentServer extends VersionedProtocol {
      * @param shardDir  The directory where the shard data is.
      * @throws Exception when an error occurs
      */
-    void addShard(String shardName, File shardDir) throws Exception;
+    void addShard(String shardName, Path shardDir) throws Exception;
 
     /**
      * Stop including the shard (directory of data). After this call returns, the

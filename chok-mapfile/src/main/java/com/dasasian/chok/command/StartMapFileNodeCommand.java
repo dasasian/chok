@@ -19,13 +19,17 @@ import com.dasasian.chok.mapfile.MapFileServer;
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.node.Node;
 import com.dasasian.chok.protocol.InteractionProtocol;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
 import com.dasasian.chok.util.NodeConfigurationLoader;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -34,10 +38,14 @@ import java.util.Map;
  */
 public class StartMapFileNodeCommand extends ProtocolCommand {
 
+    private final ChokFileSystem.Factory chokFileSystemFactory;
     private NodeConfiguration nodeConfiguration;
     private IContentServer server = null;
-    public StartMapFileNodeCommand() {
+
+    @Inject
+    public StartMapFileNodeCommand(ChokFileSystem.Factory chokFileSystemFactory) {
         super("startNode", "[-p <port number>] [-f <shard folder>]", "Starts a local node");
+        this.chokFileSystemFactory = chokFileSystemFactory;
     }
 
     @Override
@@ -47,9 +55,9 @@ public class StartMapFileNodeCommand extends ProtocolCommand {
             startPort = Optional.of(Integer.parseInt(optionMap.get("-p")));
         }
 
-        Optional<File> shardFolder = Optional.absent();
+        Optional<Path> shardFolder = Optional.absent();
         if (optionMap.containsKey("-f")) {
-            shardFolder = Optional.of(new File(optionMap.get("-f")));
+            shardFolder = Optional.of(Paths.get(optionMap.get("-f")));
         }
 
         try {
@@ -58,16 +66,12 @@ public class StartMapFileNodeCommand extends ProtocolCommand {
             throw new RuntimeException(e);
         }
 
-        try {
-            server = new MapFileServer();
-        } catch (IOException e) {
-            throw new RuntimeException("Error instantiating MapFileServer", e);
-        }
+        server = new MapFileServer();
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        final Node node = new Node(protocol, nodeConfiguration, server);
+        final Node node = new Node(protocol, nodeConfiguration, server, chokFileSystemFactory);
         node.start();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

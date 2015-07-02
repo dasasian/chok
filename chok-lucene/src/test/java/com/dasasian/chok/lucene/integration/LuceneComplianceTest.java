@@ -22,8 +22,12 @@ import com.dasasian.chok.lucene.*;
 import com.dasasian.chok.lucene.testutil.TestLuceneNodeConfigurationFactory;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -56,10 +60,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class LuceneComplianceTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     // index related fields
     private static final String FIELD_NAME = "text";
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
     private File chokIndex;
     private File luceneIndex;
     private List<Document> documents1;
@@ -99,7 +105,7 @@ public class LuceneComplianceTest extends AbstractTest {
     }
 
     private static void deployIndexToChok(IDeployClient deployClient, File file, int replicationLevel) throws InterruptedException {
-        IndexState indexState = deployClient.addIndex(file.getName(), file.getAbsolutePath(), replicationLevel).joinDeployment();
+        IndexState indexState = deployClient.addIndex(file.getName(), file.toURI(), replicationLevel).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
     }
 

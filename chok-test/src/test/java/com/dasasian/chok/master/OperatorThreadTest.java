@@ -23,6 +23,10 @@ import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.testutil.Mocks;
 import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.mockito.SleepingAnswer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.I0Itec.zkclient.exception.ZkInterruptedException;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -42,9 +46,11 @@ public class OperatorThreadTest {
 
     protected static final List EMPTY_LIST = Collections.EMPTY_LIST;
 
+    protected Injector injector = Guice.createInjector(new UtilModule());
+
     private final InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
     private final MasterQueue queue = Mockito.mock(MasterQueue.class);
-    protected final MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue);
+    protected final MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue, injector.getInstance(ChokFileSystem.Factory.class));
 
     @Test(timeout = 10000)
     public void testSafeMode() throws Exception {

@@ -28,6 +28,10 @@ import com.dasasian.chok.testutil.*;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestClient;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.I0Itec.zkclient.ZkClient;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher.Event.EventType;
@@ -43,8 +47,10 @@ import static org.junit.Assert.*;
 
 public class FailoverTest extends AbstractTest {
 
+    protected Injector injector = Guice.createInjector(new UtilModule());
+
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 3, 20000, TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 3, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     public TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 3);
 
@@ -99,7 +105,7 @@ public class FailoverTest extends AbstractTest {
 
         ZkClient zkClient = new ZkClient(miniCluster.getZkConfiguration().getServers());
         InteractionProtocol protocol = new InteractionProtocol(zkClient, miniCluster.getZkConfiguration());
-        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         master.start();
         TestUtil.waitUntilBecomeMaster(master);
 
@@ -107,7 +113,7 @@ public class FailoverTest extends AbstractTest {
         WatchedEvent event = new WatchedEvent(new WatcherEvent(EventType.None.getIntValue(), KeeperState.Expired.getIntValue(), null));
         for (int i = 0; i < 25; i++) {
             final String indexName = "index" + i;
-            IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, testIndex.getIndexPath(), 1);
+            IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, testIndex.getIndexUri(), 1);
             zkClient.getEventLock().lock();
             zkClient.process(event);
             zkClient.getEventLock().unlock();

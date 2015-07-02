@@ -15,14 +15,30 @@
  */
 package com.dasasian.chok.command;
 
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 /**
  * Provides command line access to a Chok cluster.
  */
 public class ChokLucene extends CommandLineInterface {
 
-    static {
-        addCommand(new StartLuceneNodeCommand());
-        addCommand(new SearchCommand());
+    @Inject protected StartLuceneNodeCommand startLuceneNodeCommand;
+    @Inject protected SearchCommand searchCommand;
+
+    protected void init() {
+        addBaseCommands();
+        addCommand(startLuceneNodeCommand);
+        addCommand(searchCommand);
+    }
+
+    public static void main(String[] args) throws Exception {
+        Injector injector = Guice.createInjector(new UtilModule());
+        ChokLucene chok = injector.getInstance(ChokLucene.class);
+        chok.init();
+        chok.execute(args);
     }
 
 }

@@ -24,9 +24,9 @@ import com.dasasian.chok.protocol.metadata.NodeMetaData;
 import com.dasasian.chok.testutil.*;
 import com.dasasian.chok.testutil.mockito.SerializableCountDownLatchAnswer;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
-import com.dasasian.chok.util.ChokException;
-import com.dasasian.chok.util.ZkChokUtil;
-import com.dasasian.chok.util.ZkConfiguration;
+import com.dasasian.chok.util.*;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.I0Itec.zkclient.Gateway;
 import org.I0Itec.zkclient.ZkClient;
 import org.junit.Test;
@@ -36,13 +36,15 @@ import static org.junit.Assert.assertNotNull;
 
 public class MasterZkTest extends AbstractZkTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     public final TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 4);
     private final NodeConfigurationFactory nodeConfigurationFactory = new TestNodeConfigurationFactory(temporaryFolder);
 
     @Test
     public void testShutdown_shouldCleanupZkClientSubscriptions() throws ChokException {
         int numberOfListeners = zk.getZkClient().numberOfListeners();
-        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         master.start();
         master.shutdown();
         assertEquals(numberOfListeners, zk.getZkClient().numberOfListeners());
@@ -51,7 +53,7 @@ public class MasterZkTest extends AbstractZkTest {
     @SuppressWarnings("unchecked")
     @Test(timeout = 10000)
     public void testMasterOperationPickup() throws Exception {
-        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         Node node = Mocks.mockNode();// leave safe mode
         protocol.publishNode(node, new NodeMetaData("node1"));
         master.start();
@@ -79,13 +81,13 @@ public class MasterZkTest extends AbstractZkTest {
 
     @Test(timeout = 500000)
     public void testMasterChange_OnSessionReconnect() throws Exception {
-        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         Node node = Mocks.mockNode();// leave safe mode
         protocol.publishNode(node, new NodeMetaData("node1"));
         master.start();
         TestUtil.waitUntilLeaveSafeMode(master);
 
-        Master secMaster = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        Master secMaster = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         secMaster.start();
 
         master.disconnect();
@@ -96,14 +98,14 @@ public class MasterZkTest extends AbstractZkTest {
 
     @Test(timeout = 50000)
     public void testMasterChangeWhileDeploingIndex() throws Exception {
-        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         Node node = Mocks.mockNode();// leave safe mode
         NodeQueue nodeQueue = protocol.publishNode(node, new NodeMetaData("node1"));
         master.start();
         TestUtil.waitUntilLeaveSafeMode(master);
 
         // phase I - until watchdog is running and its node turn
-        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), 1);
+        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), 1);
         protocol.addMasterOperation(deployOperation);
         while (!master.getContext().getMasterQueue().isEmpty()) {
             // wait until deploy is in watch phase
@@ -112,7 +114,7 @@ public class MasterZkTest extends AbstractZkTest {
 
         // phase II - master change while node is deploying
         master.shutdown();
-        Master secMaster = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        Master secMaster = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         secMaster.start();
 
         // phase III - finish node operations/ mater operation should be finished
@@ -128,7 +130,7 @@ public class MasterZkTest extends AbstractZkTest {
     @Test(timeout = 50000)
     public void testReconnectNode() throws Exception {
         final int GATEWAY_PORT = 2190;
-        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, false);
+        final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
         String zkRootPath = zk.getZkConfiguration().getRootPath();
         int serverPort = zk.getServerPort();
 
@@ -138,7 +140,7 @@ public class MasterZkTest extends AbstractZkTest {
         gateway.start();
         final ZkClient zkGatewayClient = ZkChokUtil.startZkClient(gatewayConf, 30000);
         InteractionProtocol gatewayProtocol = new InteractionProtocol(zkGatewayClient, gatewayConf);
-        final Node node = new Node(gatewayProtocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer());
+        final Node node = new Node(gatewayProtocol, nodeConfigurationFactory.getConfiguration(), new SimpleTestServer(), injector.getInstance(ChokFileSystem.Factory.class));
         node.start();
 
         // check node-master link

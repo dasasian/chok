@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dasasian.chok.lucene.testutil;
+package com.dasasian.chok.command;
 
-import com.dasasian.chok.testutil.TestIndex;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.AbstractModule;
 
-public class LuceneTestResources {
-
-    public final static TestIndex INDEX1 = new TestIndex(LuceneTestResources.class.getResource("/testIndexA"));
-    public final static TestIndex INDEX2 = new TestIndex(LuceneTestResources.class.getResource("/testIndexB"));
-
-    //public final static File UNZIPPED_INDEX = new File(LuceneTestResources.class.getResource("/testIndexC").getURI());
-    //public final static File INVALID_INDEX = new File(LuceneTestResources.class.getResource("/testIndexInvalid").getURI());
-
+/**
+ * Created by damith.chandrasekara on 6/23/15.
+ */
+public class ChokModule extends AbstractModule {
+    @Override
+    protected void configure() {
+        install(new UtilModule());
+    }
 }

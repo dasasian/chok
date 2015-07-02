@@ -23,6 +23,10 @@ import com.dasasian.chok.lucene.testutil.LuceneTestResources;
 import com.dasasian.chok.lucene.testutil.TestLuceneNodeConfigurationFactory;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.Query;
@@ -32,14 +36,16 @@ import org.junit.Test;
 
 public class LuceneSearchPerformanceTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class);
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(LuceneServer.class, 2, 20000, TestLuceneNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     @Test
     public void measureSearchPerformance() throws Exception {
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex("index1", LuceneTestResources.INDEX1.getIndexPath(), 1).joinDeployment();
-        deployClient.addIndex("index2", LuceneTestResources.INDEX2.getIndexPath(), 1).joinDeployment();
+        deployClient.addIndex("index1", LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
+        deployClient.addIndex("index2", LuceneTestResources.INDEX2.getIndexUri(), 1).joinDeployment();
 
         final ILuceneClient client = new LuceneClient(miniCluster.getZkConfiguration());
         final Query query = new QueryParser(Version.LUCENE_30, "", new KeywordAnalyzer()).parse("foo: bar");

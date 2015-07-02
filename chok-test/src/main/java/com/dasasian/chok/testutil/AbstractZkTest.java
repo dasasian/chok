@@ -16,6 +16,9 @@
 package com.dasasian.chok.testutil;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;

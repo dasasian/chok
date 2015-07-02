@@ -29,6 +29,10 @@ import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.loadtest.LoadTestMasterOperation;
 import com.dasasian.chok.testutil.server.sleep.SleepServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -36,11 +40,14 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.URI;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class LuceneLoadTest extends AbstractZkTest {
+
+    protected static Injector injector = Guice.createInjector(new UtilModule());
 
     public static final String LUCENE_ZK_ROOT_PATH = "/LuceneLoadIntegrationTest/luceneCluster";
     public static final String LOAD_TEST_ZK_ROOT_PATH = "/LuceneLoadIntegrationTest/loadTestCluster";
@@ -50,19 +57,19 @@ public class LuceneLoadTest extends AbstractZkTest {
     private ChokMiniCluster luceneCluster;
     private ChokMiniCluster loadTestCluster;
 
-    private static void deployIndex(InteractionProtocol protocol, String indexName, File index) throws InterruptedException {
+    private static void deployIndex(InteractionProtocol protocol, String indexName, URI indexUri) throws InterruptedException {
         DeployClient deployClient1 = new DeployClient(protocol);
-        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, index.getAbsolutePath(), 1);
+        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, indexUri, 1);
         LOG.info("Joining deployment on " + deployment.getClass().getName());
         deployment.joinDeployment();
     }
 
     @Before
     public void setUp() throws Exception {
-        luceneCluster = new ChokMiniCluster(LuceneServer.class, NODE_COUNT_LUCENE, 30000, TestLuceneNodeConfigurationFactory.class);
+        luceneCluster = new ChokMiniCluster(LuceneServer.class, NODE_COUNT_LUCENE, 30000, TestLuceneNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
         luceneCluster.start(zk, LUCENE_ZK_ROOT_PATH);
 
-        loadTestCluster = new ChokMiniCluster(SleepServer.class, NODE_COUNT_LOAD_TEST, 40000, TestNodeConfigurationFactory.class);
+        loadTestCluster = new ChokMiniCluster(SleepServer.class, NODE_COUNT_LOAD_TEST, 40000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
         loadTestCluster.start(zk, LOAD_TEST_ZK_ROOT_PATH);
 
         TestUtil.waitUntilLeaveSafeMode(luceneCluster.getMaster());
@@ -71,7 +78,7 @@ public class LuceneLoadTest extends AbstractZkTest {
         TestUtil.waitUntilNumberOfLiveNode(loadTestCluster.getProtocol(), NODE_COUNT_LOAD_TEST);
 
         LOG.info("Deploying indices");
-        deployIndex(luceneCluster.getProtocol(), "index1", LuceneTestResources.INDEX1.getIndexFile());
+        deployIndex(luceneCluster.getProtocol(), "index1", LuceneTestResources.INDEX1.getIndexUri());
 
         // Verify setup.
         // LOG.info("\n\nLUCENE CLUSTER STRUCTURE:\n");

@@ -45,6 +45,6 @@ public class RedeployIndexCommand extends ProtocolCommand {
         }
         CommandLineHelper.removeIndex(protocol, indexName);
         Thread.sleep(5000);
-        CommandLineHelper.addIndex(protocol, indexName, indexMD.getPath(), indexMD.getReplicationLevel());
+        CommandLineHelper.addIndex(protocol, indexName, indexMD.getUri(), indexMD.getReplicationLevel());
     }
 }

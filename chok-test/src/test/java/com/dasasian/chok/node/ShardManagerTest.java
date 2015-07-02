@@ -17,36 +17,43 @@ package com.dasasian.chok.node;
 
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.TestIndex;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class ShardManagerTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     protected final TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 4);
-    private final File _testFile = testIndex.getIndexFile();
+    private final File testFile = testIndex.getIndexFile();
 
     public void setUp() {
         // _managerFolder = temporaryFolder.newFolder("managerFolder");
-        assertTrue("test file" + _testFile + " does not exists", _testFile.exists());
+        assertTrue("test file" + testFile + " does not exists", testFile.exists());
     }
 
     @Test
     public void testThrottling() throws Exception {
         String shardName = "shard";
-        File managerFolder = temporaryFolder.newFolder("managerFolder");
+        Path managerFolder = temporaryFolder.newFolder("managerFolder").toPath();
 
         // measure transfer rate with no throttle
-        ShardManager shardManager = new ShardManager(managerFolder);
+        ShardManager shardManager = new ShardManager(managerFolder, injector.getInstance(ChokFileSystem.Factory.class), null);
         long startTime = System.currentTimeMillis();
-        long fileLength = FileUtils.sizeOf(_testFile);
+        long fileLength = FileUtils.sizeOf(testFile);
         for (int i = 0; i < 10; i++) {
-            shardManager.installShard(shardName + i, _testFile.getAbsolutePath());
+            shardManager.installShard(shardName + i, testFile.toURI());
         }
         long durationInMilliSec = System.currentTimeMillis() - startTime;
         long bytesPerSec = (fileLength * 10) / durationInMilliSec * 1000;
@@ -56,10 +63,10 @@ public class ShardManagerTest extends AbstractTest {
         for (int i = 0; i < 10; i++) {
             shardManager.uninstallShard(shardName + i);
         }
-        shardManager = new ShardManager(managerFolder, new ThrottleSemaphore(bytesPerSec / 3));
+        shardManager = new ShardManager(managerFolder, injector.getInstance(ChokFileSystem.Factory.class), new ThrottleSemaphore(bytesPerSec / 3));
         startTime = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
-            shardManager.installShard(shardName + i, _testFile.getAbsolutePath());
+            shardManager.installShard(shardName + i, testFile.toURI());
         }
         durationInMilliSec = (System.currentTimeMillis() - startTime);
         long bytesPerSec2 = (fileLength * 10) / durationInMilliSec * 1000;

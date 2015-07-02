@@ -28,15 +28,18 @@ import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import java.net.URI;
+
 public class ClientTest extends AbstractTest {
 
     @Test
     public void testAddRemoveIndexForSearching() throws Exception {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         Client client = new Client(ISimpleTestServer.class, new DefaultNodeSelectionPolicy(), protocol, new ClientConfiguration());
-        IndexMetaData indexMD = new IndexMetaData("index1", "path", 1);
-        indexMD.getShards().add(new Shard("shard1", "path"));
-        indexMD.getShards().add(new Shard("shard2", "path"));
+        final URI uri = new URI("path");
+        IndexMetaData indexMD = new IndexMetaData("index1", uri, 1);
+        indexMD.getShards().add(new Shard("shard1", uri));
+        indexMD.getShards().add(new Shard("shard2", uri));
         client.addIndexForSearching(indexMD);
         Mockito.verify(protocol, Mockito.times(2)).registerChildListener(Matchers.eq(client), Matchers.eq(PathDef.SHARD_TO_NODES), Matchers.anyString(), Matchers.any(IAddRemoveListener.class));
 
@@ -48,9 +51,10 @@ public class ClientTest extends AbstractTest {
     public void testAddRemoveIndexForWatching() throws Exception {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         Client client = new Client(ISimpleTestServer.class, new DefaultNodeSelectionPolicy(), protocol, new ClientConfiguration());
-        IndexMetaData indexMD = new IndexMetaData("index1", "path", 1);
-        indexMD.getShards().add(new Shard("shard1", "path"));
-        indexMD.getShards().add(new Shard("shard2", "path"));
+        final URI uri = new URI("path");
+        IndexMetaData indexMD = new IndexMetaData("index1", uri, 1);
+        indexMD.getShards().add(new Shard("shard1", uri));
+        indexMD.getShards().add(new Shard("shard2", uri));
         client.addIndexForWatching(indexMD.getName());
         Mockito.verify(protocol, Mockito.times(1)).registerDataListener(Matchers.eq(client), Matchers.eq(PathDef.INDICES_METADATA), Matchers.anyString(), Matchers.any(IZkDataListener.class));
 

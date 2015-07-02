@@ -26,6 +26,10 @@ import com.dasasian.chok.testutil.mockito.ChainedAnswer;
 import com.dasasian.chok.testutil.mockito.PauseAnswer;
 import com.dasasian.chok.testutil.server.simpletest.ISimpleTestServer;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.fest.assertions.Assertions;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -35,8 +39,10 @@ import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
 public class ClientIntegrationTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     public TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 2);
 
@@ -49,7 +55,7 @@ public class ClientIntegrationTest extends AbstractTest {
         Mockito.doAnswer(new ChainedAnswer(pauseAnswer, new CallsRealMethods())).when(proxyCreatorSpy).getProxy(Matchers.anyString(), Matchers.eq(true));
         client.setProxyCreator(proxyCreatorSpy);
 
-        IndexMetaData indexMD = miniCluster.deployIndex(testIndex.getIndexName(), testIndex.getIndexFile(), miniCluster.getRunningNodeCount());
+        IndexMetaData indexMD = miniCluster.deployIndex(testIndex.getIndexName(), testIndex.getIndexUri(), miniCluster.getRunningNodeCount());
         pauseAnswer.joinExecutionBegin();
         Assertions.assertThat(client.getSelectionPolicy().getShardNodes(indexMD.getShards().iterator().next().getName())).isEmpty();
         Assertions.assertThat(client.getIndices()).isEmpty();

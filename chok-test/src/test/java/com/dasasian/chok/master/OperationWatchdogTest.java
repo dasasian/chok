@@ -21,6 +21,10 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.Mocks;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -38,7 +42,9 @@ public class OperationWatchdogTest extends AbstractTest {
     private OperationWatchdog watchdog = new OperationWatchdog("e1", masterOperation, operationIds);
     private InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
     private MasterQueue masterQueue = Mockito.mock(MasterQueue.class);
-    private MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), masterQueue);
+    private MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), masterQueue, injector.getInstance(ChokFileSystem.Factory.class));
+
+    protected static Injector injector = Guice.createInjector(new UtilModule());
 
     @Test
     public void testWatchdogCompletion_OperationsDone() throws Exception {

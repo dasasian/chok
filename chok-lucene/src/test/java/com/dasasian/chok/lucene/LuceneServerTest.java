@@ -21,6 +21,7 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.testutil.mockito.ChainedAnswer;
 import com.dasasian.chok.testutil.mockito.SleepingAnswer;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.queryParser.ParseException;
@@ -33,6 +34,7 @@ import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -134,8 +136,8 @@ public class LuceneServerTest extends AbstractTest {
         final DefaultSearcherFactory seacherFactory = new DefaultSearcherFactory();
         ISearcherFactory mockSeacherFactory = mock(ISearcherFactory.class);
         final AtomicInteger shardsWithTimeoutCount = new AtomicInteger();
-        when(mockSeacherFactory.createSearcher(anyString(), any(File.class))).thenAnswer(invocation -> {
-            final IndexSearcher indexSearcher = seacherFactory.createSearcher((String) invocation.getArguments()[0], (File) invocation.getArguments()[1]);
+        when(mockSeacherFactory.createSearcher(anyString(), any(Path.class))).thenAnswer(invocation -> {
+            final IndexSearcher indexSearcher = seacherFactory.createSearcher((String) invocation.getArguments()[0], (Path) invocation.getArguments()[1]);
             synchronized (shardsWithTimeoutCount) {
                 if (shardsWithTimeoutCount.intValue() >= 2) {
                     // 2 from 4 shards will get tiemout
@@ -171,7 +173,7 @@ public class LuceneServerTest extends AbstractTest {
         int i = 0;
         for (File shard : shards) {
             String shardName = shard.getName();
-            server.addShard(shardName, shard);
+            server.addShard(shardName, shard.toPath());
             shardNames[i++] = shardName;
         }
         return shardNames;

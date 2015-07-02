@@ -25,7 +25,11 @@ import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.testutil.AbstractZkTest;
 import com.dasasian.chok.testutil.Mocks;
 import com.dasasian.chok.testutil.TestIndex;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
 import com.dasasian.chok.util.ZkConfiguration;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Before;
 
 import java.util.Collections;
@@ -36,6 +40,8 @@ public abstract class AbstractMasterNodeZkTest extends AbstractZkTest {
 
     protected static final List EMPTY_LIST = Collections.EMPTY_LIST;
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     protected final TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 4);
     public MasterContext masterContext;
     protected Master mockMaster;
@@ -43,7 +49,7 @@ public abstract class AbstractMasterNodeZkTest extends AbstractZkTest {
     @Before
     public void setMasterContext() {
         mockMaster = Mocks.mockMaster();
-        masterContext = new MasterContext(protocol, mockMaster, new DefaultDistributionPolicy(), protocol.publishMaster(mockMaster));
+        masterContext = new MasterContext(protocol, mockMaster, new DefaultDistributionPolicy(), protocol.publishMaster(mockMaster), injector.getInstance(ChokFileSystem.Factory.class));
     }
 
     protected ZkConfiguration getZkConf() {
@@ -56,14 +62,14 @@ public abstract class AbstractMasterNodeZkTest extends AbstractZkTest {
 
     protected void deployIndexWithError() throws Exception {
         MasterContext context = masterContext;
-        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), 3);
+        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), 3);
         deployOperation.execute(context, EMPTY_LIST);
         deployOperation.nodeOperationsComplete(context, Collections.EMPTY_LIST);
     }
 
     protected void deployIndex(List<Node> nodes, List<NodeQueue> nodeQueues) throws Exception {
         MasterContext context = masterContext;
-        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexPath(), 3);
+        IndexDeployOperation deployOperation = new IndexDeployOperation(testIndex.getIndexName(), testIndex.getIndexUri(), 3);
         deployOperation.execute(context, EMPTY_LIST);
         publishShards(nodes, nodeQueues);
         deployOperation.nodeOperationsComplete(context, Collections.EMPTY_LIST);

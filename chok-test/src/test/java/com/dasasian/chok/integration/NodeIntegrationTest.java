@@ -25,10 +25,15 @@ import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestClient;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -37,8 +42,10 @@ import static org.junit.Assert.assertFalse;
 
 public class NodeIntegrationTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @Rule
-    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
+    public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     @Test
     public void testContentServer() throws Exception {
@@ -80,7 +87,7 @@ public class NodeIntegrationTest extends AbstractTest {
         TestUtil.waitUntilNodeServesShards(protocol, node.getName(), testIndex.getShardCount());
 
         // we should have 4 folders in our working folder now.
-        File shardsFolder = node.getContext().getShardManager().getShardsFolder();
+        File shardsFolder = node.getContext().getShardManager().getShardsFolder().toFile();
         assertEquals(testIndex.getShardCount(), shardsFolder.list().length);
 
         ShardUndeployOperation undeployOperation = new ShardUndeployOperation(Arrays.asList(protocol.getNodeShards(node.getName()).iterator().next()));

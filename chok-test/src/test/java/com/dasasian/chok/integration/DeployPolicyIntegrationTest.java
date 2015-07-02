@@ -22,6 +22,10 @@ import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.UtilModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -31,15 +35,17 @@ import static org.junit.Assert.assertTrue;
 
 public class DeployPolicyIntegrationTest extends AbstractTest {
 
+    protected static Injector injector = Guice.createInjector(new UtilModule());
+
     @ClassRule
-    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class);
+    public static ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
 
     public TestIndex testIndexWithOnShard = TestIndex.createTestIndex(temporaryFolder, 1);
 
     @Test
     public void testEqualDistribution3WhenMoreNodesThenShards() throws Exception {
         int replicationCount = 1;
-        miniCluster.deployTestIndexes(testIndexWithOnShard.getIndexFile(), replicationCount);
+        miniCluster.deployTestIndexes(testIndexWithOnShard.getIndexUri(), replicationCount);
 
         final InteractionProtocol protocol = miniCluster.getProtocol();
         // todo this could be better

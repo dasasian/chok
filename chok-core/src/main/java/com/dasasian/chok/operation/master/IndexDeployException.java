@@ -20,19 +20,19 @@ import com.dasasian.chok.protocol.metadata.IndexDeployError.ErrorType;
 public class IndexDeployException extends Exception {
 
     private static final long serialVersionUID = 1L;
-    private final ErrorType _errorType;
+    private final ErrorType errorType;
 
     public IndexDeployException(ErrorType errorType, final String message) {
         super(message);
-        _errorType = errorType;
+        this.errorType = errorType;
     }
 
     public IndexDeployException(ErrorType errorType, final String message, final Throwable cause) {
         super(message, cause);
-        _errorType = errorType;
+        this.errorType = errorType;
     }
 
     public ErrorType getErrorType() {
-        return _errorType;
+        return errorType;
     }
 }

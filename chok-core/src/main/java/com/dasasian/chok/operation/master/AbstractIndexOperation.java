@@ -88,7 +88,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
             if (!listOfAdded.isEmpty()) {
                 ShardDeployOperation deployInstruction = new ShardDeployOperation();
                 for (String shard : listOfAdded) {
-                    deployInstruction.addShard(shard, indexMD.getShardPath(shard));
+                    deployInstruction.addShard(shard, indexMD.getShardUri(shard));
                     newShardsByNode.add(node, shard);
                 }
                 OperationId operationId = protocol.addNodeOperation(node, deployInstruction);

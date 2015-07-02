@@ -15,22 +15,25 @@
  */
 package com.dasasian.chok.util;
 
-//import com.dasasian.chok.util.FSDataInputStream;
-//import com.dasasian.chok.util.FSDataOutputStream;
-//import com.dasasian.chok.util.ChokFileSystem;
-//import com.dasasian.chok.util.Path;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URI;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class FileUtil {
 
     public static final FilenameFilter VISIBLE_FILES_FILTER = (dir, name) -> !name.startsWith(".");
+
+    public static final DirectoryStream.Filter<Path> VISIBLE_PATHS_FILTER = path -> !path.getFileName().toString().startsWith(".");
+
     private final static Logger LOG = LoggerFactory.getLogger(FileUtil.class);
     private static final int BUFFER = 4096;
 
@@ -40,32 +43,6 @@ public class FileUtil {
         } catch (FileNotFoundException ignore) {
         } catch (IOException e) {
             throw new RuntimeException("could not delete folder '" + folder + "'", e);
-        }
-    }
-
-    /**
-     * Simply unzips the content from the source zip to the target folder. The
-     * first level folder of the zip content is removed.
-     * @param sourceZip the source zip
-     * @param targetFolder the target folder
-     */
-    public static void unzip(final File sourceZip, final File targetFolder) {
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(sourceZip);
-            final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
-            LOG.debug("Extracting zip file '" + sourceZip.getAbsolutePath() + "' to '" + targetFolder + "'");
-            unzip(zis, targetFolder);
-        } catch (final Exception e) {
-            throw new RuntimeException("unable to expand upgrade files for " + sourceZip + " to " + targetFolder, e);
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (Exception ignore) {
-                    // ignore
-                }
-            }
         }
     }
 
@@ -82,54 +59,59 @@ public class FileUtil {
      *                     being unzipped. The name used is <code>targetFolder.zip</code>. If
      *                     false, the unzip is streamed.
      */
-    public static void unzip(final URI sourceZip, final File targetFolder, final ChokFileSystem fileSystem, final boolean localSpool) {
+    public static void unzip(final URI sourceZip, final Path targetFolder, final ChokFileSystem fileSystem, final boolean localSpool) {
         try {
             if (localSpool) {
-                targetFolder.mkdirs();
-                final File shardZipLocal = new File(targetFolder + ".zip");
-                if (shardZipLocal.exists()) {
+                Files.createDirectories(targetFolder);
+                final Path shardZipLocal = Paths.get(targetFolder.toString() + ".zip");
+                if (Files.exists(shardZipLocal)) {
                     // make sure we overwrite cleanly
-                    shardZipLocal.delete();
+                    Files.delete(shardZipLocal);
                 }
                 try {
-                    fileSystem.copyToLocalFile(sourceZip, shardZipLocal.toURI());
+                    fileSystem.copyToLocalFile(sourceZip, shardZipLocal);
                     FileUtil.unzip(shardZipLocal, targetFolder);
                 } finally {
-                    shardZipLocal.delete();
+                    Files.delete(shardZipLocal);
                 }
             } else {
-                InputStream fis = fileSystem.open(sourceZip);
-                try {
-                    ZipInputStream zis = new ZipInputStream(fis);
+                try(final ZipInputStream zis = new ZipInputStream(fileSystem.open(sourceZip))) {
                     unzip(zis, targetFolder);
-                } finally {
-                    if (fis != null) {
-                        try {
-                            fis.close();
-                        } catch (Exception ignore) {
-                            // ignore
-                        }
-                    }
                 }
             }
         } catch (Exception e) {
             throw new RuntimeException("unable to expand upgrade files for " + sourceZip + " to " + targetFolder, e);
         }
-
     }
 
     /**
-     * Unpack a zip stream to a directory usually called by {@link #unzip(File, File)} or {@link #unzip(URI, File, ChokFileSystem, boolean)}.
+     * Simply unzips the content from the source zip to the target folder. The
+     * first level folder of the zip content is removed.
+     * @param sourceZip the source zip
+     * @param targetFolder the target folder
+     */
+    protected static void unzip(final Path sourceZip, final Path targetFolder) {
+        try(final ZipInputStream zis = new ZipInputStream(Files.newInputStream(sourceZip))) {
+            LOG.debug("Extracting zip file '" + sourceZip + "' to '" + targetFolder + "'");
+            unzip(zis, targetFolder);
+        } catch (final Exception e) {
+            throw new RuntimeException("unable to expand upgrade files for " + sourceZip + " to " + targetFolder, e);
+        }
+    }
+
+
+
+    /**
+     * Unpack a zip stream to a directory usually called by {@link #unzip(Path, Path)} or {@link #unzip(URI, Path, ChokFileSystem, boolean)}.
      *
      * @param zis          Zip data strip to unpack
      * @param targetFolder The folder to unpack to. This directory and path is created if needed.
      * @throws IOException If there is an error.
      */
-    public static void unzip(final ZipInputStream zis, final File targetFolder) throws IOException {
+    public static void unzip(final ZipInputStream zis, final Path targetFolder) throws IOException {
         ZipEntry entry;
-        BufferedOutputStream dest;
 
-        targetFolder.mkdirs();
+        Files.createDirectories(targetFolder);
         while ((entry = zis.getNextEntry()) != null) {
             LOG.debug("Extracting:   " + entry);
             // we need to remove the first element of the path since the
@@ -137,22 +119,15 @@ public class FileUtil {
             final String entryPath = entry.getName();
             final int indexOf = entryPath.indexOf("/");
             final String cleanUpPath = entryPath.substring(indexOf + 1, entryPath.length());
-            final File targetFile = new File(targetFolder, cleanUpPath);
+            final Path targetFile = targetFolder.resolve(cleanUpPath);
             if (entry.isDirectory()) {
-                targetFile.mkdirs();
-            } else {
-                if (!targetFile.getParentFile().exists()) {
-                    targetFile.getParentFile().mkdirs(); // CHOK-130
+                Files.createDirectories(targetFile);
+            }
+            else {
+                if (!Files.exists(targetFile.getParent())) {
+                    Files.createDirectories(targetFile.getParent());
                 }
-                int count;
-                final byte data[] = new byte[BUFFER];
-                final FileOutputStream fos = new FileOutputStream(targetFile);
-                dest = new BufferedOutputStream(fos, BUFFER);
-                while ((count = zis.read(data, 0, BUFFER)) != -1) {
-                    dest.write(data, 0, count);
-                }
-                dest.flush();
-                dest.close();
+                Files.copy(zis, targetFile);
             }
         }
 

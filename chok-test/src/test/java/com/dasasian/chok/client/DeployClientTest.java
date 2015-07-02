@@ -23,6 +23,8 @@ import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import java.net.URI;
+
 public class DeployClientTest extends AbstractTest {
 
     protected InteractionProtocol _protocol = Mockito.mock(InteractionProtocol.class);
@@ -30,25 +32,25 @@ public class DeployClientTest extends AbstractTest {
     @Test
     public void testAddIndex() throws Exception {
         DeployClient deployClient = new DeployClient(_protocol);
-        deployClient.addIndex("i1", "iP", 1);
+        deployClient.addIndex("i1", new URI("iP"), 1);
         Mockito.verify(_protocol).addMasterOperation(Matchers.any(IndexDeployOperation.class));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddIndexWithInvalidReplicationCount() throws Exception {
         DeployClient deployClient = new DeployClient(_protocol);
-        deployClient.addIndex("i1", "iP", 0);
+        deployClient.addIndex("i1", new URI("iP"), 0);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddIndexWithInvalidName() throws Exception {
         DeployClient deployClient = new DeployClient(_protocol);
-        deployClient.addIndex("*", "iP", 1);
+        deployClient.addIndex("*", new URI("iP"), 1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddIndexWithInvalidName2() throws Exception {
         DeployClient deployClient = new DeployClient(_protocol);
-        deployClient.addIndex("a" + AbstractIndexOperation.INDEX_SHARD_NAME_SEPARATOR, "iP", 1);
+        deployClient.addIndex("a" + AbstractIndexOperation.INDEX_SHARD_NAME_SEPARATOR, new URI("iP"), 1);
     }
 }

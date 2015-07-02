@@ -24,6 +24,7 @@ import org.I0Itec.zkclient.ZkClient;
 import org.I0Itec.zkclient.ZkConnection;
 import org.I0Itec.zkclient.ZkServer;
 import org.I0Itec.zkclient.serialize.ZkSerializer;
+import org.apache.zookeeper.server.DatadirCleanupManager;
 
 public class ZkChokUtil {
 
@@ -60,16 +61,22 @@ public class ZkChokUtil {
         if (!hostAndPort.hasPort()) {
             throw new IllegalArgumentException("No Port Specified for ZkServer");
         }
-//        else {
-//            String host = hostAndPort.getHostText();
-////            if (!host.equals("127.0.0.1") && !host.equals("localhost")) {
-////                throw new IllegalArgumentException("Attempting to start ZkServer remotely on " + host + " valid values are 127.0.0.1 or localhost");
-////            }
-//        }
         ZkServer zkServer = new ZkServer(conf.getDataDir(), conf.getLogDataDir(), new DefaultNameSpaceImpl(conf), hostAndPort.getPort(), conf.getTickTime());
         zkServer.start();
         zkServer.getZkClient().setZkSerializer(new ChokZkSerializer());
         return zkServer;
+    }
+
+    public static DatadirCleanupManager getDatadirCleanupManager(ZkConfiguration conf) {
+        DatadirCleanupManager datadirCleanupManager;
+        if(conf.getPurgeInterval()>0) {
+            datadirCleanupManager = new DatadirCleanupManager(conf.getDataDir(), conf.getLogDataDir(), conf.getSnapRetainCount(), conf.getPurgeInterval());
+            datadirCleanupManager.start();
+        }
+        else {
+            datadirCleanupManager = null;
+        }
+        return datadirCleanupManager;
     }
 
 }

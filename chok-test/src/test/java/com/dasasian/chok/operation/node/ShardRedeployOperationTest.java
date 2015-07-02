@@ -22,6 +22,8 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,7 +34,7 @@ public class ShardRedeployOperationTest extends AbstractNodeOperationMockTest {
 
     @Before
     public void setUp() {
-        Mockito.when(shardManager.getShardFolder((String) Matchers.notNull())).thenReturn(new File("shardFolder"));
+        Mockito.when(shardManager.getShardFolder((String) Matchers.notNull())).thenReturn(Paths.get("shardFolder"));
     }
 
     @Test
@@ -43,7 +45,7 @@ public class ShardRedeployOperationTest extends AbstractNodeOperationMockTest {
 
         InOrder inOrder = inOrder(protocol, contentServer);
         for (String shard : shards) {
-            inOrder.verify(contentServer).addShard(Matchers.eq(shard), (File) Matchers.notNull());
+            inOrder.verify(contentServer).addShard(Matchers.eq(shard), (Path) Matchers.notNull());
             inOrder.verify(protocol).publishShard(eq(node), Matchers.eq(shard));
         }
     }

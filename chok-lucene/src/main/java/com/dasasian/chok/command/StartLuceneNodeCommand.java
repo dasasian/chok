@@ -20,11 +20,15 @@ import com.dasasian.chok.lucene.LuceneServer;
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.node.Node;
 import com.dasasian.chok.protocol.InteractionProtocol;
+import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -33,10 +37,14 @@ import java.util.Map;
  */
 public class StartLuceneNodeCommand extends ProtocolCommand {
 
+    private final ChokFileSystem.Factory chokFileSystemFactory;
     private NodeConfiguration nodeConfiguration;
     private IContentServer server = null;
-    public StartLuceneNodeCommand() {
+
+    @Inject
+    public StartLuceneNodeCommand(ChokFileSystem.Factory chokFileSystemFactory) {
         super("startNode", "[-p <port number>]", "Starts a local node");
+        this.chokFileSystemFactory = chokFileSystemFactory;
     }
 
     @Override
@@ -46,9 +54,9 @@ public class StartLuceneNodeCommand extends ProtocolCommand {
             startPort = Optional.of(Integer.parseInt(optionMap.get("-p")));
         }
 
-        Optional<File> shardFolder = Optional.absent();
+        Optional<Path> shardFolder = Optional.absent();
         if (optionMap.containsKey("-f")) {
-            shardFolder = Optional.of(new File(optionMap.get("-f")));
+            shardFolder = Optional.of(Paths.get(optionMap.get("-f")));
         }
 
         try {
@@ -62,7 +70,7 @@ public class StartLuceneNodeCommand extends ProtocolCommand {
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        final Node node = new Node(protocol, nodeConfiguration, server);
+        final Node node = new Node(protocol, nodeConfiguration, server, chokFileSystemFactory);
         node.start();
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override

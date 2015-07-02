@@ -19,6 +19,8 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.AbstractZkTest;
 import org.junit.Test;
 
+import java.net.URI;
+
 // todo break this up into individual tests for each command class
 public class CommandTest extends AbstractZkTest {
 
@@ -36,7 +38,7 @@ public class CommandTest extends AbstractZkTest {
     // todo find out why this breaks SleepClientTest
 //    @Test
     public void testListIndexesWithUnreachableIndex_CHOK_76() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("indexABC", "hdfs://localhost:8020/unreachableIndex", 1);
+        IndexMetaData indexMD = new IndexMetaData("indexABC", new URI("hdfs://localhost:8020/unreachableIndex"), 1);
         protocol.publishIndex(indexMD);
         execute(new ListIndicesCommand(), indexMD.getName());
     }

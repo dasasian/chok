@@ -16,7 +16,6 @@
 package com.dasasian.chok.util;
 
 import com.dasasian.chok.testutil.AbstractTest;
-import org.apache.hadoop.conf.Configuration;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -28,6 +27,9 @@ import java.nio.channels.Channels;
 import java.nio.channels.Pipe;
 import java.nio.channels.Pipe.SinkChannel;
 import java.nio.channels.Pipe.SourceChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipInputStream;
 
@@ -36,18 +38,19 @@ import static org.junit.Assert.assertTrue;
 public class FileUtilTest extends AbstractTest {
 
     public static final String INDEX_TXT = "index.txt";
-    protected final File testZipFile = new File(FileUtilTest.class.getResource("/test.zip").getFile());
+    protected final Path testZipFile = Paths.get(FileUtilTest.class.getResource("/test.zip").getFile());
+
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
 
     @Test
     public void testUnzipFileFile() throws IOException {
         // ChokFileSystem fileSystem = ChokFileSystem.get(configuration);
-        File targetFolder = temporaryFolder.newFolder("unpacked1");
+        Path targetFolder = temporaryFolder.newFolder("unpacked1").toPath();
         FileUtil.unzip(testZipFile, targetFolder);
 
-        File segment = new File(targetFolder, INDEX_TXT);
-        assertTrue("Unzipped local zip directly to target", segment.exists());
+        Path segment = targetFolder.resolve(INDEX_TXT);
+        assertTrue("Unzipped local zip directly to target", Files.exists(segment));
     }
 
     @Test
@@ -55,26 +58,26 @@ public class FileUtilTest extends AbstractTest {
         ChokFileSystem fileSystem = new HDFSChokFileSystem();
 
         // Test the unspooled case
-        File targetFolder = temporaryFolder.newFolder("unpacked2");
-        URI zipPath = testZipFile.toURI();
+        Path targetFolder = temporaryFolder.newFolder("unpacked2").toPath();
+        URI zipPath = testZipFile.toUri();
         FileUtil.unzip(zipPath, targetFolder, fileSystem, false);
-        File segment = new File(targetFolder, INDEX_TXT);
-        assertTrue("Unzipped local zip directly to target", segment.exists());
+        Path segment = targetFolder.resolve(INDEX_TXT);
+        assertTrue("Unzipped local zip directly to target", Files.exists(segment));
 
         // Test the spooled case
 
-        targetFolder = temporaryFolder.newFolder("unpacked3");
-        zipPath = testZipFile.toURI();
+        targetFolder = temporaryFolder.newFolder("unpacked3").toPath();
+        zipPath = testZipFile.toUri();
         FileUtil.unzip(zipPath, targetFolder, fileSystem, true);
-        segment = new File(targetFolder, INDEX_TXT);
-        assertTrue("Unzipped spooled local zip to target", segment.exists());
+        segment = targetFolder.resolve(INDEX_TXT);
+        assertTrue("Unzipped spooled local zip to target", Files.exists(segment));
 
     }
 
     @Test
     public void testUnzipZipInputStreamFile() throws IOException {
         // Test on an unseekable input steam
-        File targetFolder = temporaryFolder.newFolder("unpacked4");
+        Path targetFolder = temporaryFolder.newFolder("unpacked4").toPath();
 
         final Pipe zipPipe = Pipe.open();
         final SinkChannel sink = zipPipe.sink();
@@ -82,7 +85,7 @@ public class FileUtilTest extends AbstractTest {
         final InputStream sourceIn = Channels.newInputStream(source);
         final OutputStream sourceOut = Channels.newOutputStream(sink);
         final ZipInputStream zis = new ZipInputStream(sourceIn);
-        final FileInputStream fis = new FileInputStream(testZipFile);
+        final InputStream fis = Files.newInputStream(testZipFile);
         final AtomicBoolean failed = new AtomicBoolean(false);
         // Write the zip data to the pipe a byte at a time to worst case the unzip
         // process
@@ -114,8 +117,8 @@ public class FileUtilTest extends AbstractTest {
         };
         writer.start();
         FileUtil.unzip(zis, targetFolder);
-        File segment = new File(targetFolder, INDEX_TXT);
-        assertTrue("Unzipped streamed zip to target", segment.exists());
+        Path segment = targetFolder.resolve(INDEX_TXT);
+        assertTrue("Unzipped streamed zip to target", Files.exists(segment));
     }
 
 }

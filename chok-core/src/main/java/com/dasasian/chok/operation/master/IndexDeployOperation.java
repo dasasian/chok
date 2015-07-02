@@ -25,7 +25,6 @@ import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
 import com.dasasian.chok.util.ChokFileSystem;
 import com.google.common.collect.Lists;
 import org.I0Itec.zkclient.ExceptionUtil;
-import com.dasasian.chok.util.HDFSChokFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,38 +38,25 @@ public class IndexDeployOperation extends AbstractIndexOperation {
     private static final long serialVersionUID = 1L;
     private final static Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
     private final String indexName;
-    private final String indexPath;
+    private final URI indexUri;
     protected final IndexMetaData indexMetaData;
 
-    public IndexDeployOperation(String indexName, String indexPath, int replicationLevel) {
-        indexMetaData = new IndexMetaData(indexName, indexPath, replicationLevel);
+    public IndexDeployOperation(String indexName, URI indexUri, int replicationLevel) {
+        indexMetaData = new IndexMetaData(indexName, indexUri, replicationLevel);
         this.indexName = indexName;
-        this.indexPath = indexPath;
+        this.indexUri = indexUri;
     }
 
-    protected static List<Shard> readShardsFromFs(final ChokFileSystem fileSystem, final String indexName, final String indexPathString) throws IndexDeployException {
-        // get shard folders from source
-        URI uri;
-        try {
-            uri = HDFSChokFileSystem.getURI(indexPathString);
-        } catch (final URISyntaxException e) {
-            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to parse index path uri '" + indexPathString + "', make sure it starts with file:// or hdfs:// ", e);
-        }
-
+    protected static List<Shard> readShardsFromFs(final ChokFileSystem fileSystem, final String indexName, final URI indexUri) throws IndexDeployException {
         List<Shard> shards = Lists.newArrayList();
         try {
-//            final Path indexPath = new Path(indexPathString);
-            if (!fileSystem.exists(uri)) {
-                throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "index path '" + uri + "' does not exists");
-            }
-            for (final URI subUri : fileSystem.list(uri)) {
-                final String shardPath = subUri.getPath();
-                if (fileSystem.isDir(subUri) || shardPath.endsWith(".zip")) {
-                    shards.add(new Shard(createShardName(indexName, shardPath), shardPath));
+            for (final URI shardUri : fileSystem.list(indexUri)) {
+                if (fileSystem.isDir(shardUri) || shardUri.toString().endsWith(".zip")) {
+                    shards.add(new Shard(createShardName(indexName, shardUri.getPath()), shardUri));
                 }
             }
         } catch (final URISyntaxException | IOException e) {
-            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "could not access index path: " + indexPathString, e);
+            throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "could not access index: " + indexUri, e);
         }
 
         if (shards.size() == 0) {
@@ -83,10 +69,6 @@ public class IndexDeployOperation extends AbstractIndexOperation {
         return indexName;
     }
 
-    public String getIndexPath() {
-        return indexPath;
-    }
-
     public int getReplicationLevel() {
         return indexMetaData.getReplicationLevel();
     }
@@ -97,11 +79,11 @@ public class IndexDeployOperation extends AbstractIndexOperation {
         try {
             try {
                 ChokFileSystem fileSystem = context.getChokFileSystem(indexMetaData);
-                indexMetaData.getShards().addAll(readShardsFromFs(fileSystem, indexName, indexPath));
+                indexMetaData.getShards().addAll(readShardsFromFs(fileSystem, indexName, indexUri));
                 LOG.info("Found shards '" + indexMetaData.getShards() + "' for index '" + indexName + "'");
                 return distributeIndexShards(context, indexMetaData, protocol.getLiveNodes(), runningOperations);
             } catch (final IOException e) {
-                throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to retrieve file system for index path '" + indexPath + "', make sure your path starts with hadoop support prefix like file:// or hdfs://", e);
+                throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to retrieve file system for index path '" + indexUri + "', make sure your path starts with hadoop support prefix like file:// or hdfs://", e);
             }
 
         } catch (Exception e) {
