@@ -26,15 +26,15 @@ import java.util.List;
 
 public class NodeQueue extends BlockingQueue<NodeOperation> {
 
-    private final String _resultsPath;
+    private final String resultsPath;
 
     public NodeQueue(ZkClient zkClient, String rootPath) {
         super(zkClient, rootPath);
-        _resultsPath = rootPath + "/results";
-        this.zkClient.createPersistent(_resultsPath, true);
+        resultsPath = rootPath + "/results";
+        this.zkClient.createPersistent(resultsPath, true);
 
         // cleanup odd result situations
-        List<String> results = this.zkClient.getChildren(_resultsPath);
+        List<String> results = this.zkClient.getChildren(resultsPath);
         for (String elementName : results) {
             try {
                 this.zkClient.delete(getElementPath(elementName));
@@ -45,7 +45,7 @@ public class NodeQueue extends BlockingQueue<NodeOperation> {
     }
 
     private String getResultPath(String elementId) {
-        return _resultsPath + "/" + elementId;
+        return resultsPath + "/" + elementId;
     }
 
     public String add(NodeOperation element) {
@@ -73,7 +73,7 @@ public class NodeQueue extends BlockingQueue<NodeOperation> {
     }
 
     public List<OperationResult> getResults() {
-        List<String> childs = zkClient.getChildren(_resultsPath);
+        List<String> childs = zkClient.getChildren(resultsPath);
         List<OperationResult> watchdogs = new ArrayList<>(childs.size());
         for (String child : childs) {
             watchdogs.add(zkClient.readData(getResultPath(child)));

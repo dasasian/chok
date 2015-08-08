@@ -408,6 +408,15 @@ public class InteractionProtocol {
         return nodeQueue;
     }
 
+    public void unpublishNode(String nodeName) {
+        if(!zkClient.exists(zkConf.getPath(PathDef.NODES_LIVE, nodeName))) {
+            zkClient.deleteRecursive(zkConf.getPath(PathDef.NODES_METADATA, nodeName));
+            zkClient.deleteRecursive(zkConf.getPath(PathDef.NODE_QUEUE, nodeName));
+            zkClient.deleteRecursive(zkConf.getPath(PathDef.NODE_METRICS, nodeName));
+        }
+    }
+
+
     public void publishIndex(IndexMetaData indexMD) {
         zkClient.createPersistent(zkConf.getPath(PathDef.INDICES_METADATA, indexMD.getName()), indexMD);
     }

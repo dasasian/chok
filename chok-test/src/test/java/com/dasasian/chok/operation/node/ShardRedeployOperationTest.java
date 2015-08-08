@@ -15,17 +15,19 @@
  */
 package com.dasasian.chok.operation.node;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
-import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -34,17 +36,17 @@ public class ShardRedeployOperationTest extends AbstractNodeOperationMockTest {
 
     @Before
     public void setUp() {
-        Mockito.when(shardManager.getShardFolder((String) Matchers.notNull())).thenReturn(Paths.get("shardFolder"));
+        Mockito.when(shardManager.getShardFolder((String) Matchers.notNull(), Matchers.anyLong())).thenReturn(Paths.get("shardFolder"));
     }
 
     @Test
     public void testRedeploy() throws Exception {
-        List<String> shards = Arrays.asList("shard1", "shard2");
+        Map<String, URI> shards = ImmutableMap.of("shard1", new URI("file:///tmp/shardFolder"), "shard2", new URI("file:///tmp/shardFolder"));
         ShardRedeployOperation operation = new ShardRedeployOperation(shards);
         operation.execute(context);
 
         InOrder inOrder = inOrder(protocol, contentServer);
-        for (String shard : shards) {
+        for (String shard : shards.keySet()) {
             inOrder.verify(contentServer).addShard(Matchers.eq(shard), (Path) Matchers.notNull());
             inOrder.verify(protocol).publishShard(eq(node), Matchers.eq(shard));
         }
@@ -52,15 +54,14 @@ public class ShardRedeployOperationTest extends AbstractNodeOperationMockTest {
 
     @Test
     public void testRedeployShardAlreadyKnownToNodeManaged() throws Exception {
-        List<String> shards = Arrays.asList("shard1", "shard2");
-
-        Mockito.when(contentServer.getShards()).thenReturn(shards);
+        Map<String, URI> shards = ImmutableMap.of("shard1", new URI("file:///tmp/shardFolder"), "shard2", new URI("file:///tmp/shardFolder"));
+        Mockito.when(contentServer.getShards()).thenReturn(shards.keySet());
         ShardRedeployOperation operation = new ShardRedeployOperation(shards);
         operation.execute(context);
 
         // only publish but not add to nodemanaged again
         InOrder inOrder = inOrder(protocol, contentServer);
-        for (String shard : shards) {
+        for (String shard : shards.keySet()) {
             inOrder.verify(protocol).publishShard(eq(node), Matchers.eq(shard));
         }
     }

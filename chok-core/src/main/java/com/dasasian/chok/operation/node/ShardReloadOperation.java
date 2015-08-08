@@ -17,35 +17,45 @@ package com.dasasian.chok.operation.node;
 
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.node.NodeContext;
+import com.dasasian.chok.node.ShardManager;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Map;
 
-/**
- * Redeploys shards which are already installed in {@link com.dasasian.chok.node.ShardManager}.
- */
-public class ShardRedeployOperation extends AbstractShardOperation {
+public class ShardReloadOperation extends AbstractShardOperation {
 
     private static final long serialVersionUID = 1L;
 
-    public ShardRedeployOperation(Map<String, URI> installedShards) {
-        installedShards.forEach(this::addShard);
+    public ShardReloadOperation(Map<String, URI> reloadShards) {
+        reloadShards.forEach(this::addShard);
     }
 
     @Override
     protected String getOperationName() {
-        return "redeploy";
+        return "reload";
     }
 
     @Override
     protected void execute(NodeContext context, String shardName, DeployResult deployResult) throws Exception {
-        Path localShardFolder = Paths.get(getShardUri(shardName));
-        IContentServer contentServer = context.getContentServer();
-        if (!contentServer.getShards().contains(shardName)) {
-            contentServer.addShard(shardName, localShardFolder);
+        URI shardUri = getShardUri(shardName);
+        // auto reload is set to false since we would only reload a shard if this was alread set
+        // so no need to do work twice
+        final ShardManager shardManager = context.getShardManager();
+        final IContentServer contentServer = context.getContentServer();
+
+        Path localShardFolder = shardManager.installShard(shardName, shardUri, false);
+
+        Path replacedLocalShardFolder = contentServer.replaceShard(shardName, localShardFolder);
+
+        shardManager.removeLocalShardFolder(replacedLocalShardFolder);
+
+        Map<String, String> shardMetaData = context.getContentServer().getShardMetaData(shardName);
+        if (shardMetaData == null) {
+            throw new IllegalStateException("node managed '" + context.getContentServer() + "' does return NULL as shard metadata");
         }
+        deployResult.addShardMetaDataMap(shardName, shardMetaData);
+
         publishShard(shardName, context);
     }
 

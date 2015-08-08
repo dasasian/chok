@@ -18,7 +18,6 @@ package com.dasasian.chok.util;
 import com.dasasian.chok.node.monitor.IMonitor;
 import com.dasasian.chok.node.monitor.JmxMonitor;
 
-import java.io.File;
 import java.nio.file.Path;
 
 public class NodeConfiguration {
@@ -28,17 +27,19 @@ public class NodeConfiguration {
     private final int shardDeployThrottle;
     private final Class<? extends IMonitor> monitorClass;
     private final int rpcHandlerCount;
+    private final int reloadCheckInterval;
 
     public NodeConfiguration(int startPort, Path shardFolder) {
-        this(startPort, shardFolder, 0, JmxMonitor.class, 25);
+        this(startPort, shardFolder, 0, JmxMonitor.class, 25, 0);
     }
 
-    public NodeConfiguration(int startPort, Path shardFolder, int shardDeployThrottle, Class<? extends IMonitor> monitorClass, int rpcHandlerCount) {
+    public NodeConfiguration(int startPort, Path shardFolder, int shardDeployThrottle, Class<? extends IMonitor> monitorClass, int rpcHandlerCount, int reloadCheckInterval) {
         this.startPort = startPort;
         this.shardFolder = shardFolder;
         this.shardDeployThrottle = shardDeployThrottle;
         this.monitorClass = monitorClass;
         this.rpcHandlerCount = rpcHandlerCount;
+        this.reloadCheckInterval = reloadCheckInterval;
     }
 
     public int getStartPort() {
@@ -64,5 +65,8 @@ public class NodeConfiguration {
         return rpcHandlerCount;
     }
 
+    public int getReloadCheckInterval() {
+        return reloadCheckInterval;
+    }
 }
 

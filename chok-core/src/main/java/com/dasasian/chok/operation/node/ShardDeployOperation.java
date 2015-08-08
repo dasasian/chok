@@ -25,6 +25,12 @@ import java.util.Map;
 public class ShardDeployOperation extends AbstractShardOperation {
 
     private static final long serialVersionUID = 1L;
+    private final boolean autoReload;
+
+    public ShardDeployOperation(boolean autoReload) {
+        super();
+        this.autoReload = autoReload;
+    }
 
     @Override
     protected String getOperationName() {
@@ -34,7 +40,7 @@ public class ShardDeployOperation extends AbstractShardOperation {
     @Override
     protected void execute(NodeContext context, String shardName, DeployResult deployResult) throws Exception {
         URI shardUri = getShardUri(shardName);
-        Path localShardFolder = context.getShardManager().installShard(shardName, shardUri);
+        Path localShardFolder = context.getShardManager().installShard(shardName, shardUri, autoReload);
         IContentServer contentServer = context.getContentServer();
         if (!contentServer.getShards().contains(shardName)) {
             contentServer.addShard(shardName, localShardFolder);

@@ -113,7 +113,7 @@ public class FailoverTest extends AbstractTest {
         WatchedEvent event = new WatchedEvent(new WatcherEvent(EventType.None.getIntValue(), KeeperState.Expired.getIntValue(), null));
         for (int i = 0; i < 25; i++) {
             final String indexName = "index" + i;
-            IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, testIndex.getIndexUri(), 1);
+            IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, testIndex.getIndexUri(), 1, false);
             zkClient.getEventLock().lock();
             zkClient.process(event);
             zkClient.getEventLock().unlock();

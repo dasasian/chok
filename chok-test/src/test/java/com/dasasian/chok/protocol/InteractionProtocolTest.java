@@ -207,7 +207,7 @@ public class InteractionProtocolTest extends AbstractTest {
     }
 
     @Test(timeout = 7000)
-    public void testDeleteEphemeraksOnUnregisterComponent() throws Exception {
+    public void testDeleteEphemeralsOnUnregisterComponent() throws Exception {
         Master master = Mockito.mock(Master.class);
         protocol.publishMaster(master);
         assertNotNull(protocol.getMasterMD());
@@ -261,7 +261,7 @@ public class InteractionProtocolTest extends AbstractTest {
 
     @Test(timeout = 70000)
     public void testIndexManagement() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 2);
+        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 2, false);
         indexMD.getShards().add(new Shard(AbstractIndexOperation.createShardName(indexMD.getName(), "path1"), new URI("path1")));
         Node node = Mocks.mockNode();
 
@@ -328,7 +328,7 @@ public class InteractionProtocolTest extends AbstractTest {
         // remove one shard completely
         protocol.unpublishShard(node1, "shard2");
 
-        Map<String, List<String>> shard2NodesMap = protocol.getShard2NodesMap(Arrays.asList("shard1"));
+        Map<String, List<String>> shard2NodesMap = protocol.getShard2NodesMap(Collections.singletonList("shard1"));
         assertEquals(1, shard2NodesMap.size());
         assertEquals(1, shard2NodesMap.get("shard1").size());
     }

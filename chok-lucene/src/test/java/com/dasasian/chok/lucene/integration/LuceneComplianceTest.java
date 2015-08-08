@@ -105,7 +105,7 @@ public class LuceneComplianceTest extends AbstractTest {
     }
 
     private static void deployIndexToChok(IDeployClient deployClient, File file, int replicationLevel) throws InterruptedException {
-        IndexState indexState = deployClient.addIndex(file.getName(), file.toURI(), replicationLevel).joinDeployment();
+        IndexState indexState = deployClient.addIndex(file.getName(), file.toURI(), replicationLevel, false).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
     }
 

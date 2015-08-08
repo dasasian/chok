@@ -86,7 +86,7 @@ public abstract class AbstractIndexOperation implements MasterOperation {
             List<String> nodeShards = newNode2ShardMap.get(node);
             List<String> listOfAdded = CollectionUtil.getListOfAdded(currentGlobalNode2ShardsMap.get(node), nodeShards);
             if (!listOfAdded.isEmpty()) {
-                ShardDeployOperation deployInstruction = new ShardDeployOperation();
+                ShardDeployOperation deployInstruction = new ShardDeployOperation(indexMD.getAutoReload());
                 for (String shard : listOfAdded) {
                     deployInstruction.addShard(shard, indexMD.getShardUri(shard));
                     newShardsByNode.add(node, shard);
@@ -198,21 +198,20 @@ public abstract class AbstractIndexOperation implements MasterOperation {
     }
 
     private void updateShardMetaData(List<OperationResult> results, IndexMetaData indexMD) {
-        for (OperationResult operationResult : results) {
-            if (operationResult != null) {// node-crashed produces null
-                DeployResult deployResult = (DeployResult) operationResult;
-                for (Entry<String, Map<String, String>> entry : deployResult.getShardMetaDataMaps().entrySet()) {
-                    Map<String, String> existingMap = indexMD.getShard(entry.getKey()).getMetaDataMap();
-                    Map<String, String> newMap = entry.getValue();
-                    if (existingMap.size() > 0 && !existingMap.equals(newMap)) {
-                        // maps from different nodes but for the same shard should have
-                        // the same content
-                        LOG.warn("new shard metadata differs from existing one. old: " + existingMap + " new: " + newMap);
-                    }
-                    existingMap.putAll(newMap);
+        // node-crashed produces null
+        results.stream().filter(Objects::nonNull).forEach(operationResult -> {// node-crashed produces null
+            DeployResult deployResult = (DeployResult) operationResult;
+            for (Entry<String, Map<String, String>> entry : deployResult.getShardMetaDataMaps().entrySet()) {
+                Map<String, String> existingMap = indexMD.getShard(entry.getKey()).getMetaDataMap();
+                Map<String, String> newMap = entry.getValue();
+                if (existingMap.size() > 0 && !existingMap.equals(newMap)) {
+                    // maps from different nodes but for the same shard should have
+                    // the same content
+                    LOG.warn("new shard metadata differs from existing one. old: " + existingMap + " new: " + newMap);
                 }
+                existingMap.putAll(newMap);
             }
-        }
+        });
     }
 
 }

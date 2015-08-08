@@ -19,13 +19,13 @@ import com.dasasian.chok.node.monitor.IMonitor;
 import com.dasasian.chok.operation.node.NodeOperation;
 import com.dasasian.chok.operation.node.OperationResult;
 import com.dasasian.chok.operation.node.ShardRedeployOperation;
+import com.dasasian.chok.operation.node.ShardReloadOperation;
 import com.dasasian.chok.protocol.ConnectedComponent;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.protocol.metadata.NodeMetaData;
 import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
-import com.dasasian.chok.util.ThrottledInputStream;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
 import org.I0Itec.zkclient.ExceptionUtil;
 import org.I0Itec.zkclient.NetworkUtil;
@@ -36,14 +36,14 @@ import org.apache.hadoop.ipc.RPC.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.BindException;
-import java.nio.file.FileSystems;
+import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Node implements ConnectedComponent {
 
@@ -58,12 +58,18 @@ public class Node implements ConnectedComponent {
     private IMonitor monitor;
     private Thread nodeOperatorThread;
     private boolean stopped;
+    private final ScheduledExecutorService scheduledExecutorService;
 
     public Node(InteractionProtocol protocol, final NodeConfiguration configuration, IContentServer contentServer, ChokFileSystem.Factory chokFileSystemFactory) {
         this.protocol = protocol;
         this.contentServer = contentServer;
         this.nodeConfiguration = configuration;
         this.chokFileSystemFactory = chokFileSystemFactory;
+        if (nodeConfiguration.getReloadCheckInterval() > 0) {
+            scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        } else {
+            scheduledExecutorService = null;
+        }
     }
 
     /*
@@ -117,7 +123,7 @@ public class Node implements ConnectedComponent {
             LOG.info("throttling of shard deployment to " + throttleInKbPerSec + " kilo-bytes per second");
             throttleSemaphore = new ThrottleSemaphore(throttleInKbPerSec * 1024);
         }
-        final ShardManager shardManager  = new ShardManager(shardsFolder, chokFileSystemFactory, throttleSemaphore);
+        final ShardManager shardManager = new ShardManager(shardsFolder, chokFileSystemFactory, throttleSemaphore);
         context = new NodeContext(protocol, this, shardManager, contentServer);
         protocol.registerComponent(this);
 
@@ -127,10 +133,24 @@ public class Node implements ConnectedComponent {
     }
 
     private void init() {
+        // delete bad data e.g. tmp shard
+        context.getShardManager().cleanup();
+
         redeployInstalledShards();
         NodeMetaData nodeMetaData = new NodeMetaData(nodeName);
         NodeQueue nodeOperationQueue = protocol.publishNode(this, nodeMetaData);
         startOperatorThread(nodeOperationQueue);
+        if (scheduledExecutorService != null) {
+            scheduledExecutorService.scheduleAtFixedRate(() -> {
+                try {
+                    final Map<String, URI> reloadShards = context.getShardManager().getReloadShards(context);
+                    ShardReloadOperation shardReloadOperation = new ShardReloadOperation(reloadShards);
+                    shardReloadOperation.execute(context);
+                } catch (Exception e) {
+                    LOG.error("Error redeploying installed shards:", e);
+                }
+            }, nodeConfiguration.getReloadCheckInterval(), nodeConfiguration.getReloadCheckInterval(), TimeUnit.SECONDS);
+        }
     }
 
     private void startOperatorThread(NodeQueue nodeOperationQueue) {
@@ -161,13 +181,15 @@ public class Node implements ConnectedComponent {
         // we keep serving the shards
     }
 
-    private void redeployInstalledShards() {
-        List<String> installedShards = context.getShardManager().getInstalledShards();
-        ShardRedeployOperation redeployOperation = new ShardRedeployOperation(installedShards);
-        try {
-            redeployOperation.execute(context);
-        } catch (InterruptedException e) {
-            ExceptionUtil.convertToRuntimeException(e);
+    public void redeployInstalledShards() {
+        Map<String, URI> localShardFolders = context.getShardManager().getLocalShards();
+        if (!localShardFolders.isEmpty()) {
+            ShardRedeployOperation redeployOperation = new ShardRedeployOperation(localShardFolders);
+            try {
+                redeployOperation.execute(context);
+            } catch (InterruptedException e) {
+                throw ExceptionUtil.convertToRuntimeException(e);
+            }
         }
     }
 
@@ -189,6 +211,7 @@ public class Node implements ConnectedComponent {
             throw new IllegalStateException("already stopped");
         }
         LOG.info("shutdown " + nodeName + " ...");
+
         stopped = true;
 
         if (monitor != null) {
@@ -257,11 +280,11 @@ public class Node implements ConnectedComponent {
 
     protected static class NodeOperationProcessor implements Runnable {
 
-        private final NodeQueue _queue;
+        private final NodeQueue nodeQueue;
         private final NodeContext nodeContext;
 
         public NodeOperationProcessor(NodeQueue queue, NodeContext nodeContext) {
-            _queue = queue;
+            nodeQueue = queue;
             this.nodeContext = nodeContext;
         }
 
@@ -270,7 +293,7 @@ public class Node implements ConnectedComponent {
             try {
                 while (nodeContext.getNode().isRunning()) {
                     try {
-                        NodeOperation operation = _queue.peek();
+                        NodeOperation operation = nodeQueue.peek();
                         OperationResult operationResult = null;
                         try {
                             LOG.info("executing " + operation);
@@ -280,8 +303,9 @@ public class Node implements ConnectedComponent {
                             operationResult = new OperationResult(nodeContext.getNode().getName(), e);
                             ExceptionUtil.rethrowInterruptedException(e);
                         } finally {
-                            _queue.complete(operationResult);// only remove after finish
+                            nodeQueue.complete(operationResult);// only remove after finish
                         }
+
                     } catch (Throwable e) {
                         ExceptionUtil.rethrowInterruptedException(e);
                         LOG.error(nodeContext.getNode().getName() + ": operation failure ", e);

@@ -50,6 +50,7 @@ public class CommandLineInterface {
     @Inject protected IndexAutoRepairCommand indexAutoRepairCommand;
     @Inject protected StatusCommand statusCommand;
     @Inject protected HealthcheckCommand healthcheckCommand;
+    @Inject protected RemoveNodeCommand removeNodeCommand;
 
     protected void addBaseCommands() {
         addCommand(startZkCommand);
@@ -68,6 +69,7 @@ public class CommandLineInterface {
         addCommand(indexAutoRepairCommand);
         addCommand(statusCommand);
         addCommand(healthcheckCommand);
+        addCommand(removeNodeCommand);
     }
 
     protected void addCommand(Command command) {

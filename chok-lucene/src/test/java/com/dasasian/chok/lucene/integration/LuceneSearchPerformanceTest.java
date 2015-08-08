@@ -44,8 +44,8 @@ public class LuceneSearchPerformanceTest extends AbstractTest {
     @Test
     public void measureSearchPerformance() throws Exception {
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex("index1", LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
-        deployClient.addIndex("index2", LuceneTestResources.INDEX2.getIndexUri(), 1).joinDeployment();
+        deployClient.addIndex("index1", LuceneTestResources.INDEX1.getIndexUri(), 1, false).joinDeployment();
+        deployClient.addIndex("index2", LuceneTestResources.INDEX2.getIndexUri(), 1, false).joinDeployment();
 
         final ILuceneClient client = new LuceneClient(miniCluster.getZkConfiguration());
         final Query query = new QueryParser(Version.LUCENE_30, "", new KeywordAnalyzer()).parse("foo: bar");

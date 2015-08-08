@@ -34,7 +34,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         IndexDeployFuture deployFuture = new IndexDeployFuture(protocol, indexName);
         assertEquals(IndexState.DEPLOYING, deployFuture.joinDeployment(200));
 
-        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1));
+        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1, false));
         assertEquals(IndexState.DEPLOYED, deployFuture.joinDeployment(200));
     }
 
@@ -44,7 +44,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         IndexDeployFuture deployFuture = new IndexDeployFuture(protocol, indexName);
         assertEquals(IndexState.DEPLOYING, deployFuture.joinDeployment(200));
 
-        IndexMetaData indexMD = new IndexMetaData(indexName, new URI("path"), 1);
+        IndexMetaData indexMD = new IndexMetaData(indexName, new URI("path"), 1, false);
         indexMD.setDeployError(new IndexDeployError(indexName, ErrorType.NO_NODES_AVAILIBLE));
         protocol.publishIndex(indexMD);
         assertEquals(IndexState.ERROR, deployFuture.joinDeployment(200));
@@ -68,7 +68,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         thread.start();
         deployFuture.disconnect();
         deployFuture.reconnect();
-        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1));
+        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1, false));
         thread.join();
     }
 
@@ -78,7 +78,7 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         IndexDeployFuture deployFuture = new IndexDeployFuture(protocol, indexName);
         assertEquals(IndexState.DEPLOYING, deployFuture.joinDeployment(200));
 
-        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1));
+        protocol.publishIndex(new IndexMetaData(indexName, new URI("path"), 1, false));
         protocol.unpublishIndex(indexName);
         assertEquals(IndexState.DEPLOYED, deployFuture.joinDeployment(200));
     }

@@ -84,6 +84,16 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
         }
     }
 
+    @Override
+    public Path replaceShard(String shardName, Path shardPath) throws Exception {
+        LOG.info("TestServer " + nodeName + " got replace shard " + shardName);
+        Path dataFile = shardPath.resolve(TestIndex.DATA_FILE_NAME);
+        if (!Files.exists(dataFile)) {
+            throw new IOException("File " + dataFile + " not found");
+        }
+        return null;
+    }
+
     /**
      * Removes a search by given shardName from the list of searchers.
      * @param shardName the shard name

@@ -38,7 +38,7 @@ public class CommandTest extends AbstractZkTest {
     // todo find out why this breaks SleepClientTest
 //    @Test
     public void testListIndexesWithUnreachableIndex_CHOK_76() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("indexABC", new URI("hdfs://localhost:8020/unreachableIndex"), 1);
+        IndexMetaData indexMD = new IndexMetaData("indexABC", new URI("hdfs://localhost:8020/unreachableIndex"), 1, false);
         protocol.publishIndex(indexMD);
         execute(new ListIndicesCommand(), indexMD.getName());
     }

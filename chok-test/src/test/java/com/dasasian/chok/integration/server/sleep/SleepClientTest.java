@@ -83,7 +83,7 @@ public class SleepClientTest extends AbstractTest {
 
 
         IDeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex(INDEX_NAME, index1.toURI(), 1).joinDeployment();
+        deployClient.addIndex(INDEX_NAME, index1.toURI(), 1, false).joinDeployment();
         client = new SleepClient(miniCluster.getZkConfiguration());
         // sleep so that the client can update
         TestUtil.waitUntilClientHasIndex(client.getClient(), INDEX_NAME);

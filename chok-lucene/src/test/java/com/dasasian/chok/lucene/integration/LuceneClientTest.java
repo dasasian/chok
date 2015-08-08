@@ -88,7 +88,7 @@ public class LuceneClientTest extends AbstractTest {
         for (int i = 0; i < 3; i++) {
             TestIndex testIndex = LuceneIndexGenerator.createTestIndex(temporaryFolder, 2);
             String indexName = testIndex.getIndexName();
-            deployClient.addIndex(indexName, testIndex.getIndexUri(), 1).joinDeployment();
+            deployClient.addIndex(indexName, testIndex.getIndexUri(), 1, false).joinDeployment();
             indexNames.add(indexName);
         }
 
@@ -191,7 +191,7 @@ public class LuceneClientTest extends AbstractTest {
         indexWriter.addDocument(document);
         indexWriter.close(true);
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        IndexState indexState = deployClient.addIndex(index.getName(), index.toURI(), 1).joinDeployment();
+        IndexState indexState = deployClient.addIndex(index.getName(), index.toURI(), 1, false).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
 
         LuceneClient client = new LuceneClient(miniCluster.createInteractionProtocol());
@@ -321,7 +321,7 @@ public class LuceneClientTest extends AbstractTest {
         }
         indexWriter.close(true);
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        IndexState indexState = deployClient.addIndex(sortIndex.getName(), sortIndex.toURI(), 1).joinDeployment();
+        IndexState indexState = deployClient.addIndex(sortIndex.getName(), sortIndex.toURI(), 1, false).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
 
         // query and compare results
@@ -472,7 +472,7 @@ public class LuceneClientTest extends AbstractTest {
         indexWriter.close(true);
 
         DeployClient deployClient = new DeployClient(miniCluster.createInteractionProtocol());
-        IndexState indexState = deployClient.addIndex(filterIndex.getName(), filterIndex.toURI(), 1).joinDeployment();
+        IndexState indexState = deployClient.addIndex(filterIndex.getName(), filterIndex.toURI(), 1, false).joinDeployment();
         assertEquals(IndexState.DEPLOYED, indexState);
 
         // build filter for terms in set {i | (i % 10) == 3}.
@@ -509,9 +509,9 @@ public class LuceneClientTest extends AbstractTest {
 
     private void deploy3Indices() throws Exception {
         DeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex(INDEX1, LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
-        deployClient.addIndex(INDEX2, LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
-        deployClient.addIndex(INDEX3, LuceneTestResources.INDEX1.getIndexUri(), 1).joinDeployment();
+        deployClient.addIndex(INDEX1, LuceneTestResources.INDEX1.getIndexUri(), 1, false).joinDeployment();
+        deployClient.addIndex(INDEX2, LuceneTestResources.INDEX1.getIndexUri(), 1, false).joinDeployment();
+        deployClient.addIndex(INDEX3, LuceneTestResources.INDEX1.getIndexUri(), 1, false).joinDeployment();
     }
 
 }

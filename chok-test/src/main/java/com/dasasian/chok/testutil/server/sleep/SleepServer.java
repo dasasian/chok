@@ -55,6 +55,14 @@ public class SleepServer implements IContentServer, ISleepServer {
         shards.add(shardName);
     }
 
+    @Override
+    public Path replaceShard(String shardName, Path shardDir) throws Exception {
+        if(!shards.contains(shardName)) {
+            throw new IllegalStateException("Cannot replace non-existent shard "+shardName);
+        }
+        return null;
+    }
+
     public void removeShard(final String shardName) {
         shards.remove(shardName);
     }

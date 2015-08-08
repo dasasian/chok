@@ -37,7 +37,7 @@ public class ClientTest extends AbstractTest {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         Client client = new Client(ISimpleTestServer.class, new DefaultNodeSelectionPolicy(), protocol, new ClientConfiguration());
         final URI uri = new URI("path");
-        IndexMetaData indexMD = new IndexMetaData("index1", uri, 1);
+        IndexMetaData indexMD = new IndexMetaData("index1", uri, 1, false);
         indexMD.getShards().add(new Shard("shard1", uri));
         indexMD.getShards().add(new Shard("shard2", uri));
         client.addIndexForSearching(indexMD);
@@ -52,7 +52,7 @@ public class ClientTest extends AbstractTest {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         Client client = new Client(ISimpleTestServer.class, new DefaultNodeSelectionPolicy(), protocol, new ClientConfiguration());
         final URI uri = new URI("path");
-        IndexMetaData indexMD = new IndexMetaData("index1", uri, 1);
+        IndexMetaData indexMD = new IndexMetaData("index1", uri, 1, false);
         indexMD.getShards().add(new Shard("shard1", uri));
         indexMD.getShards().add(new Shard("shard2", uri));
         client.addIndexForWatching(indexMD.getName());

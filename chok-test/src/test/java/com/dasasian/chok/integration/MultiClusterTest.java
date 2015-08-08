@@ -134,7 +134,7 @@ public class MultiClusterTest extends AbstractTest {
 
     private static void deployIndex(InteractionProtocol protocol, String indexName, File index) throws InterruptedException {
         DeployClient deployClient1 = new DeployClient(protocol);
-        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, index.toURI(), 1);
+        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, index.toURI(), 1, false);
         LOG.info("Joining deployment on " + deployment.getClass().getName());
         deployment.joinDeployment();
     }

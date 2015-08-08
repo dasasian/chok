@@ -16,35 +16,38 @@
 package com.dasasian.chok.command;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
-import com.dasasian.chok.protocol.metadata.IndexMetaData;
+import com.dasasian.chok.protocol.metadata.NodeMetaData;
 import com.dasasian.chok.util.ZkConfiguration;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * User: damith.chandrasekara
  * Date: 7/7/13
  */
-public class RedeployIndexCommand extends ProtocolCommand {
+public class RemoveNodeCommand extends ProtocolCommand {
 
-    private String indexName;
+    private String nodeName;
 
-    public RedeployIndexCommand() {
-        super("redeployIndex", "<index name>", "Undeploys and deploys an index");
+    public RemoveNodeCommand() {
+        super("removeNode", "<node name>", "Remove a node from Chok");
     }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
         CommandLineHelper.validateMinArguments(args, 2);
-        indexName = args[1];
+        nodeName = args[1];
     }
 
     @Override
-    public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        IndexMetaData indexMD = protocol.getIndexMD(indexName);
-        if (indexMD == null) {
-            throw new IllegalArgumentException("index '" + indexName + "' does not exist");
+    public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) {
+        if(protocol.getLiveNodes().contains(nodeName)) {
+            System.err.println("Cannot remove live node "+nodeName);
         }
-        CommandLineHelper.removeIndex(protocol, indexName);
-        Thread.sleep(5000);
-        CommandLineHelper.addIndex(protocol, indexName, indexMD.getUri(), indexMD.getReplicationLevel(), indexMD.getAutoReload());
+        else {
+            protocol.unpublishNode(nodeName);
+            System.out.println("undeployed node '" + nodeName + "'");
+        }
     }
 }

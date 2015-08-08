@@ -20,10 +20,7 @@ import com.dasasian.chok.util.*;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.io.BytesWritable;
-import org.apache.hadoop.io.DataOutputBuffer;
-import org.apache.hadoop.io.MapWritable;
-import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.*;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.lucene.document.Document;
@@ -39,10 +36,7 @@ import org.apache.lucene.util.PriorityQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
@@ -158,7 +152,7 @@ public class LuceneServer implements IContentServer, ILuceneServer {
     public void addShard(final String shardName, final Path shardDir) throws IOException {
         LOG.info("LuceneServer " + nodeName + " got shard " + shardName);
         try {
-            IndexSearcher indexSearcher = searcherFactory.createSearcher(shardName, shardDir);
+            IndexSearcher indexSearcher = openSearcher(shardName, shardDir);
             searcherByShard.put(shardName, indexSearcher);
             pathByShard.put(shardName, shardDir);
         } catch (CorruptIndexException e) {
@@ -167,17 +161,46 @@ public class LuceneServer implements IContentServer, ILuceneServer {
         }
     }
 
+    @Override
+    public Path replaceShard(String shardName, Path shardDir) throws Exception {
+        LOG.info("LuceneServer " + nodeName + " got shard " + shardName);
+        try {
+            final IndexSearcher oldSearcher = searcherByShard.get(shardName);
+            final Path oldPath = pathByShard.get(shardName);
+
+            IndexSearcher indexSearcher = openSearcher(shardName, shardDir);
+            searcherByShard.put(shardName, indexSearcher);
+            pathByShard.put(shardName, shardDir);
+
+            if(oldSearcher != null)  {
+                closeSearcher(shardName, oldSearcher);
+            }
+
+            return oldPath;
+        } catch (CorruptIndexException e) {
+            LOG.error("Error building index for shard " + shardName, e);
+            throw e;
+        }
+    }
+
+    private IndexSearcher openSearcher(String shardName, Path shardDir) throws IOException {
+        return searcherFactory.createSearcher(shardName, shardDir);
+    }
+
     /**
      * Removes a search by given shardName from the list of searchers.
      */
     @Override
     public void removeShard(final String shardName) {
         LOG.info("LuceneServer " + nodeName + " removing shard " + shardName);
+        pathByShard.remove(shardName);
         final IndexSearcher remove = searcherByShard.remove(shardName);
-        final Path shardDir = pathByShard.remove(shardName);
-        if (remove == null || shardDir == null) {
-            return; // nothing to do.
+        if (remove != null) {
+            closeSearcher(shardName, remove);
         }
+    }
+
+    private void closeSearcher(String shardName, IndexSearcher remove) {
         try {
             remove.close();
         } catch (Exception e) {

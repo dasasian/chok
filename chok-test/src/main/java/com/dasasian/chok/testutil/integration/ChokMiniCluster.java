@@ -220,7 +220,7 @@ public class ChokMiniCluster extends ExternalResource {
         List<String> indices = new ArrayList<>();
         IDeployClient deployClient = new DeployClient(protocol);
         String indexName = Paths.get(indexUri).getFileName().toString();
-        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexUri, replicationCount);
+        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexUri, replicationCount, false);
         indices.add(indexName);
         deployFuture.joinDeployment();
 
@@ -257,7 +257,7 @@ public class ChokMiniCluster extends ExternalResource {
     }
 
     public IndexMetaData deployIndex(String indexName, URI indexUri, int replication) throws Exception {
-        IndexDeployOperation deployOperation = new IndexDeployOperation(indexName, indexUri, replication);
+        IndexDeployOperation deployOperation = new IndexDeployOperation(indexName, indexUri, replication, false);
         InteractionProtocol protocol = getProtocol();
         protocol.addMasterOperation(deployOperation);
         TestUtil.waitUntilIndexDeployed(protocol, indexName);

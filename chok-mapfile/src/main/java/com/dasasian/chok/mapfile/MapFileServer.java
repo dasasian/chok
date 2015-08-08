@@ -81,13 +81,46 @@ public class MapFileServer implements IContentServer, IMapFileServer {
             throw new IOException("Can not read shard " + shardName + " dir " + shardDir + "!");
         }
         try {
+            final Reader reader = openReader(shardDir);
             pathByShard.put(shardName, shardDir);
-            final MapFile.Reader reader = new MapFile.Reader(new org.apache.hadoop.fs.Path(shardDir.toUri()), conf);
             readerByShard.put(shardName, reader);
         } catch (IOException e) {
             LOG.error("Error opening shard " + shardName + " " + shardDir, e);
             throw e;
         }
+    }
+
+    private Reader openReader(Path shardDir) throws IOException {
+        return new Reader(new org.apache.hadoop.fs.Path(shardDir.toUri()), conf);
+    }
+
+    @Override
+    public Path replaceShard(String shardName, Path shardDir) throws Exception {
+        LOG.debug("LuceneServer " + nodeName + " got replace shard " + shardName);
+        if (!Files.exists(shardDir)) {
+            throw new IOException("Shard " + shardName + " dir " + shardDir + " does not exist!");
+        }
+        if (!Files.isReadable(shardDir)) {
+            throw new IOException("Can not read shard " + shardName + " dir " + shardDir + "!");
+        }
+        try {
+            final MapFile.Reader oldReader = readerByShard.get(shardName);
+            final Path oldPath = pathByShard.get(shardName);
+
+            final Reader reader = openReader(shardDir);
+            pathByShard.put(shardName, shardDir);
+            readerByShard.put(shardName, reader);
+
+            if (oldReader != null) {
+                closeReader(shardName, oldReader);
+            }
+
+            return oldPath;
+        } catch (IOException e) {
+            LOG.error("Error opening shard " + shardName + " " + shardDir, e);
+            throw e;
+        }
+
     }
 
     @Override
@@ -104,16 +137,21 @@ public class MapFileServer implements IContentServer, IMapFileServer {
             pathByShard.remove(shardName);
             final MapFile.Reader reader = readerByShard.get(shardName);
             if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    LOG.error("Error closing shard " + shardName, e);
-                    throw e;
-                }
+                closeReader(shardName, reader);
                 readerByShard.remove(shardName);
             } else {
                 LOG.warn("Shard " + shardName + " not found!");
             }
+
+        }
+    }
+
+    private void closeReader(String shardName, Reader reader) throws IOException {
+        try {
+            reader.close();
+        } catch (IOException e) {
+            LOG.error("Error closing shard " + shardName, e);
+            throw e;
         }
     }
 
@@ -126,7 +164,7 @@ public class MapFileServer implements IContentServer, IMapFileServer {
     protected long shardDiskUsage(String shardName) {
         Path shardDir = pathByShard.get(shardName);
         if (shardDir != null) {
-            try{
+            try {
                 return FileUtils.sizeOfDirectory(shardDir.toFile());
             } catch (Exception ignore) {
             }

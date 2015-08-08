@@ -35,12 +35,14 @@ public class IndexMetaData implements Serializable {
     private final URI uri;
     private final Set<Shard> shards = Sets.newHashSet();
     private int replicationLevel;
+    private boolean autoReload;
     private IndexDeployError deployError;
 
-    public IndexMetaData(String name, URI uri, int replicationLevel) {
+    public IndexMetaData(String name, URI uri, int replicationLevel, boolean autoReload) {
         this.name = name;
         this.uri = uri;
         this.replicationLevel = replicationLevel;
+        this.autoReload = autoReload;
     }
 
     public URI getUri() {
@@ -53,6 +55,14 @@ public class IndexMetaData implements Serializable {
 
     public void setReplicationLevel(int replicationLevel) {
         this.replicationLevel = replicationLevel;
+    }
+
+    public boolean getAutoReload() {
+        return autoReload;
+    }
+
+    public void setAutoReload(boolean autoReload) {
+        this.autoReload = autoReload;
     }
 
     public String getName() {
@@ -95,11 +105,10 @@ public class IndexMetaData implements Serializable {
 
     @Override
     public String toString() {
-        return "name: " + name + ", replication: " + replicationLevel + ", uri: " + uri;
+        return "name: " + name + ", replication: " + replicationLevel + ", autoReload: " + autoReload + ", uri: " + uri;
     }
 
     public static class Shard implements Serializable {
-
         private static final long serialVersionUID = IndexMetaData.serialVersionUID;
         private final String name;
         private final URI uri;
@@ -130,7 +139,6 @@ public class IndexMetaData implements Serializable {
         public String toString() {
             return getName();
         }
-
     }
 
 }

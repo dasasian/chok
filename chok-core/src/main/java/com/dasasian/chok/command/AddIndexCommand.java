@@ -29,9 +29,10 @@ public class AddIndexCommand extends ProtocolCommand {
     private String name;
     private String uriString;
     private int replicationLevel = 3;
+    private boolean autoReload = false;
 
     public AddIndexCommand() {
-        super("addIndex", "<index name> <uri to index> [<replication level>]", "Add a index to Chok");
+        super("addIndex", "<index name> <uri to index> [<replication level>] [<auto reload (true/false)>]", "Add a index to Chok");
     }
 
     @Override
@@ -42,11 +43,14 @@ public class AddIndexCommand extends ProtocolCommand {
         if (args.length >= 4) {
             replicationLevel = Integer.parseInt(args[3]);
         }
+        if (args.length >= 5) {
+            autoReload = Boolean.parseBoolean(args[4].trim());
+        }
     }
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) throws Exception {
-        CommandLineHelper.addIndex(protocol, name, new URI(uriString), replicationLevel);
+        CommandLineHelper.addIndex(protocol, name, new URI(uriString), replicationLevel, autoReload);
     }
 
 }

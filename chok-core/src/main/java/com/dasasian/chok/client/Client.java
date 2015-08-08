@@ -41,7 +41,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
     private static final String[] ALL_INDICES = new String[]{"*"};
 
     protected final Set<String> indicesToWatch = Sets.newHashSet();
-    protected final Map<String, List<String>> indexToShards = Maps.newHashMap();
+    protected final Multimap<String, String> indexToShards = HashMultimap.create();
 
     protected final INodeSelectionPolicy selectionPolicy;
     private final long startupTime;
@@ -121,18 +121,18 @@ public class Client implements ConnectedComponent, AutoCloseable {
         this.proxyManager = proxyManager;
     }
 
-    protected void removeIndexes(List<String> indexes) {
+    protected void removeIndexes(Iterable<String> indexes) {
         indexes.forEach(this::removeIndex);
     }
 
     protected void removeIndex(String index) {
-        List<String> shards = indexToShards.remove(index);
-        if (shards != null) {
-            for (String shard : shards) {
+        if(indexToShards.containsKey(index)) {
+            indexToShards.removeAll(index).stream().forEach(shard -> {
                 selectionPolicy.remove(shard);
                 protocol.unregisterChildListener(this, PathDef.SHARD_TO_NODES, shard);
-            }
-        } else {
+            });
+        }
+        else {
             if (indicesToWatch.contains(index)) {
                 protocol.unregisterDataChanges(this, PathDef.INDICES_METADATA, index);
             } else {
@@ -174,8 +174,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
     }
 
     protected void addIndexForSearching(IndexMetaData indexMD) {
-        final Set<Shard> shards = indexMD.getShards();
-        List<String> shardNames = shards.stream().map(Shard::getName).collect(Collectors.toList());
+        List<String> shardNames = indexMD.getShards().stream().map(Shard::getName).collect(Collectors.toList());
 
         for (final String shardName : shardNames) {
             List<String> nodes = protocol.registerChildListener(this, PathDef.SHARD_TO_NODES, shardName, new IAddRemoveListener() {
@@ -204,8 +203,8 @@ public class Client implements ConnectedComponent, AutoCloseable {
                 }
             }
             selectionPolicy.update(shardName, shardNodes);
+            indexToShards.put(indexMD.getName(), shardName);
         }
-        indexToShards.put(indexMD.getName(), shardNames);
     }
 
     protected boolean isIndexSearchable(final IndexMetaData indexMD) {
@@ -222,7 +221,7 @@ public class Client implements ConnectedComponent, AutoCloseable {
      * Broadcast a method call to all indices. Return all the results in a
      * Collection.
      *
-     * @param <T> the class for the result
+     * @param <T>                  the class for the result
      * @param timeout              timeout value
      * @param shutdown             ??
      * @param method               The server's method to call.
@@ -285,37 +284,19 @@ public class Client implements ConnectedComponent, AutoCloseable {
 
     private <T> ClientResult<T> broadcastInternal(IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, Map<String, List<String>> nodeShardsMap, Object... args) {
         queryCount++;
-    /*
-     * Validate inputs.
-     */
+
+        // Validate inputs.
         if (method == null || args == null) {
             throw new IllegalArgumentException("Null method or args!");
         }
         Class<?>[] types = method.getParameterTypes();
-        if (args.length != types.length) {
-            throw new IllegalArgumentException("Wrong number of args: found " + args.length + ", expected " + types.length + "!");
-        }
-        for (int i = 0; i < args.length; i++) {
-            if (args[i] != null) {
-                Class<?> from = args[i].getClass();
-                Class<?> to = types[i];
-                if (!to.isAssignableFrom(from) && !(from.isPrimitive() || to.isPrimitive())) {
-                    // Assume autoboxing will work.
-                    throw new IllegalArgumentException("Incorrect argument type for param " + i + ": expected " + types[i] + "!");
-                }
-            }
-        }
-        if (shardArrayParamIndex > 0) {
-            if (shardArrayParamIndex >= types.length) {
-                throw new IllegalArgumentException("shardArrayParamIndex out of range!");
-            }
-            if (!(types[shardArrayParamIndex]).equals(String[].class)) {
-                throw new IllegalArgumentException("shardArrayParamIndex parameter (" + shardArrayParamIndex + ") is not of type String[]!");
-            }
-        }
+
+        validateArgs(types, args);
+        validateShardArryaParamIndex(shardArrayParamIndex, types);
+
         if (LOG.isTraceEnabled()) {
-            for (Map.Entry<String, List<String>> e : indexToShards.entrySet()) {
-                LOG.trace("indexToShards " + e.getKey() + " --> " + e.getValue().toString());
+            for (String indexName : indexToShards.keySet()) {
+                LOG.trace("indexToShards " + indexName + " --> " + indexToShards.get(indexName).toString());
             }
             for (Map.Entry<String, List<String>> e : nodeShardsMap.entrySet()) {
                 LOG.trace("broadcast using " + e.getKey() + " --> " + e.getValue().toString());
@@ -323,18 +304,15 @@ public class Client implements ConnectedComponent, AutoCloseable {
             LOG.trace("selection policy = " + selectionPolicy);
         }
 
-    /*
-     * Make RPC calls to all nodes in parallel.
-     */
+        // Make RPC calls to all nodes in parallel.
         long start = 0;
         if (LOG.isDebugEnabled()) {
             start = System.currentTimeMillis();
         }
-    /*
-     * We don't know what selectionPolicy built, and multiple threads may write
-     * to map if IO errors occur. This map might be shared across multiple calls
-     * also. So make a copy and synchronize it.
-     */
+
+        // We don't know what selectionPolicy built, and multiple threads may write
+        // to map if IO errors occur. This map might be shared across multiple calls
+        // also. So make a copy and synchronize it.
         Map<String, List<String>> nodeShardMapCopy = Maps.newHashMap();
         Set<String> allShards = Sets.newHashSet();
         for (Map.Entry<String, List<String>> e : nodeShardsMap.entrySet()) {
@@ -358,6 +336,33 @@ public class Client implements ConnectedComponent, AutoCloseable {
         return results;
     }
 
+    private void validateShardArryaParamIndex(int shardArrayParamIndex, Class<?>[] types) {
+        if (shardArrayParamIndex > 0) {
+            if (shardArrayParamIndex >= types.length) {
+                throw new IllegalArgumentException("shardArrayParamIndex out of range!");
+            }
+            if (!(types[shardArrayParamIndex]).equals(String[].class)) {
+                throw new IllegalArgumentException("shardArrayParamIndex parameter (" + shardArrayParamIndex + ") is not of type String[]!");
+            }
+        }
+    }
+
+    private void validateArgs(Class<?>[] types, Object[] args) {
+        if (args.length != types.length) {
+            throw new IllegalArgumentException("Wrong number of args: found " + args.length + ", expected " + types.length + "!");
+        }
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] != null) {
+                Class<?> from = args[i].getClass();
+                Class<?> to = types[i];
+                if (!to.isAssignableFrom(from) && !(from.isPrimitive() || to.isPrimitive())) {
+                    // Assume autoboxing will work.
+                    throw new IllegalArgumentException("Incorrect argument type for param " + i + ": expected " + types[i] + "!");
+                }
+            }
+        }
+    }
+
     // -------------------- Node management --------------------
 
     private Map<String, List<String>> getNode2ShardsMap(final String[] indexNames) throws ChokException {
@@ -369,12 +374,11 @@ public class Client implements ConnectedComponent, AutoCloseable {
         Collection<String> allShards = Sets.newHashSet();
         for (String index : indexNames) {
             if ("*".equals(index)) {
-                ImmutableSet.copyOf(indexToShards.values()).forEach(allShards::addAll);
+                ImmutableSet.copyOf(indexToShards.values()).forEach(allShards::add);
                 break;
             }
-            List<String> shardsForIndex = indexToShards.get(index);
-            if (shardsForIndex != null) {
-                allShards.addAll(shardsForIndex);
+            if (indexToShards.containsKey(index)) {
+                allShards.addAll(indexToShards.get(index));
             } else {
                 Pattern pattern = Pattern.compile(index);
                 int matched = 0;
@@ -431,8 +435,12 @@ public class Client implements ConnectedComponent, AutoCloseable {
         return indexToShards.containsKey(index);
     }
 
+    public boolean hasShard(String index, String shardName) {
+        return indexToShards.containsEntry(index, shardName);
+    }
+
     private Iterable<String> getAllShards() {
-        return Iterables.concat(indexToShards.values());
+        return indexToShards.values();
     }
 
 

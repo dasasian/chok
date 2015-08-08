@@ -27,6 +27,7 @@ import com.dasasian.chok.testutil.server.simpletest.SimpleTestClient;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
 import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.UtilModule;
+import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.junit.Rule;
@@ -36,6 +37,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -90,7 +92,7 @@ public class NodeIntegrationTest extends AbstractTest {
         File shardsFolder = node.getContext().getShardManager().getShardsFolder().toFile();
         assertEquals(testIndex.getShardCount(), shardsFolder.list().length);
 
-        ShardUndeployOperation undeployOperation = new ShardUndeployOperation(Arrays.asList(protocol.getNodeShards(node.getName()).iterator().next()));
+        ShardUndeployOperation undeployOperation = new ShardUndeployOperation(Collections.singletonList(Iterables.getFirst(protocol.getNodeShards(node.getName()), null)));
         protocol.addNodeOperation(node.getName(), undeployOperation);
         int expectedShardCount = testIndex.getShardCount() - 1;
         TestUtil.waitUntilNodeServesShards(protocol, node.getName(), expectedShardCount);

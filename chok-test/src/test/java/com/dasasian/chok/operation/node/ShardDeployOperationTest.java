@@ -35,19 +35,19 @@ public class ShardDeployOperationTest extends AbstractNodeOperationMockTest {
 
     @Test
     public void testDeploy() throws Exception {
-        ShardDeployOperation operation = new ShardDeployOperation();
+        ShardDeployOperation operation = new ShardDeployOperation(false);
         operation.addShard("shard1", new URI("shardPath1"));
         operation.addShard("shard2", new URI("shardPath2"));
 
         Path shardFolder = Paths.get("shardFolder");
         Map<String, String> shardMD = new HashMap<>();
-        Mockito.when(shardManager.installShard((String) Matchers.notNull(), (URI) Matchers.notNull())).thenReturn(shardFolder);
+        Mockito.when(shardManager.installShard((String) Matchers.notNull(), (URI) Matchers.notNull(), Matchers.anyBoolean())).thenReturn(shardFolder);
         Mockito.when(contentServer.getShardMetaData((String) Matchers.notNull())).thenReturn(shardMD);
 
         DeployResult result = operation.execute(context);
         InOrder inOrder = inOrder(protocol, shardManager, contentServer);
         for (String shard : operation.getShardNames()) {
-            inOrder.verify(shardManager).installShard(shard, operation.getShardUri(shard));
+            inOrder.verify(shardManager).installShard(shard, operation.getShardUri(shard), false);
             inOrder.verify(contentServer).addShard(shard, shardFolder);
             inOrder.verify(protocol).publishShard(node, shard);
         }
@@ -61,13 +61,13 @@ public class ShardDeployOperationTest extends AbstractNodeOperationMockTest {
 
     @Test
     public void testDeployWithOneFailingShard() throws Exception {
-        ShardDeployOperation operation = new ShardDeployOperation();
+        ShardDeployOperation operation = new ShardDeployOperation(false);
         operation.addShard("shard1", new URI("shardPath1"));
         operation.addShard("shard2", new URI("shardPath2"));
 
         Path shardFolder = Paths.get("shardFolder");
         Map<String, String> shardMD = new HashMap<>();
-        Mockito.when(shardManager.installShard((String) Matchers.notNull(), (URI) Matchers.notNull())).thenReturn(shardFolder);
+        Mockito.when(shardManager.installShard((String) Matchers.notNull(), (URI) Matchers.notNull(), Matchers.anyBoolean())).thenReturn(shardFolder);
         Mockito.when(contentServer.getShardMetaData((String) Matchers.notNull())).thenReturn(shardMD);
 
         String failingShard = operation.getShardNames().iterator().next();
@@ -76,7 +76,7 @@ public class ShardDeployOperationTest extends AbstractNodeOperationMockTest {
         DeployResult result = operation.execute(context);
         InOrder inOrder = inOrder(protocol, shardManager, contentServer);
         for (String shard : operation.getShardNames()) {
-            inOrder.verify(shardManager).installShard(shard, operation.getShardUri(shard));
+            inOrder.verify(shardManager).installShard(shard, operation.getShardUri(shard), false);
             inOrder.verify(contentServer).addShard(shard, shardFolder);
             if (!shard.equals(failingShard)) {
                 inOrder.verify(protocol).publishShard(node, shard);

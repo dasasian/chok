@@ -15,27 +15,40 @@
  */
 package com.dasasian.chok.node;
 
-import com.dasasian.chok.util.*;
+import com.dasasian.chok.util.ChokException;
+import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.FileUtil;
+import com.dasasian.chok.util.ThrottledFileSystem;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Map;
 
 public class ShardManager {
 
     protected final static Logger LOG = LoggerFactory.getLogger(ShardManager.class);
 
+    public static final char LAST_MODIFIED_SHARD_NAME_SEPARATOR = '@';
+    public static final String TEMP_SHARD_EXTENSION = "_tmp";
+
     private final Path shardsFolder;
     private final ChokFileSystem.Factory chokFileSystemFactory;
     private final ThrottleSemaphore throttleSemaphore;
+
+    private final Map<String, URI> autoReloadShards = Maps.newHashMap();
 
     public ShardManager(Path shardsFolder, ChokFileSystem.Factory chokFileSystemFactory, ThrottleSemaphore throttleSemaphore) {
         this.shardsFolder = shardsFolder;
@@ -50,10 +63,13 @@ public class ShardManager {
         }
     }
 
-    public Path installShard(String shardName, URI shardUri) throws Exception {
-        Path localShardFolder = getShardFolder(shardName);
+    public Path installShard(String shardName, URI shardUri, boolean autoReload) throws Exception {
+        Path localShardFolder = getShardFolder(shardName, getLastModified(shardUri));
         try {
             installShard(shardName, shardUri, localShardFolder);
+            if (autoReload) {
+                installReloadCheck(shardName, shardUri);
+            }
             return localShardFolder;
         } catch (Exception e) {
             // cleanup
@@ -62,29 +78,48 @@ public class ShardManager {
         }
     }
 
-    public void uninstallShard(String shardName) {
-        Path localShardFolder = getShardFolder(shardName);
+    public long getLastModified(URI shardUri) throws IOException {
+        ChokFileSystem chokFileSystem = chokFileSystemFactory.create(shardUri);
+        return chokFileSystem.lastModified(shardUri);
+    }
+
+    public void removeLocalShardFolder(Path localShardFolder) {
         FileUtil.deleteFolder(localShardFolder.toFile());
     }
 
-    public List<String> getInstalledShards() {
-        ImmutableList.Builder<String> builder = ImmutableList.builder();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(shardsFolder, FileUtil.VISIBLE_PATHS_FILTER)) {
-            for (Path entry: stream) {
-                builder.add(entry.getFileName().toString());
+    public void uninstallShard(String shardName) {
+        for (Path localShardFolder : getLocalShardFolders(shardName)) {
+            synchronized (shardName.intern()) {
+                FileUtil.deleteFolder(localShardFolder.toFile());
             }
-        } catch (IOException e) {
-            LOG.error("Error while getting installed shards", e);
         }
-        return builder.build();
+    }
+
+    public Iterable<Path> getLocalShardFolders(@Nullable String shardName) {
+        final DirectoryStream.Filter<Path> pathsFilter = entry -> {
+            if (FileUtil.VISIBLE_PATHS_FILTER.accept(entry)) {
+                if (shardName != null) {
+                    return entry.getFileName().toString().equals(shardName) ||
+                            entry.getFileName().toString().startsWith(shardName + LAST_MODIFIED_SHARD_NAME_SEPARATOR);
+                }
+                return true;
+            }
+            return false;
+        };
+        try {
+            return Files.newDirectoryStream(shardsFolder, pathsFilter);
+        } catch (IOException e) {
+            LOG.error("Error while getting local shards", e);
+        }
+        return ImmutableList.of();
     }
 
     public Path getShardsFolder() {
         return shardsFolder;
     }
 
-    public Path getShardFolder(String shardName) {
-        return shardsFolder.resolve(shardName);
+    public Path getShardFolder(String shardName, long lastModified) {
+        return getShardsFolder().resolve(shardName + LAST_MODIFIED_SHARD_NAME_SEPARATOR + lastModified);
     }
 
     /*
@@ -100,34 +135,36 @@ public class ShardManager {
         int maxTries = 5;
         for (int i = 0; i < maxTries; i++) {
             try {
-                ChokFileSystem fileSystem = chokFileSystemFactory.create(shardUri);
+                synchronized (shardName.intern()) {
+                    ChokFileSystem fileSystem = chokFileSystemFactory.create(shardUri);
 
-                if (throttleSemaphore != null) {
-                    fileSystem = new ThrottledFileSystem(fileSystem, throttleSemaphore);
-                }
-
-                boolean isZip = fileSystem.isFile(shardUri) && shardUri.getPath().endsWith(".zip");
-
-                Path shardTmpFolder = Paths.get(localShardFolder.toString() + "_tmp");
-                try {
-                    FileUtil.deleteFolder(localShardFolder.toFile());
-                    FileUtil.deleteFolder(shardTmpFolder.toFile());
-
-                    if (isZip) {
-                        FileUtil.unzip(shardUri, shardTmpFolder, fileSystem, "true".equalsIgnoreCase(System.getProperty("chok.spool.zip.shards", "false")));
-                    } else {
-                        fileSystem.copyToLocalFile(shardUri, shardTmpFolder);
+                    if (throttleSemaphore != null) {
+                        fileSystem = new ThrottledFileSystem(fileSystem, throttleSemaphore);
                     }
-                    Files.move(shardTmpFolder, localShardFolder);
-                } finally {
-                    // Ensure that the tmp folder is deleted on an error
-                    FileUtil.deleteFolder(shardTmpFolder.toFile());
+
+                    boolean isZip = fileSystem.isFile(shardUri) && shardUri.getPath().endsWith(".zip");
+
+                    Path shardTmpFolder = Paths.get(localShardFolder.toString() + TEMP_SHARD_EXTENSION);
+                    try {
+                        FileUtil.deleteFolder(localShardFolder.toFile());
+                        FileUtil.deleteFolder(shardTmpFolder.toFile());
+
+                        if (isZip) {
+                            FileUtil.unzip(shardUri, shardTmpFolder, fileSystem, "true".equalsIgnoreCase(System.getProperty("chok.spool.zip.shards", "false")));
+                        } else {
+                            fileSystem.copyToLocalFile(shardUri, shardTmpFolder);
+                        }
+                        Files.move(shardTmpFolder, localShardFolder);
+                    } finally {
+                        // Ensure that the tmp folder is deleted on an error
+                        FileUtil.deleteFolder(shardTmpFolder.toFile());
+                    }
+                    // Looks like we were successful.
+                    if (i > 0) {
+                        LOG.error("Loaded shard:" + shardUri);
+                    }
+                    return;
                 }
-                // Looks like we were successful.
-                if (i > 0) {
-                    LOG.error("Loaded shard:" + shardUri);
-                }
-                return;
             } catch (final Exception e) {
                 LOG.error(String.format("Error loading shard: %s (try %d of %d)", shardUri, i, maxTries), e);
                 if (i >= maxTries - 1) {
@@ -137,4 +174,82 @@ public class ShardManager {
         }
     }
 
+    public Map<String, URI> getLocalShards() {
+        Map<String, Path> localShards = Maps.newHashMap();
+        for (Path localShardFolder : getLocalShardFolders(null)) {
+            String shardName = getShardName(localShardFolder);
+            long currentLastModified = (localShards.containsKey(shardName)) ? getLastModified(localShards.get(shardName)) : 0;
+            long lastModified = getLastModified(localShardFolder);
+            if (lastModified > currentLastModified) {
+                localShards.put(shardName, localShardFolder);
+            }
+        }
+        return Maps.transformValues(localShards, Path::toUri);
+    }
+
+    private long getLastModified(Path localShardFolder) {
+        String folderName = localShardFolder.getFileName().toString();
+        return getLastModified(folderName);
+    }
+
+    protected long getLastModified(String folderName) {
+        final int startIndex = folderName.indexOf(LAST_MODIFIED_SHARD_NAME_SEPARATOR);
+        if (startIndex > 0) {
+            try {
+                return Long.parseLong(folderName.substring(startIndex+1));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(folderName + " is not a valid local shard folder name");
+            }
+        }
+        return 0L;
+    }
+
+    private String getShardName(Path localShardFolder) {
+        String folderName = localShardFolder.getFileName().toString();
+        final int endIndex = folderName.indexOf(LAST_MODIFIED_SHARD_NAME_SEPARATOR);
+        if (endIndex > 0) {
+            return folderName.substring(0, endIndex);
+        }
+        return folderName;
+    }
+
+    public long getLocalShardLastModified(String shardName) {
+        Path localShardFolder = Iterables.getOnlyElement(getLocalShardFolders(shardName));
+        return getLastModified(localShardFolder.getFileName().toString());
+    }
+
+    private void installReloadCheck(final String shardName, final URI shardUri) {
+        autoReloadShards.put(shardName, shardUri);
+    }
+
+    public Map<String, URI> getReloadShards(NodeContext context) {
+        if(!autoReloadShards.isEmpty()) {
+            Predicate<Map.Entry<String, URI>> reloadPredicate = shardNameUriEntry -> {
+                final String shardName = shardNameUriEntry.getKey();
+                final URI shardUri = shardNameUriEntry.getValue();
+                try {
+                    final long lastModified = context.getShardManager().getLastModified(shardUri);
+                    final long localLastModified = context.getShardManager().getLocalShardLastModified(shardName);
+                    return lastModified > localLastModified;
+                } catch (IOException e) {
+                    LOG.warn("Unable to get last modified from " + shardUri);
+                }
+                return false;
+            };
+            return Maps.filterEntries(autoReloadShards, reloadPredicate);
+        }
+        return ImmutableMap.of();
+    }
+
+    public void cleanup() {
+        final DirectoryStream.Filter<Path> pathsFilter = entry -> FileUtil.VISIBLE_PATHS_FILTER.accept(entry) &&
+                entry.getFileName().toString().endsWith(TEMP_SHARD_EXTENSION);
+        try {
+            for(Path path : Files.newDirectoryStream(shardsFolder, pathsFilter)) {
+                FileUtil.deleteFolder(path.toFile());
+            }
+        } catch (IOException e) {
+            LOG.error("Error while cleaning up", e);
+        }
+    }
 }

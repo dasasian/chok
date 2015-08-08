@@ -77,6 +77,18 @@ public interface IContentServer extends VersionedProtocol {
     void addShard(String shardName, Path shardDir) throws Exception;
 
     /**
+     * Replace the shard (directory of data) when computing results. The shard is
+     * a directory, ready to be used.
+     *
+     * @param shardName The name of the shard. Will be used in removeShard(). May also be
+     *                  used in requests.
+     * @param shardDir  The directory where the shard data is.
+     * @return the replaced shardDir
+     * @throws Exception when an error occurs
+     */
+    Path replaceShard(String shardName, Path shardDir) throws Exception;
+
+    /**
      * Stop including the shard (directory of data). After this call returns, the
      * server should use the directory, or even assume that it exists.
      *

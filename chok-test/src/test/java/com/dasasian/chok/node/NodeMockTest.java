@@ -106,7 +106,7 @@ public class NodeMockTest extends AbstractTest {
     }
 
     @Test
-    public void testRedployInstalledShards() throws Exception {
+    public void testRedeployInstalledShards() throws Exception {
         NodeOperation nodeOperation = Mockito.mock(NodeOperation.class);
         Mockito.when(queue.peek()).thenReturn(nodeOperation).thenAnswer(new SleepingAnswer());
 
@@ -117,7 +117,7 @@ public class NodeMockTest extends AbstractTest {
         File shardFile = testIndex.getShardFiles().get(0);
 
         String shardName = shardFile.getName();
-        node.getContext().getShardManager().installShard(shardName, shardFile.toURI());
+        node.getContext().getShardManager().installShard(shardName, shardFile.toURI(), false);
 
         // restart, node should be added
         node.shutdown();

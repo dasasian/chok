@@ -62,8 +62,8 @@ public class MapFileClientTest extends AbstractTest {
     @Before
     public void setUp() throws Exception {
         IDeployClient deployClient = new DeployClient(miniCluster.getProtocol());
-        deployClient.addIndex(INDEX1, MapFileTestResources.MAP_FILE_A.toURI(), 1).joinDeployment();
-        deployClient.addIndex(INDEX2, MapFileTestResources.MAP_FILE_B.toURI(), 1).joinDeployment();
+        deployClient.addIndex(INDEX1, MapFileTestResources.MAP_FILE_A.toURI(), 1, false).joinDeployment();
+        deployClient.addIndex(INDEX2, MapFileTestResources.MAP_FILE_B.toURI(), 1, false).joinDeployment();
         client = new MapFileClient(miniCluster.getZkConfiguration());
     }
 

@@ -33,9 +33,9 @@ public class DeployClient implements IDeployClient {
     }
 
     @Override
-    public IIndexDeployFuture addIndex(String indexName, URI indexUri, int replicationLevel) {
+    public IIndexDeployFuture addIndex(String indexName, URI indexUri, int replicationLevel, boolean autoReload) {
         validateIndexData(indexName, replicationLevel);
-        protocol.addMasterOperation(new IndexDeployOperation(indexName, indexUri, replicationLevel));
+        protocol.addMasterOperation(new IndexDeployOperation(indexName, indexUri, replicationLevel, autoReload));
         return new IndexDeployFuture(protocol, indexName);
     }
 

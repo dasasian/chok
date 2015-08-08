@@ -59,7 +59,7 @@ public class LuceneLoadTest extends AbstractZkTest {
 
     private static void deployIndex(InteractionProtocol protocol, String indexName, URI indexUri) throws InterruptedException {
         DeployClient deployClient1 = new DeployClient(protocol);
-        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, indexUri, 1);
+        IIndexDeployFuture deployment = deployClient1.addIndex(indexName, indexUri, 1, false);
         LOG.info("Joining deployment on " + deployment.getClass().getName());
         deployment.joinDeployment();
     }

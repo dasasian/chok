@@ -92,7 +92,7 @@ public class MasterIntegrationTest extends AbstractTest {
         String indexName = indexFile.getName();
 
         IDeployClient deployClient = new DeployClient(protocol);
-        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexFile.toURI(), 1);
+        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexFile.toURI(), 1, false);
         deployFuture.joinDeployment();
         TestUtil.waitUntilIndexDeployed(protocol, indexName);
         Assert.assertEquals(1, protocol.getIndices().size());

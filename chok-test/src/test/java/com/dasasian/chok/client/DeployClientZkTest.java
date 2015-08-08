@@ -31,12 +31,12 @@ public class DeployClientZkTest extends AbstractZkTest {
     @Test
     public void testAddIndex() throws Exception {
         DeployClient deployClient = new DeployClient(protocol);
-        deployClient.addIndex(testIndex.getIndexName(), testIndex.getIndexUri(), 1);
+        deployClient.addIndex(testIndex.getIndexName(), testIndex.getIndexUri(), 1, false);
     }
 
     @Test
     public void testIndexAccess() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 1);
+        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 1, false);
         IDeployClient deployClient = new DeployClient(protocol);
 
         assertFalse(deployClient.existsIndex(indexMD.getName()));
@@ -51,7 +51,7 @@ public class DeployClientZkTest extends AbstractZkTest {
 
     @Test
     public void testIndexRemove() throws Exception {
-        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 1);
+        IndexMetaData indexMD = new IndexMetaData("index1", new URI("indexPath"), 1, false);
         IDeployClient deployClient = new DeployClient(protocol);
 
         try {

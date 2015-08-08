@@ -52,7 +52,7 @@ public class DeployUndeploySearchInLoop {
             try {
                 String indexName = "index" + runThroughs;
                 LOG.info("deploying index '" + indexName + "'");
-                deployClient.addIndex(indexName, new URI("/Users/jz/Documents/workspace/ms/katta/src/test/testIndexA"), 1).joinDeployment();
+                deployClient.addIndex(indexName, new URI("/Users/jz/Documents/workspace/ms/katta/src/test/testIndexA"), 1, false).joinDeployment();
             } catch (Exception e) {
                 logException("deploy", e);
             }

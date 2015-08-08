@@ -22,7 +22,7 @@ import java.util.List;
 
 public interface IDeployClient {
 
-    IIndexDeployFuture addIndex(final String name, final URI uri, final int replicationLevel);
+    IIndexDeployFuture addIndex(final String name, final URI uri, final int replicationLevel, boolean autoReload);
 
     void removeIndex(final String name);
 

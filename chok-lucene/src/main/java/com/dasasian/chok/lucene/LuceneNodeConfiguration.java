@@ -31,7 +31,7 @@ public class LuceneNodeConfiguration extends NodeConfiguration {
     private final int filterCacheMaxSize;
 
     public LuceneNodeConfiguration(NodeConfiguration nodeConfiguration, Class<? extends ISearcherFactory> searcherFactorClass, float timeoutPercentage, int threadPoolCoreSize, int threadPoolMaxSize, boolean filterCacheEnabled, int filterCacheMaxSize) {
-        super(nodeConfiguration.getStartPort(), nodeConfiguration.getShardFolder(), nodeConfiguration.getShardDeployThrottle(), nodeConfiguration.getMonitorClass(), nodeConfiguration.getRpcHandlerCount());
+        super(nodeConfiguration.getStartPort(), nodeConfiguration.getShardFolder(), nodeConfiguration.getShardDeployThrottle(), nodeConfiguration.getMonitorClass(), nodeConfiguration.getRpcHandlerCount(), nodeConfiguration.getReloadCheckInterval());
         this.searcherFactorClass = searcherFactorClass;
         this.timeoutPercentage = timeoutPercentage;
         this.threadPoolCoreSize = threadPoolCoreSize;

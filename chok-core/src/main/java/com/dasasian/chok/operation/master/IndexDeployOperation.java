@@ -42,7 +42,11 @@ public class IndexDeployOperation extends AbstractIndexOperation {
     protected final IndexMetaData indexMetaData;
 
     public IndexDeployOperation(String indexName, URI indexUri, int replicationLevel) {
-        indexMetaData = new IndexMetaData(indexName, indexUri, replicationLevel);
+        this(indexName, indexUri, replicationLevel, false);
+    }
+
+    public IndexDeployOperation(String indexName, URI indexUri, int replicationLevel, boolean autoReload) {
+        indexMetaData = new IndexMetaData(indexName, indexUri, replicationLevel, autoReload);
         this.indexName = indexName;
         this.indexUri = indexUri;
     }
