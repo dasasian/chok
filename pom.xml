@@ -31,7 +31,7 @@
 
     <groupId>com.dasasian.chok</groupId>
     <artifactId>chok</artifactId>
-    <version>1.4</version>
+    <version>1.5-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <licenses>
@@ -74,7 +74,7 @@
         <connection>scm:git:git@github.com:dasasian/chok.git</connection>
         <url>https://github.com/dasasian/chok</url>
         <developerConnection>scm:git:git@github.com:dasasian/chok.git</developerConnection>
-        <tag>chok-1.4</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
