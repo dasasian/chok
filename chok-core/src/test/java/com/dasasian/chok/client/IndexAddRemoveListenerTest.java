@@ -19,9 +19,6 @@ import com.dasasian.chok.protocol.IAddRemoveListener;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
-import com.dasasian.chok.testutil.AbstractTest;
-import com.dasasian.chok.testutil.server.simpletest.ISimpleTestServer;
-import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
 import org.I0Itec.zkclient.IZkDataListener;
 import org.junit.Test;
@@ -30,46 +27,53 @@ import org.mockito.Mockito;
 
 import java.net.URI;
 
-public class ClientTest extends AbstractTest {
+/**
+ * Tests for IndexAddRemoveListener
+ *
+ * Created by damith.chandrasekara on 8/27/15.
+ */
+public class IndexAddRemoveListenerTest {
 
     @Test
     public void testAddRemoveIndexForSearching() throws Exception {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
-        Client client = new Client(ISimpleTestServer.class, new DefaultNodeSelectionPolicy(), protocol, new ClientConfiguration());
+        INodeProxyManager proxyManager = Mockito.mock(INodeProxyManager.class);
+        IndexAddRemoveListener indexAddRemoveListener = new IndexAddRemoveListener(new DefaultNodeSelectionPolicy(), protocol, proxyManager);
         final URI uri = new URI("path");
         IndexMetaData indexMD = new IndexMetaData("index1", uri, 1, false);
         indexMD.getShards().add(new Shard("shard1", uri));
         indexMD.getShards().add(new Shard("shard2", uri));
-        client.addIndexForSearching(indexMD);
-        Mockito.verify(protocol, Mockito.times(2)).registerChildListener(Matchers.eq(client), Matchers.eq(PathDef.SHARD_TO_NODES), Matchers.anyString(), Matchers.any(IAddRemoveListener.class));
+        indexAddRemoveListener.addIndexForSearching(indexMD);
+        Mockito.verify(protocol, Mockito.times(2)).registerChildListener(Matchers.eq(indexAddRemoveListener), Matchers.eq(PathDef.SHARD_TO_NODES), Matchers.anyString(), Matchers.any(IAddRemoveListener.class));
 
-        client.removeIndex(indexMD.getName());
-        Mockito.verify(protocol, Mockito.times(2)).unregisterChildListener(Matchers.eq(client), Matchers.eq(PathDef.SHARD_TO_NODES), Matchers.anyString());
+        indexAddRemoveListener.removeIndex(indexMD.getName());
+        Mockito.verify(protocol, Mockito.times(2)).unregisterChildListener(Matchers.eq(indexAddRemoveListener), Matchers.eq(PathDef.SHARD_TO_NODES), Matchers.anyString());
     }
 
     @Test
     public void testAddRemoveIndexForWatching() throws Exception {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
-        Client client = new Client(ISimpleTestServer.class, new DefaultNodeSelectionPolicy(), protocol, new ClientConfiguration());
+        INodeProxyManager proxyManager = Mockito.mock(INodeProxyManager.class);
+        IndexAddRemoveListener indexAddRemoveListener = new IndexAddRemoveListener(new DefaultNodeSelectionPolicy(), protocol, proxyManager);
         final URI uri = new URI("path");
         IndexMetaData indexMD = new IndexMetaData("index1", uri, 1, false);
         indexMD.getShards().add(new Shard("shard1", uri));
         indexMD.getShards().add(new Shard("shard2", uri));
-        client.addIndexForWatching(indexMD.getName());
-        Mockito.verify(protocol, Mockito.times(1)).registerDataListener(Matchers.eq(client), Matchers.eq(PathDef.INDICES_METADATA), Matchers.anyString(), Matchers.any(IZkDataListener.class));
+        indexAddRemoveListener.addIndexForWatching(indexMD.getName());
+        Mockito.verify(protocol, Mockito.times(1)).registerDataListener(Matchers.eq(indexAddRemoveListener), Matchers.eq(PathDef.INDICES_METADATA), Matchers.anyString(), Matchers.any(IZkDataListener.class));
 
-        client.removeIndex(indexMD.getName());
-        Mockito.verify(protocol, Mockito.times(1)).unregisterDataChanges(Matchers.eq(client), Matchers.eq(PathDef.INDICES_METADATA), Matchers.anyString());
+        indexAddRemoveListener.removeIndex(indexMD.getName());
+        Mockito.verify(protocol, Mockito.times(1)).unregisterDataChanges(Matchers.eq(indexAddRemoveListener), Matchers.eq(PathDef.INDICES_METADATA), Matchers.anyString());
     }
 
     @Test
     public void testClose() throws Exception {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
-        Client client = new Client(ISimpleTestServer.class, new DefaultNodeSelectionPolicy(), protocol, new ClientConfiguration());
-        client.close();
+        INodeProxyManager proxyManager = Mockito.mock(INodeProxyManager.class);
+        IndexAddRemoveListener indexAddRemoveListener = new IndexAddRemoveListener(new DefaultNodeSelectionPolicy(), protocol, proxyManager);
 
-        Mockito.verify(protocol).unregisterComponent(client);
-        Mockito.verify(protocol).disconnect();
+        indexAddRemoveListener.close();
+        Mockito.verify(protocol).unregisterComponent(indexAddRemoveListener);
     }
 
 }

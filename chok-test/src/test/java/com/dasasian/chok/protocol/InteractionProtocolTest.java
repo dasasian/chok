@@ -31,6 +31,7 @@ import com.dasasian.chok.testutil.ZkTestSystem;
 import com.dasasian.chok.testutil.mockito.WaitingAnswer;
 import com.dasasian.chok.util.ZkChokUtil;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.I0Itec.zkclient.Gateway;
 import org.I0Itec.zkclient.IZkDataListener;
 import org.I0Itec.zkclient.ZkClient;
@@ -50,6 +51,8 @@ import java.net.URI;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 public class InteractionProtocolTest extends AbstractTest {
@@ -328,9 +331,9 @@ public class InteractionProtocolTest extends AbstractTest {
         // remove one shard completely
         protocol.unpublishShard(node1, "shard2");
 
-        Map<String, List<String>> shard2NodesMap = protocol.getShard2NodesMap(Collections.singletonList("shard1"));
-        assertEquals(1, shard2NodesMap.size());
-        assertEquals(1, shard2NodesMap.get("shard1").size());
+        ImmutableSetMultimap<String, String> shard2NodesMap = protocol.getShard2NodesMap(Collections.singletonList("shard1"));
+        assertThat(shard2NodesMap.keySet().size(), is(equalTo(1)));
+        assertThat(shard2NodesMap.get("shard1").size(), is(equalTo(1)));
     }
 
     @Test(timeout = 7000)

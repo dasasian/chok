@@ -13,16 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dasasian.chok.testutil.server.simpletest;
+package com.dasasian.chok.client;
 
-import com.dasasian.chok.util.ChokException;
-
-import java.util.List;
+import com.dasasian.chok.protocol.InteractionProtocol;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
+ * Tests for Client
+ * Created by damith.chandrasekara on 8/27/15.
  */
-public interface ISimpleTestClient extends AutoCloseable {
+public class ClientTest {
+    @Test
+    public void testClose() throws Exception {
+        InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
+        INodeProxyManager proxyManager = Mockito.mock(INodeProxyManager.class);
+        Client client = new Client(new DefaultNodeSelectionPolicy(), protocol, proxyManager, 3);
 
-    String[] testRequest(String query) throws ChokException;
+        client.close();
+        Mockito.verify(protocol).disconnect();
+    }
 
 }

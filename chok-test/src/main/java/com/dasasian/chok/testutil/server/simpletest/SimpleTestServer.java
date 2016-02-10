@@ -27,9 +27,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The back end server which searches a set of Lucene indices. Each shard is a
@@ -154,7 +153,9 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
     }
 
     @Override
-    public String testRequest(String query, String[] shardNames) throws IOException {
-        return query;
+    public String[] testRequest(String query, String[] shardNames) throws IOException {
+        return Arrays.stream(shardNames)
+                .map(shardName -> shardName.substring(shardName.indexOf("#") + 1))
+                .map(shardPath -> shardPath + ":" + query).toArray(String[]::new);
     }
 }

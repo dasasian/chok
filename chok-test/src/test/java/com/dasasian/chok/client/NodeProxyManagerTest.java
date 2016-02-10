@@ -18,9 +18,12 @@ package com.dasasian.chok.client;
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.server.simpletest.ISimpleTestServer;
+import com.dasasian.chok.util.TestLoggerWatcher;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ipc.RPC;
 import org.fest.assertions.Assertions;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -30,12 +33,18 @@ import java.net.ConnectException;
 
 public class NodeProxyManagerTest extends AbstractTest {
 
-    private INodeSelectionPolicy _nodeSelectionPolicy = Mockito.mock(INodeSelectionPolicy.class);
-    private NodeProxyManager _proxyManager = new NodeProxyManager(ISimpleTestServer.class, new Configuration(), _nodeSelectionPolicy);
+    @Rule
+    public TestLoggerWatcher nodeProxyManagerLoggingWatcher = TestLoggerWatcher.logErrors(NodeProxyManager.class);
+
+    @Rule
+    public TestLoggerWatcher rpcLoggingWatcher = TestLoggerWatcher.logOff(RPC.class);
+
+    private INodeSelectionPolicy nodeSelectionPolicy = Mockito.mock(INodeSelectionPolicy.class);
+    private NodeProxyManager nodeProxyManager = new NodeProxyManager(ISimpleTestServer.class, new Configuration(), nodeSelectionPolicy);
 
     @Test
     public void testProxyFailure() throws Exception {
-        NodeProxyManager proxyManagerSpy = Mockito.spy(_proxyManager);
+        NodeProxyManager proxyManagerSpy = Mockito.spy(nodeProxyManager);
         IContentServer contentServer = Mockito.mock(IContentServer.class);
         Mockito.doReturn(contentServer).when(proxyManagerSpy).createNodeProxy(Matchers.anyString());
 
@@ -45,13 +54,13 @@ public class NodeProxyManagerTest extends AbstractTest {
 
         // node1 failure
         reportNodeFailure(proxyManagerSpy, "node1");
-        Mockito.verifyNoMoreInteractions(_nodeSelectionPolicy);
+        Mockito.verifyNoMoreInteractions(nodeSelectionPolicy);
         Assertions.assertThat(proxyManagerSpy.getProxy("node1", false)).isNotNull();
         Assertions.assertThat(proxyManagerSpy.getProxy("node2", false)).isNotNull();
 
         // node2 failure
         reportNodeFailure(proxyManagerSpy, "node2");
-        Mockito.verifyNoMoreInteractions(_nodeSelectionPolicy);
+        Mockito.verifyNoMoreInteractions(nodeSelectionPolicy);
         Assertions.assertThat(proxyManagerSpy.getProxy("node1", false)).isNotNull();
         Assertions.assertThat(proxyManagerSpy.getProxy("node2", false)).isNotNull();
 
@@ -60,21 +69,21 @@ public class NodeProxyManagerTest extends AbstractTest {
 
         // node1 failure
         reportNodeFailure(proxyManagerSpy, "node1");
-        Mockito.verifyNoMoreInteractions(_nodeSelectionPolicy);
+        Mockito.verifyNoMoreInteractions(nodeSelectionPolicy);
         Assertions.assertThat(proxyManagerSpy.getProxy("node1", false)).isNotNull();
         Assertions.assertThat(proxyManagerSpy.getProxy("node2", false)).isNotNull();
 
         // node2 failure
         reportNodeFailure(proxyManagerSpy, "node2");
-        Mockito.verify(_nodeSelectionPolicy).removeNode("node2");
-        Mockito.verifyNoMoreInteractions(_nodeSelectionPolicy);
+        Mockito.verify(nodeSelectionPolicy).removeNode("node2");
+        Mockito.verifyNoMoreInteractions(nodeSelectionPolicy);
         Assertions.assertThat(proxyManagerSpy.getProxy("node1", false)).isNotNull();
         Assertions.assertThat(proxyManagerSpy.getProxy("node2", false)).isNull();
     }
 
     @Test
     public void testProxyFailure_ConnectionFailure() throws Exception {
-        NodeProxyManager proxyManagerSpy = Mockito.spy(_proxyManager);
+        NodeProxyManager proxyManagerSpy = Mockito.spy(nodeProxyManager);
         IContentServer contentServer = Mockito.mock(IContentServer.class);
         Mockito.doReturn(contentServer).when(proxyManagerSpy).createNodeProxy(Matchers.anyString());
 
@@ -84,8 +93,8 @@ public class NodeProxyManagerTest extends AbstractTest {
 
         // node1 connect failure
         reportNodeFailure(proxyManagerSpy, "node1", new InvocationTargetException(new ConnectException()));
-        Mockito.verify(_nodeSelectionPolicy).removeNode("node1");
-        Mockito.verifyNoMoreInteractions(_nodeSelectionPolicy);
+        Mockito.verify(nodeSelectionPolicy).removeNode("node1");
+        Mockito.verifyNoMoreInteractions(nodeSelectionPolicy);
         Assertions.assertThat(proxyManagerSpy.getProxy("node1", false)).isNull();
         Assertions.assertThat(proxyManagerSpy.getProxy("node2", false)).isNotNull();
     }

@@ -18,6 +18,7 @@ package com.dasasian.chok.integration.server.sleep;
 import com.dasasian.chok.client.Client;
 import com.dasasian.chok.client.DeployClient;
 import com.dasasian.chok.client.IDeployClient;
+import com.dasasian.chok.client.IndexAddRemoveListener;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.AbstractTest;
@@ -26,10 +27,7 @@ import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.sleep.SleepClient;
 import com.dasasian.chok.testutil.server.sleep.SleepServer;
-import com.dasasian.chok.util.ChokException;
-import com.dasasian.chok.util.ChokFileSystem;
-import com.dasasian.chok.util.ClassUtil;
-import com.dasasian.chok.util.UtilModule;
+import com.dasasian.chok.util.*;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -64,6 +62,10 @@ public class SleepClientTest extends AbstractTest {
     private static final String[] INDEXES_ARRAY = new String[]{INDEX_NAME};
 
     protected Injector injector = Guice.createInjector(new UtilModule());
+
+    @Rule
+    public TestLoggerWatcher testNonExistantIndexLoggerWatcher = TestLoggerWatcher.logErrors(IndexAddRemoveListener.class, "testNonExistantIndex");
+
 
     @Rule
     public ChokMiniCluster miniCluster = new ChokMiniCluster(SleepServer.class, 1, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
@@ -109,11 +111,11 @@ public class SleepClientTest extends AbstractTest {
         long start = System.currentTimeMillis();
         client.sleepIndices(0, INDEXES_ARRAY);
         long d1 = System.currentTimeMillis() - start;
-        System.out.println("time 1 = " + d1);
+//        System.out.println("time 1 = " + d1);
         start = System.currentTimeMillis();
         client.sleepIndices(1000, INDEXES_ARRAY);
         long d2 = System.currentTimeMillis() - start;
-        System.out.println("time 2 = " + d2);
+//        System.out.println("time 2 = " + d2);
         assertTrue(d2 - d1 > 200);
     }
 
@@ -122,7 +124,7 @@ public class SleepClientTest extends AbstractTest {
         Random rand = new Random("sleepy".hashCode());
         List<Thread> threads = Lists.newArrayList();
         final List<Exception> exceptions = Lists.newArrayList();
-        long startTime = System.currentTimeMillis();
+//        long startTime = System.currentTimeMillis();
         for (int i = 0; i < 10; i++) {
             final Random rand2 = new Random(rand.nextInt());
             Thread t = new Thread(() -> {
@@ -143,7 +145,7 @@ public class SleepClientTest extends AbstractTest {
         for (Thread t : threads) {
             t.join();
         }
-        System.out.println("Took " + (System.currentTimeMillis() - startTime) + " msec.");
+//        System.out.println("Took " + (System.currentTimeMillis() - startTime) + " msec.");
         if (!exceptions.isEmpty()) {
             throw exceptions.get(0);
         }

@@ -23,7 +23,7 @@ import org.I0Itec.zkclient.IZkDataListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class IndexDeployFuture implements IIndexDeployFuture, IZkDataListener, ConnectedComponent {
+public class IndexDeployFuture implements IIndexDeployFuture, IZkDataListener, ConnectedComponent, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(IndexDeployFuture.class);
 
@@ -50,11 +50,15 @@ public class IndexDeployFuture implements IIndexDeployFuture, IZkDataListener, C
         } else if (indexMD.hasDeployError()) {
             return IndexState.ERROR;
         }
+        close();
+        return IndexState.DEPLOYED;
+    }
+
+    public void close() {
         if (registered) {
             registered = false;
             protocol.unregisterComponent(this);
         }
-        return IndexState.DEPLOYED;
     }
 
     private boolean isDeploymentRunning() {

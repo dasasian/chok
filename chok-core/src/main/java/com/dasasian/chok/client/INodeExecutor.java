@@ -15,8 +15,7 @@
  */
 package com.dasasian.chok.client;
 
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.ImmutableSetMultimap;
 
 /**
  * How a NodeInteraction resubmits jobs to the WorkQueue to retry failed nodes.
@@ -36,6 +35,6 @@ interface INodeExecutor {
      *                     uses this to decide whether or not to retry (M tries max).
      * @param maxTryCount  The maximum nuber of retries for a given interaction.
      */
-    void execute(String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount);
+    void execute(String node, ImmutableSetMultimap<String, String> nodeShardMap, int tryCount, int maxTryCount);
 
 }

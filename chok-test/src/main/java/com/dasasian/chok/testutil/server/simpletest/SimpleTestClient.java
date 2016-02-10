@@ -15,19 +15,21 @@
  */
 package com.dasasian.chok.testutil.server.simpletest;
 
-import com.dasasian.chok.client.Client;
-import com.dasasian.chok.client.ClientResult;
-import com.dasasian.chok.client.INodeSelectionPolicy;
+import com.dasasian.chok.client.*;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The front end for a test server that just sleeps for a while then returns
@@ -58,6 +60,7 @@ public class SimpleTestClient implements ISimpleTestClient {
     public SimpleTestClient(final ZkConfiguration config) {
         client = new Client(ISimpleTestServer.class, config);
     }
+
     public SimpleTestClient(final INodeSelectionPolicy policy, final ZkConfiguration config) {
         client = new Client(ISimpleTestServer.class, policy, config);
     }
@@ -67,17 +70,35 @@ public class SimpleTestClient implements ISimpleTestClient {
     }
 
     @Override
-    public String testRequest(final String query) throws ChokException {
+    public String[] testRequest(final String query) throws ChokException {
         return testRequest(query, null);
     }
 
-    public String testRequest(final String query, final String[] shards) throws ChokException {
+    public String[] testRequest(final String query, final String[] shards) throws ChokException {
         List<String> shardList = shards != null ? Arrays.asList(shards) : null;
-        ClientResult<String> results = client.broadcastToShards(3000, true, SLEEP_METHOD, SLEEP_METHOD_SHARD_ARG_IDX, shardList, query, null);
+        ClientResult<String[]> results = client.broadcastToShards(ResultCompletePolicy.awaitCompletion(3000), SLEEP_METHOD, SLEEP_METHOD_SHARD_ARG_IDX, shardList, query, null);
         if (results.isError()) {
             throw results.getChokException();
         }
-        return Iterables.getFirst(results.getResults(), null);
+        List<String> allResults = Lists.newArrayList();
+        results.getResults().stream().forEach(nodeResult -> Arrays.stream(nodeResult).forEach(allResults::add));
+        return allResults.toArray(new String[allResults.size()]);
+    }
+
+    public String testRequestFormattedResult(final String query, final String[] shards) throws ChokException {
+        return Arrays.asList(testRequest(query, shards)).stream()
+                .sorted().collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    public void testRequestReceiver(final String query, final String[] shards, final IResultReceiver resultReceiver) throws ChokException {
+        List<String> shardList = shards != null ? Arrays.asList(shards) : null;
+
+        ClientResult<List<String>> results = client.broadcastToShards(ResultCompletePolicy.awaitCompletion(3000), SLEEP_METHOD,
+                SLEEP_METHOD_SHARD_ARG_IDX, shardList, resultReceiver, query, null);
+
+        if (results.isError()) {
+            throw results.getChokException();
+        }
     }
 
     public Client getClient() {

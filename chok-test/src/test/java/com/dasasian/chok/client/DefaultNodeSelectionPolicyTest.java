@@ -16,8 +16,8 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.testutil.AbstractTest;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 
@@ -37,10 +37,10 @@ public class DefaultNodeSelectionPolicyTest extends AbstractTest {
         addNodes(policy, "shardB2", "node2");
 
         // now check results
-        Map<String, List<String>> nodeShardsMap = policy.createNode2ShardsMap(indexToShards.get("indexB"));
-        assertEquals(2, nodeShardsMap.size());
+        ImmutableSetMultimap<String, String> nodeShardsMap = policy.createNode2ShardsMap(indexToShards.get("indexB"));
+        assertEquals(2, nodeShardsMap.keySet().size());
 
-        assertEquals(2, extractFoundShards(nodeShardsMap).size());
+        assertEquals(2, nodeShardsMap.size());
         assertTrue(nodeShardsMap.get("node1").contains("shardB1"));
         assertTrue(nodeShardsMap.get("node2").contains("shardB2"));
     }
@@ -60,9 +60,9 @@ public class DefaultNodeSelectionPolicyTest extends AbstractTest {
         List<String> shards = new ArrayList<>();
         shards.addAll(indexToShards.get("indexA"));
         shards.addAll(indexToShards.get("indexB"));
-        Map<String, List<String>> nodeShardsMap = policy.createNode2ShardsMap(shards);
-        assertEquals(2, nodeShardsMap.size());
-        assertEquals(3, extractFoundShards(nodeShardsMap).size());
+        ImmutableSetMultimap<String, String> nodeShardsMap = policy.createNode2ShardsMap(shards);
+        assertEquals(2, nodeShardsMap.keySet().size());
+        assertEquals(3, nodeShardsMap.size());
     }
 
     @Test
@@ -74,10 +74,10 @@ public class DefaultNodeSelectionPolicyTest extends AbstractTest {
         addNodes(policy, "shardA", "node1", "node2");
         addNodes(policy, "shardB", "node1", "node2");
 
-        Map<String, List<String>> nodeShardsMap1 = policy.createNode2ShardsMap(indexToShards.get("indexA"));
-        Map<String, List<String>> nodeShardsMap2 = policy.createNode2ShardsMap(indexToShards.get("indexA"));
-        assertEquals(1, nodeShardsMap1.size());
-        assertEquals(1, nodeShardsMap2.size());
+        ImmutableSetMultimap<String, String> nodeShardsMap1 = policy.createNode2ShardsMap(indexToShards.get("indexA"));
+        ImmutableSetMultimap<String, String> nodeShardsMap2 = policy.createNode2ShardsMap(indexToShards.get("indexA"));
+        assertEquals(1, nodeShardsMap1.keySet().size());
+        assertEquals(1, nodeShardsMap2.keySet().size());
         assertFalse("nodes should differ", nodeShardsMap1.keySet().equals(nodeShardsMap2.keySet()));
     }
 
@@ -90,17 +90,13 @@ public class DefaultNodeSelectionPolicyTest extends AbstractTest {
         addNodes(policy, "shardA", "node1", "node2");
         addNodes(policy, "shardB", "node1", "node2");
 
-        Map<String, List<String>> nodeShardsMap = policy.createNode2ShardsMap(indexToShards.get("indexA"));
-        assertEquals(1, nodeShardsMap.size());
+        ImmutableSetMultimap<String, String> nodeShardsMap = policy.createNode2ShardsMap(indexToShards.get("indexA"));
+        assertEquals(1, nodeShardsMap.keySet().size());
 
-        List<String> shardList = nodeShardsMap.values().iterator().next();
+        ImmutableCollection<String> shardList = nodeShardsMap.values();
         assertEquals(2, shardList.size());
         assertTrue(shardList.contains("shardA"));
         assertTrue(shardList.contains("shardB"));
-    }
-
-    private Set<String> extractFoundShards(Map<String, List<String>> nodeShardsMap) {
-        return ImmutableSet.copyOf(Iterables.concat(nodeShardsMap.values()));
     }
 
     private void addNodes(INodeSelectionPolicy policy, String shardName, String... nodes) {
@@ -134,8 +130,8 @@ public class DefaultNodeSelectionPolicyTest extends AbstractTest {
         shards.addAll(indexToShards.get("indexA"));
         shards.addAll(indexToShards.get("indexB"));
         shards.addAll(indexToShards.get("indexC"));
-        Map<String, List<String>> nodeShardsMap = policy.createNode2ShardsMap(shards);
-        assertEquals(10, extractFoundShards(nodeShardsMap).size());
+        ImmutableSetMultimap<String, String> nodeShardsMap = policy.createNode2ShardsMap(shards);
+        assertEquals(10, nodeShardsMap.size());
     }
 
 }

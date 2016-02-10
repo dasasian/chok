@@ -34,8 +34,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -58,7 +56,7 @@ public class NodeIntegrationTest extends AbstractTest {
         assertEquals(1, protocol.getIndices().size());
 
         SimpleTestClient client = new SimpleTestClient(miniCluster.getZkConfiguration());
-        assertEquals("query", client.testRequest("query", null));
+        assertEquals("[shard0:query, shard1:query]", client.testRequestFormattedResult("query", null));
         client.close();
     }
 

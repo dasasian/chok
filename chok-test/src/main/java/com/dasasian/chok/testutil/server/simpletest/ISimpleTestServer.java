@@ -19,6 +19,7 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The public interface to the back end LuceneServer. These are all the
@@ -27,6 +28,6 @@ import java.io.IOException;
 @ProtocolInfo(protocolName = "ISimpleTestServer", protocolVersion = 0L)
 public interface ISimpleTestServer extends VersionedProtocol {
 
-    String testRequest(String query, String[] shardNames) throws IOException;
+    String[] testRequest(String query, String[] shardNames) throws IOException;
 
 }

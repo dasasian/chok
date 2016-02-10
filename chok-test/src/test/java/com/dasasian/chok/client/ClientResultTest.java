@@ -16,13 +16,17 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.testutil.AbstractTest;
+import com.dasasian.chok.util.TestLoggerWatcher;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
@@ -31,57 +35,59 @@ import static org.junit.Assert.*;
  */
 public class ClientResultTest extends AbstractTest {
 
+    @Rule
+    public TestLoggerWatcher resultsReceiverWrapperLoggingRule = TestLoggerWatcher.logErrors(ResultReceiverWrapper.class, "testResults", "testDuplicateResults", "testNoShards", "testUnknownShards", "testDuplicateErrors");
+
     @Test
     public void testToStringResults() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         assertEquals("ClientResult: 0 results, 0 errors, 0/3 shards", r.toString());
-        r.addResult("x", "a");
+        r.addNodeResult("x", ImmutableSet.of("a"));
         assertEquals("ClientResult: 1 results, 0 errors, 1/3 shards", r.toString());
-        r.addResult("x", "b");
+        r.addNodeResult("x", ImmutableSet.of("b"));
         assertEquals("ClientResult: 2 results, 0 errors, 2/3 shards", r.toString());
-        r.addResult(null, "c");
+        r.addNodeResult(null, ImmutableSet.of("c"));
         assertEquals("ClientResult: 2 results, 0 errors, 3/3 shards (complete)", r.toString());
-        r.close();
-        assertEquals("ClientResult: 2 results, 0 errors, 3/3 shards (closed) (complete)", r.toString());
+        assertEquals("ClientResult: 2 results, 0 errors, 3/3 shards (complete)", r.toString());
     }
 
     @Test
     public void testToStringErrors() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         assertEquals("ClientResult: 0 results, 0 errors, 0/3 shards", r.toString());
-        r.addError(new Throwable(""), "a");
+        r.addNodeError(new Throwable(""), ImmutableSet.of("a"));
         assertEquals("ClientResult: 0 results, 1 errors, 1/3 shards", r.toString());
-        r.addError(new Exception(""), "b");
+        r.addNodeError(new Exception(""), ImmutableSet.of("b"));
         assertEquals("ClientResult: 0 results, 2 errors, 2/3 shards", r.toString());
-        r.addError(null, "c");
+        r.addNodeError(null, ImmutableSet.of("c"));
         assertEquals("ClientResult: 0 results, 2 errors, 3/3 shards (complete)", r.toString());
     }
 
     @Test
     public void testToStringMixed() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         assertEquals("ClientResult: 0 results, 0 errors, 0/3 shards", r.toString());
-        r.addResult("x", "a");
+        r.addNodeResult("x", ImmutableSet.of("a"));
         assertEquals("ClientResult: 1 results, 0 errors, 1/3 shards", r.toString());
-        r.addResult("x", "b");
+        r.addNodeResult("x", ImmutableSet.of("b"));
         assertEquals("ClientResult: 2 results, 0 errors, 2/3 shards", r.toString());
-        r.addError(new Exception(), "c");
+        r.addNodeError(new Exception(), ImmutableSet.of("c"));
         assertEquals("ClientResult: 2 results, 1 errors, 3/3 shards (complete)", r.toString());
     }
 
     @Test
     public void testResults() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c", "d");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c", "d"));
         assertEquals("[]", r.getResults().toString());
-        r.addResult("r1", "a");
+        r.addNodeResult("r1", ImmutableSet.of("a"));
         assertEquals("[r1]", r.getResults().toString());
-        r.addError(new Exception("foo"), "b");
+        r.addNodeError(new Exception("foo"), ImmutableSet.of("b"));
         assertEquals("[r1]", r.getResults().toString());
-        r.addResult("r2", "c");
+        r.addNodeResult("r2", ImmutableSet.of("c"));
         assertEquals(8, r.getResults().toString().length());
         assertTrue(r.getResults().toString().indexOf("r1") > 0);
         assertTrue(r.getResults().toString().indexOf("r2") > 0);
-        r.addResult(null, "c");
+        r.addNodeResult(null, ImmutableSet.of("c"));
         assertEquals(8, r.getResults().toString().length());
         assertTrue(r.getResults().toString().indexOf("r1") > 0);
         assertTrue(r.getResults().toString().indexOf("r2") > 0);
@@ -89,46 +95,47 @@ public class ClientResultTest extends AbstractTest {
 
     @Test
     public void testDuplicateResults() {
-        ClientResult<Integer> r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult(5, "a");
-        r.addResult(5, "b");
-        r.addResult(5, "c");
+        ClientResult<Integer> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult(5, ImmutableSet.of("a"));
+        r.addNodeResult(5, ImmutableSet.of("b"));
+        r.addNodeResult(5, ImmutableSet.of("c"));
         assertEquals(3, r.getResults().size());
         assertEquals(3, r.entrySet().size());
-        r.addResult(5, "a");
+        r.addNodeResult(5, ImmutableSet.of("a"));
+        // todo is this the right behaviour?
         assertEquals(4, r.getResults().size());
         assertEquals(4, r.entrySet().size());
     }
 
     @Test
     public void testDuplicateErrors() {
-        ClientResult<Integer> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<Integer> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         Throwable t = new Throwable();
-        r.addError(t, "a");
-        r.addError(t, "b");
-        r.addError(t, "c");
+        r.addNodeError(t, ImmutableSet.of("a"));
+        r.addNodeError(t, ImmutableSet.of("b"));
+        r.addNodeError(t, ImmutableSet.of("c"));
         assertEquals(3, r.getErrors().size());
         assertEquals(3, r.entrySet().size());
-        r.addError(t, "a");
+        r.addNodeError(t, ImmutableSet.of("a"));
         assertEquals(4, r.getErrors().size());
         assertEquals(4, r.entrySet().size());
     }
 
     @Test
     public void testErrors() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c", "d");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c", "d"));
         assertEquals("[]", r.getErrors().toString());
         assertNull(r.getError());
         assertFalse(r.isError());
-        r.addResult("r1", "a");
+        r.addNodeResult("r1", ImmutableSet.of("a"));
         assertEquals("[]", r.getErrors().toString());
         assertFalse(r.isError());
         assertNull(r.getError());
-        r.addError(new OutOfMemoryError("foo"), "b");
+        r.addNodeError(new OutOfMemoryError("foo"), ImmutableSet.of("b"));
         assertEquals("[java.lang.OutOfMemoryError: foo]", r.getErrors().toString());
         assertEquals("java.lang.OutOfMemoryError: foo", r.getError().toString());
         assertTrue(r.isError());
-        r.addError(new NullPointerException(), "c");
+        r.addNodeError(new NullPointerException(), ImmutableSet.of("c"));
         assertEquals(65, r.getErrors().toString().length());
         assertTrue(r.getErrors().toString().indexOf("java.lang.OutOfMemoryError: foo") > 0);
         assertTrue(r.getErrors().toString().indexOf("java.lang.NullPointerException") > 0);
@@ -139,90 +146,86 @@ public class ClientResultTest extends AbstractTest {
     @Test
     public void testNoShards() {
         try {
-            new ClientResult<String>(null, (Collection<String>) null);
+            new ClientResult<String>(ImmutableSet.of());
             fail("Should have thrown an exception");
         } catch (IllegalArgumentException e) {
             // Good.
         }
         try {
-            new ClientResult<String>(null, new ArrayList<>());
+            new ClientResult<String>(ImmutableSet.of());
             fail("Should have thrown an exception");
         } catch (IllegalArgumentException e) {
             // Good.
         }
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult("foo", (Collection<String>) null);
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult("foo", null);
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getResults().isEmpty());
-        r.addResult("foo", new ArrayList<>());
+        r.addNodeResult("foo", Sets.newHashSet());
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getResults().isEmpty());
-        r.addError(new Exception("foo"), (Collection<String>) null);
+        r.addNodeError(new Exception("foo"), null);
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getErrors().isEmpty());
-        r.addError(new Exception("foo"), new ArrayList<>());
+        r.addNodeError(new Exception("foo"), Sets.newHashSet());
         assertTrue(r.getSeenShards().isEmpty());
         assertTrue(r.getErrors().isEmpty());
     }
 
     @Test
     public void testNulls() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult(null, "a");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult(null, ImmutableSet.of("a"));
         assertEquals(1, r.getSeenShards().size());
         assertTrue(r.getSeenShards().contains("a"));
         assertTrue(r.getResults().isEmpty());
         assertTrue(r.getErrors().isEmpty());
         assertFalse(r.isError());
-        assertEquals(0.3333, r.getShardCoverage(), 0.001);
         assertEquals(1, r.getArrivalTimes().size());
         assertTrue(r.getArrivalTimes().get(0).toString().startsWith("null from [a] at "));
         sleep(3);
-        r.addError(null, "b");
+        r.addNodeError(null, ImmutableSet.of("b"));
         assertEquals(2, r.getSeenShards().size());
         assertTrue(r.getSeenShards().contains("b"));
         assertTrue(r.getResults().isEmpty());
         assertTrue(r.getErrors().isEmpty());
         assertFalse(r.isError());
-        assertEquals(0.6666, r.getShardCoverage(), 0.001);
         assertEquals(2, r.getArrivalTimes().size());
         assertTrue(r.getArrivalTimes().get(1).toString().startsWith("null from [b] at "));
         sleep(3);
-        r.addResult(null, "c");
+        r.addNodeResult(null, ImmutableSet.of("c"));
         assertEquals(3, r.getSeenShards().size());
         assertTrue(r.getSeenShards().contains("c"));
         assertTrue(r.getResults().isEmpty());
         assertTrue(r.getErrors().isEmpty());
         assertFalse(r.isError());
-        assertEquals(1.0, r.getShardCoverage(), 0.001);
         assertTrue(r.getArrivalTimes().get(2).toString().startsWith("null from [c] at "));
         assertEquals(3, r.getArrivalTimes().size());
         assertTrue(r.isComplete());
-        assertTrue(r.isOK());
     }
 
     @Test
     public void testEntryBadResult() {
-        ClientResult<ToStringFails> r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult(new ToStringFails(), "c");
+        ClientResult<ToStringFails> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult(new ToStringFails(), ImmutableSet.of("c"));
         assertTrue(r.entrySet().iterator().next().toString().startsWith("(toString() err) from [c] at "));
-        r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult(null, "c");
+        r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult(null, ImmutableSet.of("c"));
         assertTrue(r.entrySet().iterator().next().toString().startsWith("null from [c] at "));
-        r = new ClientResult<>(null, "a", "b", "c");
-        r.addError(null, "c");
+        r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeError(null, ImmutableSet.of("c"));
         assertTrue(r.entrySet().iterator().next().toString().startsWith("null from [c] at "));
     }
 
     @Test
     public void testMissingAndSeenShardsSingle() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         List<String> missing = new ArrayList<>(r.getMissingShards());
         Collections.sort(missing);
         assertEquals("[a, b, c]", missing.toString());
         assertTrue(r.getSeenShards().isEmpty());
         //
-        r.addResult("x", "b");
+        r.addNodeResult("x", ImmutableSet.of("b"));
         missing = new ArrayList<>(r.getMissingShards());
         Collections.sort(missing);
         assertEquals("[a, c]", missing.toString());
@@ -230,7 +233,7 @@ public class ClientResultTest extends AbstractTest {
         Collections.sort(seen);
         assertEquals("[b]", seen.toString());
         //
-        r.addError(new Exception(""), "a");
+        r.addNodeError(new Exception(""), ImmutableSet.of("a"));
         missing = new ArrayList<>(r.getMissingShards());
         Collections.sort(missing);
         assertEquals("[c]", missing.toString());
@@ -238,7 +241,7 @@ public class ClientResultTest extends AbstractTest {
         Collections.sort(seen);
         assertEquals("[a, b]", seen.toString());
         //
-        r.addResult("x", "c");
+        r.addNodeResult("x", ImmutableSet.of("c"));
         assertTrue(r.getMissingShards().isEmpty());
         seen = new ArrayList<>(r.getSeenShards());
         Collections.sort(seen);
@@ -247,8 +250,8 @@ public class ClientResultTest extends AbstractTest {
 
     @Test
     public void testMissingAndSeenShardsMulti() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult("x", "a", "b");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult("x", ImmutableSet.of("a", "b"));
         List<String> missing = new ArrayList<>(r.getMissingShards());
         Collections.sort(missing);
         assertEquals("[c]", missing.toString());
@@ -256,8 +259,8 @@ public class ClientResultTest extends AbstractTest {
         Collections.sort(seen);
         assertEquals("[a, b]", seen.toString());
         //
-        r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult("x", "a", "b", "c");
+        r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult("x", ImmutableSet.of("a", "b", "c"));
         assertTrue(r.getMissingShards().isEmpty());
         missing = new ArrayList<>(r.getMissingShards());
         Collections.sort(missing);
@@ -269,27 +272,27 @@ public class ClientResultTest extends AbstractTest {
     @Test
     public void testUnknownShards() {
         // This should not happen normally.
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         assertEquals(3, r.getMissingShards().size());
         assertEquals(0, r.getSeenShards().size());
         assertEquals(0, r.entrySet().size());
         assertFalse(r.isComplete());
-        r.addResult("foo", "x");
+        r.addNodeResult("foo", ImmutableSet.of("x"));
         assertEquals(3, r.getMissingShards().size());
         assertEquals(1, r.getSeenShards().size());
         assertEquals(1, r.entrySet().size());
         assertFalse(r.isComplete());
-        r.addResult("foo", "y");
+        r.addNodeResult("foo", ImmutableSet.of("y"));
         assertEquals(3, r.getMissingShards().size());
         assertEquals(2, r.getSeenShards().size());
         assertEquals(2, r.entrySet().size());
         assertFalse(r.isComplete());
-        r.addResult("foo", "z");
+        r.addNodeResult("foo", ImmutableSet.of("z"));
         assertEquals(3, r.getMissingShards().size());
         assertEquals(3, r.getSeenShards().size());
         assertEquals(3, r.entrySet().size());
         assertFalse(r.isComplete());
-        r.addResult("foo", "a", "b", "c");
+        r.addNodeResult("foo", ImmutableSet.of("a", "b", "c"));
         assertEquals(0, r.getMissingShards().size());
         assertEquals(6, r.getSeenShards().size());
         assertEquals(4, r.entrySet().size());
@@ -297,64 +300,14 @@ public class ClientResultTest extends AbstractTest {
     }
 
     @Test
-    public void testDuplicateShards() {
-        // This should not happen normally.
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
-        assertEquals(3, r.getMissingShards().size());
-        assertEquals(0, r.getSeenShards().size());
-        assertEquals(0, r.entrySet().size());
-        assertFalse(r.isComplete());
-        r.addResult("foo", "a", "b");
-        assertEquals(1, r.getMissingShards().size());
-        assertEquals(2, r.getSeenShards().size());
-        assertEquals(1, r.entrySet().size());
-        assertFalse(r.isComplete());
-        r.addResult("foo", "b", "c");
-        assertEquals(0, r.getMissingShards().size());
-        assertEquals(3, r.getSeenShards().size());
-        assertEquals(2, r.entrySet().size());
-        assertTrue(r.isComplete());
-        r.addResult("foo", "c", "a");
-        assertEquals(0, r.getMissingShards().size());
-        assertEquals(3, r.getSeenShards().size());
-        assertEquals(3, r.entrySet().size());
-        assertTrue(r.isComplete());
-    }
-
-    @Test
-    public void testClosingCallback() {
-        final AtomicInteger count = new AtomicInteger(0);
-        ClientResult<String> r = new ClientResult<>(count::incrementAndGet, "a", "b", "c");
-        assertEquals(0, count.get());
-        r.close();
-        assertEquals(1, count.get());
-        r.close();
-        assertEquals(1, count.get());
-        // Test no listener.
-        r = new ClientResult<>(null, "shard");
-        assertFalse(r.isClosed());
-        r.close();
-        assertTrue(r.isClosed());
-    }
-
-    @Test
-    public void testClosed() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
-        r.close();
-        r.addResult("r1", "a");
-        r.addError(new Exception(), "b", "c");
-        assertEquals("ClientResult: 0 results, 0 errors, 0/3 shards (closed)", r.toString());
-    }
-
-    @Test
     public void testArrivalTimes() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult("r1", "a");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult("r1", ImmutableSet.of("a"));
         sleep(3);
         Throwable t = new Throwable();
-        r.addError(t, "b");
+        r.addNodeError(t, ImmutableSet.of("b"));
         sleep(3);
-        r.addResult("r2", "c");
+        r.addNodeResult("r2", ImmutableSet.of("c"));
         List<ClientResult<String>.Entry> entries = r.getArrivalTimes();
         assertNotNull(entries);
         assertEquals(3, entries.size());
@@ -377,13 +330,14 @@ public class ClientResultTest extends AbstractTest {
         Set<String> shardB = new HashSet<>();
         shardB.add("b");
         for (int i = 0; i < 10000; i++) {
-            ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+            ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+            // todo something weird here (since the else block is never executed)
             if (i % 1 == 0) {
-                r.addResult(result, shardA);
-                r.addError(error, shardB);
+                r.addNodeResult(result, shardA);
+                r.addNodeError(error, shardB);
             } else {
-                r.addError(error, shardB);
-                r.addResult(result, shardA);
+                r.addNodeResult(result, shardA);
+                r.addNodeError(error, shardB);
             }
             List<ClientResult<String>.Entry> times = r.getArrivalTimes();
             assertEquals(2, times.size());
@@ -398,32 +352,36 @@ public class ClientResultTest extends AbstractTest {
 
     @Test
     public void testMultithreaded() throws InterruptedException {
-        Set<String> shards = new HashSet<>();
+        ImmutableSet.Builder<String> shardBuilder = ImmutableSet.builder();
         final int size = 1000;
         for (int i = 0; i < size; i++) {
-            shards.add("s" + i);
+            shardBuilder.add("s" + i);
         }
-        final ClientResult<Integer> r = new ClientResult<>(null, shards);
+
+        ImmutableSet<String> shards = shardBuilder.build();
+        final ClientResult<Integer> clientResult = new ClientResult<>(shards);
+
         Random rand = new Random("testMultithreaded".hashCode());
         ExecutorService executor = Executors.newFixedThreadPool(15);
         int total = 0;
         for (int i = 0; i < size; i++) {
             final String shard = "s" + i;
-            final int result = i;
-            total += result;
+            final int nodeResult = i;
+            total += nodeResult;
             final long delay = rand.nextInt(50);
             executor.submit(() -> {
                 sleep(delay);
-                r.addResult(result, shard);
+                clientResult.addNodeResult(nodeResult, ImmutableSet.of(shard));
             });
         }
         executor.shutdown();
         executor.awaitTermination(3, TimeUnit.MINUTES);
-        r.close();
-        //
-        assertEquals(String.format("ClientResult: %s results, 0 errors, %d/%d shards (closed) (complete)", size, size, size), r.toString());
+
+        clientResult.close();
+
+        assertEquals(String.format("ClientResult: %s results, 0 errors, %d/%d shards (closed) (complete)", size, size, size), clientResult.toString());
         int resultTotal = 0;
-        for (ClientResult<Integer>.Entry e : r) {
+        for (ClientResult<Integer>.Entry e : clientResult) {
             resultTotal += e.result;
         }
         assertEquals(total, resultTotal);
@@ -431,17 +389,17 @@ public class ClientResultTest extends AbstractTest {
 
     @Test
     public void testIteratorEmpty() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         assertFalse(r.iterator().hasNext());
     }
 
     @Test
     public void testIteratorWhileAdding() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
-        r.addResult("r1", "a");
-        r.addResult("r2", "b");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
+        r.addNodeResult("r1", ImmutableSet.of("a"));
+        r.addNodeResult("r2", ImmutableSet.of("b"));
         Iterator<ClientResult<String>.Entry> i = r.iterator();
-        r.addResult("r3", "c");
+        r.addNodeResult("r3", ImmutableSet.of("c"));
         assertTrue(i.hasNext());
         ClientResult<String>.Entry e1 = i.next();
         assertTrue(e1.result.equals("r1") || e1.result.equals("r2"));
@@ -458,15 +416,13 @@ public class ClientResultTest extends AbstractTest {
 
     @Test
     public void testReadOnly() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         checkReadOnly(r);
-        r.addResult("r1", "a");
+        r.addNodeResult("r1", ImmutableSet.of("a"));
         checkReadOnly(r);
-        r.addError(new Exception(), "b");
+        r.addNodeError(new Exception(), ImmutableSet.of("b"));
         checkReadOnly(r);
-        r.addResult("r3", "c");
-        checkReadOnly(r);
-        r.close();
+        r.addNodeResult("r3", ImmutableSet.of("c"));
         checkReadOnly(r);
     }
 
@@ -485,7 +441,7 @@ public class ClientResultTest extends AbstractTest {
     }
 
     @SuppressWarnings("unchecked")
-    private void checkCollectionReadOnly(Collection<?> s) {
+    private <T> void checkCollectionReadOnly(Collection<T> s) {
         try {
             s.remove(0);
             fail("Should be read only");
@@ -507,7 +463,7 @@ public class ClientResultTest extends AbstractTest {
             }
         }
         try {
-            s.removeAll(new ArrayList<ClientResult<String>.Entry>());
+            s.removeAll(Lists.<T>newArrayList());
             fail("Should be read only");
         } catch (UnsupportedOperationException e) {
             // expected
@@ -539,34 +495,10 @@ public class ClientResultTest extends AbstractTest {
     }
 
     @Test
-    public void testCoverage() {
-        ClientResult<String> r = new ClientResult<>(null, "a", "b", "c", "d", "e");
-        assertEquals(0.0, r.getShardCoverage(), 0.000001);
-        assertFalse(r.isComplete());
-        assertFalse(r.isOK());
-        r.addResult("r1", "a");
-        assertEquals(0.2, r.getShardCoverage(), 0.000001);
-        assertFalse(r.isComplete());
-        assertFalse(r.isOK());
-        r.addResult("r1", "b");
-        assertEquals(0.4, r.getShardCoverage(), 0.000001);
-        assertFalse(r.isComplete());
-        assertFalse(r.isOK());
-        r.addResult("r1", "c", "d");
-        assertEquals(0.8, r.getShardCoverage(), 0.000001);
-        assertFalse(r.isComplete());
-        assertFalse(r.isOK());
-        r.addResult("r1", "e");
-        assertTrue(r.isComplete());
-        assertTrue(r.isOK());
-        assertEquals(1.0, r.getShardCoverage(), 0.000001);
-    }
-
-    @Test
     public void testStartTime() {
-        ClientResult<String> r1 = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r1 = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         sleep(10);
-        ClientResult<String> r2 = new ClientResult<>(null, "a", "b", "c");
+        ClientResult<String> r2 = new ClientResult<>(ImmutableSet.of("a", "b", "c"));
         assertTrue(r2.getStartTime() - r1.getStartTime() >= 10);
     }
 

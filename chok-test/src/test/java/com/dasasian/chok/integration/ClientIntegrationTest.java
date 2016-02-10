@@ -15,8 +15,8 @@
  */
 package com.dasasian.chok.integration;
 
-import com.dasasian.chok.client.Client;
-import com.dasasian.chok.client.INodeProxyManager;
+import com.dasasian.chok.client.*;
+import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.TestIndex;
@@ -26,8 +26,7 @@ import com.dasasian.chok.testutil.mockito.ChainedAnswer;
 import com.dasasian.chok.testutil.mockito.PauseAnswer;
 import com.dasasian.chok.testutil.server.simpletest.ISimpleTestServer;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
-import com.dasasian.chok.util.ChokFileSystem;
-import com.dasasian.chok.util.UtilModule;
+import com.dasasian.chok.util.*;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.fest.assertions.Assertions;
@@ -48,12 +47,11 @@ public class ClientIntegrationTest extends AbstractTest {
 
     @Test(timeout = 20000)
     public void testAddIndex_WithSlowProxyEstablishment() throws Exception {
-        Client client = new Client(ISimpleTestServer.class, miniCluster.getZkConfiguration());
-        INodeProxyManager proxyCreator = client.getProxyManager();
+        INodeProxyManager proxyCreator = TestClient.getNodeProxyManager();
         INodeProxyManager proxyCreatorSpy = Mockito.spy(proxyCreator);
         PauseAnswer<Void> pauseAnswer = new PauseAnswer<>(null);
         Mockito.doAnswer(new ChainedAnswer(pauseAnswer, new CallsRealMethods())).when(proxyCreatorSpy).getProxy(Matchers.anyString(), Matchers.eq(true));
-        client.setProxyCreator(proxyCreatorSpy);
+        Client client = new TestClient(miniCluster.getZkConfiguration(), proxyCreatorSpy);
 
         IndexMetaData indexMD = miniCluster.deployIndex(testIndex.getIndexName(), testIndex.getIndexUri(), miniCluster.getRunningNodeCount());
         pauseAnswer.joinExecutionBegin();
@@ -66,9 +64,23 @@ public class ClientIntegrationTest extends AbstractTest {
         Assertions.assertThat(client.getSelectionPolicy().getShardNodes(indexMD.getShards().iterator().next().getName())).isNotEmpty();
         Assertions.assertThat(client.getIndices()).isNotEmpty();
 
-        client.setProxyCreator(proxyCreator);
-
         client.close();
     }
+
+    static class TestClient extends Client {
+        static final INodeSelectionPolicy policy = new DefaultNodeSelectionPolicy();
+
+        TestClient(final ZkConfiguration zkConfig, INodeProxyManager proxyManager) {
+            super(policy, new InteractionProtocol(ZkChokUtil.startZkClient(zkConfig, 60000), zkConfig), proxyManager, 3);
+        }
+
+        static INodeProxyManager getNodeProxyManager() {
+            return new NodeProxyManager(ISimpleTestServer.class, getHadoopConfiguration(new ClientConfiguration()), policy);
+        }
+
+
+
+    }
+
 
 }

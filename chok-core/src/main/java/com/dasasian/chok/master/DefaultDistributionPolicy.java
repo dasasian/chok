@@ -15,11 +15,18 @@
  */
 package com.dasasian.chok.master;
 
-import com.dasasian.chok.util.CircularList;
+import com.google.common.collect.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static com.google.common.base.Predicates.in;
+import static com.google.common.base.Predicates.not;
 
 /**
  * Simple deploy policy which distributes the shards in round robin style.<br>
@@ -37,82 +44,55 @@ public class DefaultDistributionPolicy implements IDeployPolicy {
 
     private final static Logger LOG = LoggerFactory.getLogger(DefaultDistributionPolicy.class);
 
-    public Map<String, List<String>> createDistributionPlan(final Map<String, List<String>> currentShard2NodesMap, final Map<String, List<String>> currentNode2ShardsMap, List<String> aliveNodes, final int replicationLevel) {
+    @Override
+    public ImmutableSetMultimap<String, String> createDistributionPlan(Set<String> shards,
+                                                                       Collection<String> aliveNodes,
+                                                                       final ImmutableSetMultimap<String, String> currentShard2NodesMap,
+                                                                       final int replicationLevel) {
         if (aliveNodes.size() == 0) {
             throw new IllegalArgumentException("no alive nodes to distribute to");
         }
 
-        Set<String> shards = currentShard2NodesMap.keySet();
-        for (String shard : shards) {
-            Set<String> assignedNodes = new HashSet<>(replicationLevel);
-            int neededDeployments = replicationLevel - countValues(currentShard2NodesMap, shard);
-            assignedNodes.addAll(currentShard2NodesMap.get(shard));
+        final SetMultimap<String, String> newNode2ShardsMap = HashMultimap.create(currentShard2NodesMap.inverse());
 
-            // now assign new nodes based on round robin algorithm
-            sortAfterFreeCapacity(aliveNodes, currentNode2ShardsMap);
-            CircularList<String> roundRobinNodes = new CircularList<>(aliveNodes);
-            neededDeployments = chooseNewNodes(currentNode2ShardsMap, roundRobinNodes, shard, assignedNodes, neededDeployments);
+        shards.stream()
+                .sorted((n1, n2) -> Integer.compare(newNode2ShardsMap.get(n1).size(), newNode2ShardsMap.get(n2).size()))
+                .forEach(shard -> {
+                    int neededDeployments = replicationLevel - currentShard2NodesMap.get(shard).size();
+                    if (neededDeployments < 0) {
+                        LOG.info("found shard '" + shard + "' over-replicated");
+                        // TODO jz: maybe we should add a configurable threshold tha e.g. 10%
+                        // over replication is ok ?
+                        removeOverreplicatedShards(currentShard2NodesMap, newNode2ShardsMap, shard, neededDeployments);
+                    } else if (neededDeployments > 0) {
+                        Stream<String> availableNodes = getSortedAvailableNodes(aliveNodes, newNode2ShardsMap, currentShard2NodesMap.get(shard));
+                        neededDeployments = chooseNewNodes(newNode2ShardsMap, availableNodes, shard, neededDeployments);
+                        if (neededDeployments > 0) {
+                            LOG.warn("cannot replicate shard '" + shard + "' " + replicationLevel + " times, cause only " + aliveNodes.size() + " nodes connected");
+                        }
+                    }
+                });
 
-            if (neededDeployments > 0) {
-                LOG.warn("cannot replicate shard '" + shard + "' " + replicationLevel + " times, cause only " + roundRobinNodes.size() + " nodes connected");
-            } else if (neededDeployments < 0) {
-                LOG.info("found shard '" + shard + "' over-replicated");
-                // TODO jz: maybe we should add a configurable threshold tha e.g. 10%
-                // over replication is ok ?
-                removeOverreplicatedShards(currentShard2NodesMap, currentNode2ShardsMap, shard, neededDeployments);
-            }
-        }
-        return currentNode2ShardsMap;
+        return ImmutableSetMultimap.copyOf(newNode2ShardsMap);
     }
 
-    private void sortAfterFreeCapacity(List<String> aliveNodes, final Map<String, List<String>> node2ShardsMap) {
-        Collections.sort(aliveNodes, (node1, node2) -> {
-            int size1 = node2ShardsMap.get(node1).size();
-            int size2 = node2ShardsMap.get(node2).size();
-            return (size1 < size2 ? -1 : (size1 == size2 ? 0 : 1));
-        });
+    private Stream<String> getSortedAvailableNodes(Collection<String> aliveNodes, final Multimap<String, String> node2ShardsMap, Set<String> assignedNodes) {
+        return aliveNodes.stream().filter(node -> !assignedNodes.contains(node)).sorted((n1, n2) -> Integer.compare(node2ShardsMap.get(n1).size(), node2ShardsMap.get(n2).size()));
     }
 
-    private int chooseNewNodes(final Map<String, List<String>> currentNode2ShardsMap, CircularList<String> roundRobinNodes, String shard, Set<String> assignedNodes, int neededDeployments) {
-        String tailNode = roundRobinNodes.getTail();
-        String currentNode = null;
-        while (neededDeployments > 0 && !tailNode.equals(currentNode)) {
-            currentNode = roundRobinNodes.getNext();
-            if (!assignedNodes.contains(currentNode)) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("assign " + shard + " to " + currentNode);
-                }
-                currentNode2ShardsMap.get(currentNode).add(shard);
-                assignedNodes.add(currentNode);
-                neededDeployments--;
-            }
-        }
-        return neededDeployments;
+    private int chooseNewNodes(final Multimap<String, String> currentNode2ShardsMap, Stream<String> availableNodes, String shard, int neededDeployments) {
+        return neededDeployments - (int) availableNodes.limit(neededDeployments).peek(node -> currentNode2ShardsMap.put(node, shard)).count();
     }
 
-    private void removeOverreplicatedShards(final Map<String, List<String>> currentShard2NodesMap, final Map<String, List<String>> currentNode2ShardsMap, String shard, int neededDeployments) {
+    private void removeOverreplicatedShards(final ImmutableSetMultimap<String, String> currentShard2NodesMap,
+                                            final SetMultimap<String, String> newNode2ShardsMap,
+                                            String shard, int neededDeployments) {
         while (neededDeployments < 0) {
-            int maxShardServingCount = 0;
-            String maxShardServingNode = null;
-            List<String> nodeNames = currentShard2NodesMap.get(shard);
-            for (String node : nodeNames) {
-                int shardCount = countValues(currentNode2ShardsMap, node);
-                if (shardCount > maxShardServingCount) {
-                    maxShardServingCount = shardCount;
-                    maxShardServingNode = node;
-                }
-            }
-            currentNode2ShardsMap.get(maxShardServingNode).remove(shard);
+            String maxShardServingNode = currentShard2NodesMap.get(shard).stream()
+                    .max((n1, n2) -> Integer.compare(newNode2ShardsMap.get(n1).size(), newNode2ShardsMap.get(n2).size())).get();
+            newNode2ShardsMap.remove(maxShardServingNode, shard);
             neededDeployments++;
         }
-    }
-
-    private int countValues(Map<String, List<String>> multiMap, String key) {
-        List<String> list = multiMap.get(key);
-        if (list == null) {
-            return 0;
-        }
-        return list.size();
     }
 
 }

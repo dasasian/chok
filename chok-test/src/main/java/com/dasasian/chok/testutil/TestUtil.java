@@ -55,7 +55,7 @@ public class TestUtil {
      * @param timeUnit      The timeout timeunit.
      * @param timeout       The timeout.
      * @return the return value of the latest {@link Callable} execution.
-     * @throws Exception
+     * @throws Exception when an error occurs
      * @throws InterruptedException when interrupted
      */
     public static <T> T waitUntil(T expectedValue, Callable<T> callable, TimeUnit timeUnit, long timeout) throws Exception {

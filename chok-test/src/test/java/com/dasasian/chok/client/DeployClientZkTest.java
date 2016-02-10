@@ -31,7 +31,8 @@ public class DeployClientZkTest extends AbstractZkTest {
     @Test
     public void testAddIndex() throws Exception {
         DeployClient deployClient = new DeployClient(protocol);
-        deployClient.addIndex(testIndex.getIndexName(), testIndex.getIndexUri(), 1, false);
+        IndexDeployFuture indexDeployFuture = (IndexDeployFuture) deployClient.addIndex(testIndex.getIndexName(), testIndex.getIndexUri(), 1, false);
+        protocol.unregisterComponent(indexDeployFuture);
     }
 
     @Test

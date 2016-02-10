@@ -27,6 +27,7 @@ import org.junit.Ignore;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
+import java.util.List;
 
 /**
  * - start a chok-cluster<br>
@@ -66,7 +67,7 @@ public class DeployUndeploySearchInLoop {
             }
 
             try {
-                String result = testClient.testRequest("query", new String[]{"*"});
+                String[] result = testClient.testRequest("query", new String[]{"*"});
                 LOG.info(runThroughs + ": got result: " + result);
             } catch (Exception e) {
                 logException("search", e);

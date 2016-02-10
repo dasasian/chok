@@ -19,6 +19,8 @@ import com.dasasian.chok.protocol.metadata.IndexDeployError;
 import com.dasasian.chok.protocol.metadata.IndexDeployError.ErrorType;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.AbstractZkTest;
+import com.dasasian.chok.util.TestLoggerWatcher;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.net.URI;
@@ -27,6 +29,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public class IndexDeployFutureTest extends AbstractZkTest {
+
+    @Rule
+    public TestLoggerWatcher indexDeployLoggingRule = TestLoggerWatcher.logErrors(IndexDeployFuture.class, "testJoinIndexDeploymentAfterZkReconnect");
 
     @Test
     public void testJoinIndexDeployment() throws Exception {
@@ -48,6 +53,8 @@ public class IndexDeployFutureTest extends AbstractZkTest {
         indexMD.setDeployError(new IndexDeployError(indexName, ErrorType.NO_NODES_AVAILIBLE));
         protocol.publishIndex(indexMD);
         assertEquals(IndexState.ERROR, deployFuture.joinDeployment(200));
+
+        deployFuture.close();
     }
 
     @Test(timeout = 10000)

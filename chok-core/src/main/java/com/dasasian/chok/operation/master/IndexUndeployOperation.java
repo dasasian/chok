@@ -22,15 +22,13 @@ import com.dasasian.chok.operation.node.ShardUndeployOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
-import com.dasasian.chok.util.CollectionUtil;
 import com.dasasian.chok.util.ZkConfiguration;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.I0Itec.zkclient.ZkClient;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 public class IndexUndeployOperation implements MasterOperation {
 
@@ -47,15 +45,13 @@ public class IndexUndeployOperation implements MasterOperation {
         InteractionProtocol protocol = context.getProtocol();
         indexMD = protocol.getIndexMD(indexName);
 
-        Map<String, List<String>> shard2NodesMap = protocol.getShard2NodesMap(Shard.getShardNames(indexMD.getShards()));
-        Map<String, List<String>> node2ShardsMap = CollectionUtil.invertListMap(shard2NodesMap);
-        Set<String> nodes = node2ShardsMap.keySet();
-        List<OperationId> nodeOperationIds = new ArrayList<>(nodes.size());
-        for (String node : nodes) {
-            List<String> nodeShards = node2ShardsMap.get(node);
-            OperationId operationId = protocol.addNodeOperation(node, new ShardUndeployOperation(nodeShards));
-            nodeOperationIds.add(operationId);
-        }
+        ImmutableSetMultimap<String, String> shard2NodesMap = protocol.getShard2NodesMap(Shard.getShardNames(indexMD.getShards()));
+
+        ImmutableSetMultimap<String, String> node2ShardsMap = shard2NodesMap.inverse();
+
+        List<OperationId> nodeOperationIds = node2ShardsMap.asMap().entrySet().stream().map(e -> protocol.addNodeOperation(e.getKey(), new ShardUndeployOperation(e.getValue())))
+                .collect(Collectors.toList());
+
         protocol.unpublishIndex(indexName);
         return nodeOperationIds;
     }

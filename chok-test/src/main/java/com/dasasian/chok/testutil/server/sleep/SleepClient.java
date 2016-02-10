@@ -18,6 +18,7 @@ package com.dasasian.chok.testutil.server.sleep;
 import com.dasasian.chok.client.Client;
 import com.dasasian.chok.client.ClientResult;
 import com.dasasian.chok.client.INodeSelectionPolicy;
+import com.dasasian.chok.client.ResultCompletePolicy;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
@@ -77,7 +78,7 @@ public class SleepClient implements ISleepClient {
     }
 
     public int sleepShards(final long msec, final int delta, final String[] shards) throws ChokException {
-        ClientResult<Integer> results = client.broadcastToShards(msec + delta + 3000, true, SLEEP_METHOD, SLEEP_METHOD_SHARD_ARG_IDX, shards != null ? Arrays.asList(shards) : null, msec, delta, null);
+        ClientResult<Integer> results = client.broadcastToShards(ResultCompletePolicy.awaitCompletion(msec + delta + 3000), SLEEP_METHOD, SLEEP_METHOD_SHARD_ARG_IDX, shards != null ? Arrays.asList(shards) : null, msec, delta, null);
         if (results.isError()) {
             throw results.getChokException();
         }
@@ -93,7 +94,7 @@ public class SleepClient implements ISleepClient {
     }
 
     public int sleepIndices(final long msec, final int delta, final String[] indices) throws ChokException {
-        ClientResult<Integer> results = client.broadcastToIndices(msec + delta + 3000, true, SLEEP_METHOD, SLEEP_METHOD_SHARD_ARG_IDX, indices, msec, delta, null);
+        ClientResult<Integer> results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(msec + delta + 3000), SLEEP_METHOD, SLEEP_METHOD_SHARD_ARG_IDX, indices, msec, delta, null);
         if (results.isError()) {
             throw results.getChokException();
         }

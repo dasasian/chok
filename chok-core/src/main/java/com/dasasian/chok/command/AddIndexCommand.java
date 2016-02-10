@@ -16,6 +16,7 @@
 package com.dasasian.chok.command;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
+import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.ZkConfiguration;
 
 import java.net.URI;
@@ -32,7 +33,7 @@ public class AddIndexCommand extends ProtocolCommand {
     private boolean autoReload = false;
 
     public AddIndexCommand() {
-        super("addIndex", "<index name> <uri to index> [<replication level>] [<auto reload (true/false)>]", "Add a index to Chok");
+        super("addIndex", "<index name> <uri to index> [<replication level (1/2/ALL)>] [<auto reload (true/false)>]", "Add a index to Chok");
     }
 
     @Override
@@ -41,6 +42,9 @@ public class AddIndexCommand extends ProtocolCommand {
         name = args[1];
         uriString = args[2];
         if (args.length >= 4) {
+            if("ALL".equalsIgnoreCase(args[3])) {
+                replicationLevel = IndexMetaData.REPLICATE_TO_ALL_NODES;
+            }
             replicationLevel = Integer.parseInt(args[3]);
         }
         if (args.length >= 5) {

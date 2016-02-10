@@ -16,7 +16,7 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.util.CircularList;
-import com.dasasian.chok.util.One2ManyListMap;
+import com.google.common.collect.ImmutableSetMultimap;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -60,8 +60,8 @@ public class DefaultNodeSelectionPolicy implements INodeSelectionPolicy {
     }
 
     @Override
-    public Map<String, List<String>> createNode2ShardsMap(Iterable<String> shards) throws ShardAccessException {
-        One2ManyListMap<String, String> node2ShardsMap = new One2ManyListMap<>();
+    public ImmutableSetMultimap<String, String> createNode2ShardsMap(Iterable<String> shards) throws ShardAccessException {
+        ImmutableSetMultimap.Builder<String, String> node2ShardsMapBuilder = ImmutableSetMultimap.builder();
         for (String shard : shards) {
             CircularList<String> nodeList = shardsToNodeMap.get(shard);
             if (nodeList == null || nodeList.isEmpty()) {
@@ -71,9 +71,9 @@ public class DefaultNodeSelectionPolicy implements INodeSelectionPolicy {
             synchronized (nodeList) {
                 node = nodeList.getNext();
             }
-            node2ShardsMap.add(node, shard);
+            node2ShardsMapBuilder.put(node, shard);
         }
-        return node2ShardsMap.asMap();
+        return node2ShardsMapBuilder.build();
     }
 
     @Override

@@ -19,13 +19,21 @@ import com.dasasian.chok.node.Node.NodeOperationProcessor;
 import com.dasasian.chok.operation.node.NodeOperation;
 import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.testutil.mockito.SleepingAnswer;
+import com.dasasian.chok.util.TestLoggerWatcher;
 import org.I0Itec.zkclient.exception.ZkInterruptedException;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 public class NodeOperationProcessorTest {
+
+    @Rule
+    public TestLoggerWatcher nodeLoggingRule = TestLoggerWatcher.logOff(Node.class, "testDontStopOnOOM", "testInterruptedException_Operation", "testInterruptedException_Operation_ZK");
 
     private NodeQueue queue = Mockito.mock(NodeQueue.class);
     private NodeContext context = Mockito.mock(NodeContext.class);
@@ -58,6 +66,8 @@ public class NodeOperationProcessorTest {
         Mockito.when(queue.peek()).thenReturn(nodeOperation);
         Mockito.when(nodeOperation.execute(context)).thenThrow(new InterruptedException());
         processor.run();
+        assertThat(nodeLoggingRule.getLogEventCount(event -> true), is(equalTo(1)));
+        assertThat(nodeLoggingRule.getLogEventCount(event -> event.getFormattedMessage().startsWith("aNode: failed to execute Mock for NodeOperation")), is(equalTo(1)));
     }
 
     @Test(timeout = 10000)
@@ -66,6 +76,8 @@ public class NodeOperationProcessorTest {
         Mockito.when(queue.peek()).thenReturn(nodeOperation);
         Mockito.when(nodeOperation.execute(context)).thenThrow(new ZkInterruptedException(new InterruptedException()));
         processor.run();
+        assertThat(nodeLoggingRule.getLogEventCount(event -> true), is(equalTo(1)));
+        assertThat(nodeLoggingRule.getLogEventCount(event -> event.getFormattedMessage().startsWith("aNode: failed to execute Mock for NodeOperation")), is(equalTo(1)));
     }
 
     @Test(timeout = 10000)
@@ -82,5 +94,8 @@ public class NodeOperationProcessorTest {
         assertEquals(true, thread.isAlive());
         thread.interrupt();
         Mockito.verify(queue, Mockito.atLeast(2)).peek();
+
+        assertThat(nodeLoggingRule.getLogEventCount(event -> true), is(equalTo(1)));
+        assertThat(nodeLoggingRule.getLogEventCount(event -> event.getFormattedMessage().startsWith("aNode: operation failure")), is(equalTo(1)));
     }
 }

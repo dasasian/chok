@@ -15,16 +15,20 @@
  */
 package com.dasasian.chok.operation.master;
 
+import com.dasasian.chok.master.DefaultDistributionPolicy;
 import com.dasasian.chok.master.MasterContext;
 import com.dasasian.chok.node.Node;
 import com.dasasian.chok.operation.OperationId;
 import com.dasasian.chok.operation.master.MasterOperation.ExecutionInstruction;
+import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.Mocks;
 import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.HDFSChokFileSystem;
+import com.dasasian.chok.util.TestLoggerWatcher;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
@@ -34,11 +38,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @SuppressWarnings("unchecked")
 public class BalanceIndexOperationTest extends AbstractMasterNodeZkTest {
+
+    @Rule
+    public TestLoggerWatcher defaultDistributionPolicyLoggingRule = TestLoggerWatcher.logErrors(DefaultDistributionPolicy.class, "testUnbalancedIndexAfterBalancingIndex");
+
+//    @Rule
+//    public TestLoggerWatcher interactionProtocolLoggingRule = TestLoggerWatcher.logErrors(InteractionProtocol.class, "testUnbalancedIndexAfterBalancingIndex");
 
     @Test
     public void testGetExecutionInstruction() throws Exception {
@@ -154,6 +167,10 @@ public class BalanceIndexOperationTest extends AbstractMasterNodeZkTest {
         // now it shouldn't add itself again since the index is balanced
         balanceOperation.nodeOperationsComplete(masterContext, Collections.EMPTY_LIST);
         assertEquals(1, masterQueue.size());
+
+        assertThat(defaultDistributionPolicyLoggingRule.getLogEventCount(event -> true), is(equalTo(4)));
+        assertThat(defaultDistributionPolicyLoggingRule.getLogEventCount(event -> event.getFormattedMessage().matches("cannot replicate shard \\'.*\\' 3 times, cause only 2 nodes connected")), is(equalTo(4)));
+//        assertThat(interactionProtocolLoggingRule.getLogEventCount(event -> true), is(equalTo(2)));
     }
 
     @Test

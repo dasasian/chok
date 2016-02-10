@@ -29,20 +29,20 @@ public class DefaultNameSpaceImpl implements IDefaultNameSpace {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultNameSpaceImpl.class);
 
-    private final ZkConfiguration _conf;
+    private final ZkConfiguration configuration;
 
     public DefaultNameSpaceImpl(ZkConfiguration conf) {
-        _conf = conf;
+        configuration = conf;
     }
 
     @Override
     public void createDefaultNameSpace(ZkClient zkClient) {
         LOG.debug("Creating default File structure if required....");
-        safeCreate(zkClient, _conf.getRootPath());
+        safeCreate(zkClient, configuration.getRootPath());
         PathDef[] values = PathDef.values();
         for (PathDef pathDef : values) {
             if (pathDef != PathDef.MASTER && pathDef != PathDef.VERSION) {
-                safeCreate(zkClient, _conf.getPath(pathDef));
+                safeCreate(zkClient, configuration.getPath(pathDef));
             }
         }
     }

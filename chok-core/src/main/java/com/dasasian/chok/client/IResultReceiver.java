@@ -15,18 +15,12 @@
  */
 package com.dasasian.chok.client;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * These are the only ClientResult methods NodeInteraction is allowed to call.
  */
-public interface IResultReceiver<T> {
-
-    /**
-     * @return true if the result is closed, and therefore not accepting any new
-     * results.
-     */
-    boolean isClosed();
+public interface IResultReceiver<T> extends AutoCloseable {
 
     /**
      * Add the shard's results. Silently fails if result is closed.
@@ -34,7 +28,7 @@ public interface IResultReceiver<T> {
      * @param result The result to add.
      * @param shards The shards that were called to produce the result.
      */
-    void addResult(T result, Collection<String> shards);
+    void addResult(T result, Set<String> shards);
 
     /**
      * Report an error thrown by the node when we tried to access the specified
@@ -43,6 +37,6 @@ public interface IResultReceiver<T> {
      * @param error the error to add
      * @param shards The shards that were called to produce the result.
      */
-    void addError(Throwable error, Collection<String> shards);
+    void addError(Throwable error, Set<String> shards);
 
 }

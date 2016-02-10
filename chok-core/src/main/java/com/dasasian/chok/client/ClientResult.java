@@ -16,6 +16,7 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.util.ChokException;
+import com.google.common.collect.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,47 +43,30 @@ import java.util.*;
 public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResult<T>.Entry> {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClientResult.class);
-    private final Set<String> allShards;
-    private final Set<String> seenShards = new HashSet<>();
-    private final Set<Entry> entries = new HashSet<>();
-    private final Map<Object, Entry> resultMap = new HashMap<>();
-    private final Collection<T> results = new ArrayList<>();
-    private final Collection<Throwable> errors = new ArrayList<>();
-    private final long startTime = System.currentTimeMillis();
-    private final IClosedListener closedListener;
-    private boolean closed = false;
+    private final Set<Entry> entries;
+    private final Map<Object, Entry> resultMap;
+    private final List<T> results;
+    private final List<Throwable> errors;
+    private final long startTime;
+    private final ResultReceiverWrapper<T> resultReceiverWrapper;
 
     /**
      * Construct a non-closed ClientResult, which waits for addResults() or
-     * addError() calls until close() is called. After that point, addResults()
-     * and addError() calls are ignored, and this object becomes immutable.
+     * addNodeError() calls until close() is called. After that point, addResults()
+     * and addNodeError() calls are ignored, and this object becomes immutable.
      *
-     * @param closedListener If not null, it's clientResultClosed() method is called when our
-     *                       close() method is.
      * @param allShards      The set of all shards to expect results from.
      */
-    public ClientResult(IClosedListener closedListener, Collection<String> allShards) {
-        if (allShards == null || allShards.isEmpty()) {
-            throw new IllegalArgumentException("No shards specified");
-        }
-        this.allShards = Collections.unmodifiableSet(new HashSet<>(allShards));
-        this.closedListener = closedListener;
+    public ClientResult(ImmutableSet<String> allShards) {
+        this.resultReceiverWrapper = new ResultReceiverWrapper<T>(allShards, this);
         if (LOG.isTraceEnabled()) {
-            LOG.trace(String.format("Created ClientResult(%s, %s)", closedListener != null ? closedListener : "null", allShards));
+            LOG.trace(String.format("Created ClientResult(%s)", allShards));
         }
-    }
-
-    /**
-     * Construct a non-closed ClientResult, which waits for addResults() or
-     * addError() calls until close() is called. After that point, addResults()
-     * and addError() calls are ignored, and this object becomes immutable.
-     *
-     * @param closedListener If not null, it's clientResultClosed() method is called when our
-     *                       close() method is.
-     * @param allShards      The set of all shards to expect results from.
-     */
-    public ClientResult(IClosedListener closedListener, String... allShards) {
-        this(closedListener, Arrays.asList(allShards));
+        startTime = System.currentTimeMillis();
+        this.entries = Sets.newConcurrentHashSet();
+        this.resultMap = Maps.newConcurrentMap();
+        this.results = Collections.synchronizedList(Lists.newArrayList());
+        this.errors = Collections.synchronizedList(Lists.newArrayList());
     }
 
     /**
@@ -91,53 +75,18 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
      * @param result The result to add.
      * @param shards The shards used to compute the result.
      */
-    public void addResult(T result, Collection<String> shards) {
-        if (closed) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Ignoring results given to closed ClientResult");
-            }
-            return;
-        }
-        if (shards == null) {
-            LOG.warn("Null shards passed to AddResult()");
-            return;
-        }
+    @Override
+    public void addResult(T result, Set<String> shards) {
         Entry entry = new Entry(result, shards, false);
-        if (entry.shards.isEmpty()) {
-            LOG.warn("Empty shards passed to AddResult()");
-            return;
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(String.format("Adding result %s", entry));
         }
-        synchronized (this) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(String.format("Adding result %s", entry));
-            }
-            if (LOG.isWarnEnabled()) {
-                for (String shard : entry.shards) {
-                    if (seenShards.contains(shard)) {
-                        LOG.warn("Duplicate occurances of shard " + shard);
-                    } else if (!allShards.contains(shard)) {
-                        LOG.warn("Unknown shard " + shard + " returned results");
-                    }
-                }
-            }
-            entries.add(entry);
-            seenShards.addAll(entry.shards);
-            if (result != null) {
-                results.add(result);
-                resultMap.put(result, entry);
-            }
-            notifyAll();
-        }
-    }
+        entries.add(entry);
 
-    /**
-     * Add a result. Will be ignored if closed.
-     *
-     * @param result The result to add.
-     * @param shards The shards used to compute the result.
-     */
-    public void addResult(T result, String... shards) {
-        addResult(result, Arrays.asList(shards));
+        if (result != null) {
+            results.add(result);
+            resultMap.put(result, entry);
+        }
     }
 
     /**
@@ -146,151 +95,102 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
      * @param error  The error to add.
      * @param shards The shards used when the error happened.
      */
-    public void addError(Throwable error, Collection<String> shards) {
-        if (closed) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Ignoring exception given to closed ClientResult");
-            }
-            return;
-        }
-        if (shards == null) {
-            LOG.warn("Null shards passed to addError()");
-            return;
-        }
+    @Override
+    public void addError(Throwable error, Set<String> shards) {
         Entry entry = new Entry(error, shards, true);
-        if (entry.shards.isEmpty()) {
-            LOG.warn("Empty shards passed to addError()");
-            return;
+        if (LOG.isTraceEnabled()) {
+            LOG.trace(String.format("Adding error %s", entry));
         }
-        synchronized (this) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(String.format("Adding error %s", entry));
-            }
-            if (LOG.isWarnEnabled()) {
-                for (String shard : entry.shards) {
-                    if (seenShards.contains(shard)) {
-                        LOG.warn("Duplicate occurances of shard " + shard);
-                    } else if (!allShards.contains(shard)) {
-                        LOG.warn("Unknown shard " + shard + " returned results");
-                    }
-                }
-            }
-            entries.add(entry);
-            seenShards.addAll(entry.shards);
-            if (error != null) {
-                errors.add(error);
-                resultMap.put(error, entry);
-            }
-            notifyAll();
+        entries.add(entry);
+        if (error != null) {
+            errors.add(error);
+            resultMap.put(error, entry);
         }
-    }
-
-    /**
-     * Add an error. Will be ignored if closed.
-     *
-     * @param error  The error to add.
-     * @param shards The shards used when the error happened.
-     */
-    public synchronized void addError(Throwable error, String... shards) {
-        addError(error, Arrays.asList(shards));
-    }
-
-    /**
-     * Stop accepting additional results or errors. Become an immutable object.
-     * Also report the closure to the IClosedListener passed to our constructor,
-     * if any. Normally this will tell the WorkQueue to shut down immediately,
-     * killing any still running threads.
-     */
-    public synchronized void close() {
-        LOG.trace("close() called.");
-        if (!closed) {
-            closed = true;
-            if (closedListener != null) {
-                LOG.trace("Notifying closed listener.");
-                closedListener.clientResultClosed();
-            }
-        }
-        notifyAll();
-    }
-
-    /**
-     * Is this result set closed, and therefore not accepting any additional
-     * results or errors. Once closed, this becomes an immutable object.
-     */
-    public boolean isClosed() {
-        return closed;
     }
 
     /**
      * @return the set of all shards we are expecting results from.
      */
     public Set<String> getAllShards() {
-        return allShards;
+        return resultReceiverWrapper.getAllShards();
+    }
+
+    public boolean isClosed() {
+        return resultReceiverWrapper.isClosed();
     }
 
     /**
-     * @return the set of shards from whom we have seen either results or errors.
+     * @return true if we have seen either a result or an error for all shards.
      */
-    public synchronized Set<String> getSeenShards() {
-        return Collections.unmodifiableSet(closed ? seenShards : new HashSet<>(seenShards));
+    public boolean isComplete() {
+        return resultReceiverWrapper.isComplete();
+    }
+
+    public double getShardCoverage() {
+        return resultReceiverWrapper.getShardCoverage();
+    }
+
+    public void addNodeResult(T result, Set<String> shards) {
+        resultReceiverWrapper.addNodeResult(result, shards);
+    }
+
+    public void addNodeError(Throwable error, Set<String> shards) {
+        resultReceiverWrapper.addNodeError(error, shards);
     }
 
     /**
-     * @return the subset of all shards from whom we have not seen either results
-     * or errors.
+     * @return true if any errors were reported.
      */
-    public synchronized Set<String> getMissingShards() {
-        Set<String> missing = new HashSet<>(allShards);
-        missing.removeAll(seenShards);
-        return missing;
+    public synchronized boolean isError() {
+        return !errors.isEmpty();
     }
 
     /**
      * @return all of the results seen so far. Does not include errors.
      */
     public synchronized Collection<T> getResults() {
-        return Collections.unmodifiableCollection(closed ? results : new ArrayList<>(results));
+        return Collections.unmodifiableCollection(isClosed() ? results : new ArrayList<>(results));
     }
 
-    /**
-     * Either return results or throw an exception. Allows simple one line use of
-     * a ClientResult. If no errors occurred, returns same results as
-     * getResults(). If any errors occurred, one is chosen via getError() and
-     * thrown.
-     *
-     * @return if no errors occurred, results via getResults().
-     * @throws Throwable if any errors occurred, via getError().
-     */
-    public synchronized Collection<T> getResultsOrThrowException() throws Throwable {
-        if (isError()) {
-            throw getError();
-        } else {
-            return getResults();
-        }
-    }
-
-    /**
-     * Either return results or throw a ChokException. Allows simple one line use
-     * of a ClientResult. If no errors occurred, returns same results as
-     * getResults(). If any errors occurred, one is chosen via getChokException()
-     * and thrown.
-     *
-     * @return if no errors occurred, results via getResults().
-     * @throws com.dasasian.chok.util.ChokException if any errors occurred, via getError().
-     */
-    public synchronized Collection<T> getResultsOrThrowChokException() throws ChokException {
-        if (isError()) {
-            throw getChokException();
-        } else {
-            return getResults();
-        }
-    }
+//    /**
+//     * Either return results or throw an exception. Allows simple one line use of
+//     * a ClientResult. If no errors occurred, returns same results as
+//     * getResults(). If any errors occurred, one is chosen via getError() and
+//     * thrown.
+//     *
+//     * @return if no errors occurred, results via getResults().
+//     * @throws Throwable if any errors occurred, via getError().
+//     */
+//    public synchronized Collection<T> getResultsOrThrowException() throws Throwable {
+//        if (isError()) {
+//            throw getError();
+//        } else {
+//            return getResults();
+//        }
+//    }
+//
+//    /**
+//     * Either return results or throw a ChokException. Allows simple one line use
+//     * of a ClientResult. If no errors occurred, returns same results as
+//     * getResults(). If any errors occurred, one is chosen via getChokException()
+//     * and thrown.
+//     *
+//     * @return if no errors occurred, results via getResults().
+//     * @throws com.dasasian.chok.util.ChokException if any errors occurred, via getError().
+//     */
+//    public synchronized Collection<T> getResultsOrThrowChokException() throws ChokException {
+//        if (isError()) {
+//            throw getChokException();
+//        } else {
+//            return getResults();
+//        }
+//    }
 
     /**
      * @return all of the errors seen so far.
      */
     public synchronized Collection<Throwable> getErrors() {
-        return Collections.unmodifiableCollection(closed ? errors : new ArrayList<>(errors));
+        return Collections.unmodifiableCollection(isClosed() ? errors : new ArrayList<>(errors));
     }
 
     /**
@@ -328,55 +228,23 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
         }
     }
 
-    /**
-     * @param result The result to look up.
-     * @return What shards produced the result, and when it arrived. Returns null
-     * if result not found.
-     */
-    public synchronized Entry getResultEntry(T result) {
-        return resultMap.get(result);
-    }
-
-    /**
-     * @param error The error to look up.
-     * @return What shards produced the error, and when it arrived. Returns null
-     * if error not found.
-     */
-    public synchronized Entry getErrorEntry(Throwable error) {
-        return resultMap.get(error);
-    }
-
-    /**
-     * @return true if we have seen either a result or an error for all shards.
-     */
-    public synchronized boolean isComplete() {
-        return seenShards.containsAll(allShards);
-    }
-
-    /**
-     * @return true if any errors were reported.
-     */
-    public synchronized boolean isError() {
-        return !errors.isEmpty();
-    }
-
-    /**
-     * @return true if result is complete (all shards reporting in) and no errors
-     * occurred.
-     */
-    public synchronized boolean isOK() {
-        return isComplete() && !isError();
-    }
-
-    /**
-     * @return the ratio (0.0 .. 1.0) of shards we have seen. 0.0 when no shards,
-     * 1.0 when complete.
-     */
-    public synchronized double getShardCoverage() {
-        int seen = seenShards.size();
-        int all = allShards.size();
-        return all > 0 ? (double) seen / (double) all : 0.0;
-    }
+//    /**
+//     * @param result The result to look up.
+//     * @return What shards produced the result, and when it arrived. Returns null
+//     * if result not found.
+//     */
+//    public synchronized Entry getResultEntry(T result) {
+//        return resultMap.get(result);
+//    }
+//
+//    /**
+//     * @param error The error to look up.
+//     * @return What shards produced the error, and when it arrived. Returns null
+//     * if error not found.
+//     */
+//    public synchronized Entry getErrorEntry(Throwable error) {
+//        return resultMap.get(error);
+//    }
 
     /**
      * @return the time when this ClientResult was created.
@@ -389,7 +257,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
      * @return a snapshot of all the data about the results so far.
      */
     public Set<Entry> entrySet() {
-        if (closed) {
+        if (isClosed()) {
             return Collections.unmodifiableSet(entries);
         } else {
             synchronized (this) {
@@ -402,6 +270,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
     /**
      * @return an iterator of our Entries sees so far.
      */
+    @Override
     public Iterator<Entry> iterator() {
         return entrySet().iterator();
     }
@@ -431,37 +300,6 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
         return arrivals;
     }
 
-    public void waitFor(IResultPolicy<T> policy) {
-        long waitTime;
-        while (true) {
-            synchronized (results) {
-                // Need to stay synchronized before waitTime() through wait() or we will
-                // miss notifications.
-                waitTime = policy.waitTime(this);
-                if (waitTime > 0 && !closed) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace(String.format("Waiting %d ms, results = %s", waitTime, this));
-                    }
-                    try {
-                        synchronized (this) {
-                            this.wait(waitTime);
-                        }
-                    } catch (InterruptedException e) {
-                        LOG.debug("Interrupted", e);
-                    }
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace(String.format("Done waiting, results = %s", this));
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-        if (waitTime < 0) {
-            close();
-        }
-    }
-
     @Override
     public synchronized String toString() {
         int numResults = 0;
@@ -474,19 +312,24 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
                 numErrors++;
             }
         }
-        return String.format("ClientResult: %d results, %d errors, %d/%d shards%s%s", numResults, numErrors, seenShards.size(), allShards.size(), closed ? " (closed)" : "", isComplete() ? " (complete)" : "");
+        return String.format("ClientResult: %d results, %d errors, %d/%d shards%s%s", numResults, numErrors, getSeenShards().size(), getAllShards().size(), isClosed() ? " (closed)" : "", isComplete() ? " (complete)" : "");
     }
 
-    /**
-     * Provides a way to notify interested parties when our close() method is
-     * called.
-     */
-    public interface IClosedListener {
-        /**
-         * The ClientResult's close() method was called. The result is closed before
-         * calling this.
-         */
-        void clientResultClosed();
+    public Set<String> getSeenShards() {
+        return resultReceiverWrapper.getSeenShards();
+    }
+
+    public Set<String> getMissingShards() {
+        return resultReceiverWrapper.getMissingShards();
+    }
+
+    @Override
+    public void close() {
+        resultReceiverWrapper.close();
+    }
+
+    public ResultReceiverWrapper<T> getResultReceiverWrapper() {
+        return resultReceiverWrapper;
     }
 
     /**

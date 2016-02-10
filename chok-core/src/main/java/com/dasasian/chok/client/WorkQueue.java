@@ -15,17 +15,13 @@
  */
 package com.dasasian.chok.client;
 
-import com.dasasian.chok.client.ClientResult.IClosedListener;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
@@ -45,10 +41,18 @@ class WorkQueue<T> implements INodeExecutor {
     private final Method method;
     private final int shardArrayParamIndex;
     private final Object[] args;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
-    private final ClientResult<T> results;
+    private final ExecutorService executor;
+    private final IResultReceiverWrapper<T> resultReceiverWrapper;
     private final int instanceId = instanceCounter++;
     private int callCounter = 0;
+
+    /**
+     * Used by unit tests to make toString() output repeatable.
+     */
+    public static void resetInstanceCounter() {
+        instanceCounter = 0;
+    }
+
     /**
      * Normal constructor. Jobs submitted by execute() will result in a
      * NodeInteraction instance being created and run(). The WorkQueue
@@ -59,58 +63,40 @@ class WorkQueue<T> implements INodeExecutor {
      *
      * @param shardManager         The class that maintains the node/shard maps, the node selection
      *                             policy, and the node proxies.
-     * @param allShards            The entire set of shards for this request. When all these shards
-     *                             have reported in, the result is complete.
      * @param method               Which method to call on the server side.
      * @param shardArrayParamIndex Which paramater, if any, should be overwritten with an array of
      *                             the shard names (per server call). Pass -1 to disable this.
      * @param args                 The arguments to pass in to the method on the server side.
      */
-    protected WorkQueue(INodeProxyManager shardManager, Set<String> allShards, Method method, int shardArrayParamIndex, Object... args) {
-        this(NodeInteraction::new, shardManager, allShards, method, shardArrayParamIndex, args);
+    protected WorkQueue(ExecutorService executor, INodeProxyManager shardManager, Method method, int shardArrayParamIndex, IResultReceiverWrapper<T> resultReceiverWrapper, Object... args) {
+        this(executor, NodeInteraction::new, shardManager, method, shardArrayParamIndex, resultReceiverWrapper, args);
     }
+
     /**
      * Used by unit tests. By providing an alternate factory, this class can be tested without creating
      * and NodeInteractions.
-     *
+     *  @param executor             The executor to use for the queue
      * @param shardManager         The class that maintains the node/shard maps, the node selection
      *                             policy, and the node proxies.
-     * @param allShards            The entire set of shards for this request. When all these shards
-     *                             have reported in, the result is complete.
      * @param method               Which method to call on the server side.
      * @param shardArrayParamIndex Which paramater, if any, should be overwritten with an array of
      *                             the shard names (per server call). Pass -1 to disable this.
      * @param args                 The arguments to pass in to the method on the server side.
      */
-    protected WorkQueue(INodeInteractionFactory<T> interactionFactory, INodeProxyManager shardManager, Set<String> allShards, Method method, int shardArrayParamIndex, Object... args) {
-        if (shardManager == null || allShards == null || method == null) {
+    protected WorkQueue(ExecutorService executor, INodeInteractionFactory<T> interactionFactory, INodeProxyManager shardManager, Method method, int shardArrayParamIndex, IResultReceiverWrapper<T> resultReceiverWrapper, Object... args) {
+        this.executor = executor;
+        if (shardManager == null || method == null) {
             throw new IllegalArgumentException("Null passed to new WorkQueue()");
-        }
-        if (allShards.isEmpty()) {
-            throw new IllegalArgumentException("No shards passed to new WorkQueue()");
         }
         this.interactionFactory = interactionFactory;
         this.shardManager = shardManager;
         this.method = method;
         this.shardArrayParamIndex = shardArrayParamIndex;
         this.args = args != null ? args : new Object[0];
-        IClosedListener closedListener = new IClosedListener() {
-            public void clientResultClosed() {
-                LOG.trace("Shut down via ClientRequest.close()");
-                shutdown();
-            }
-        };
-        this.results = new ClientResult<>(closedListener, allShards);
+        this.resultReceiverWrapper = resultReceiverWrapper;
         if (LOG.isTraceEnabled()) {
             LOG.trace("Creating new " + this);
         }
-    }
-
-    /**
-     * Used by unit tests to make toString() output repeatable.
-     */
-    public static void resetInstanceCounter() {
-        instanceCounter = 0;
     }
 
     /**
@@ -122,12 +108,12 @@ class WorkQueue<T> implements INodeExecutor {
      * @param tryCount     This call is the Nth retry. Starts at 1.
      * @param maxTryCount  How often the call should be repeated in maximum.
      */
-    public void execute(String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount) {
-        if (!executor.isShutdown() && !results.isClosed()) {
+    public void execute(String node, ImmutableSetMultimap<String, String> nodeShardMap, int tryCount, int maxTryCount) {
+        if (!executor.isShutdown() && !resultReceiverWrapper.isClosed()) {
             if (LOG.isTraceEnabled()) {
                 LOG.trace(String.format("Creating interaction with %s, will use shards: %s, tryCount=%d (id=%d)", node, nodeShardMap.get(node), tryCount, instanceId));
             }
-            Runnable interaction = interactionFactory.createInteraction(method, args, shardArrayParamIndex, node, nodeShardMap, tryCount, maxTryCount, shardManager, this, results);
+            Runnable interaction = interactionFactory.createInteraction(method, args, shardArrayParamIndex, node, nodeShardMap, tryCount, maxTryCount, shardManager, this, resultReceiverWrapper);
             if (interaction != null) {
                 try {
                     executor.execute(interaction);
@@ -140,54 +126,9 @@ class WorkQueue<T> implements INodeExecutor {
             }
         } else {
             if (LOG.isTraceEnabled()) {
-                LOG.trace(String.format("Not creating interaction with %s, shards=%s, tryCount=%d, executor=%s, result=%s (id=%d)", node, nodeShardMap.get(node), tryCount, executor.isShutdown() ? "shutdown" : "running", results, instanceId));
+                LOG.trace(String.format("Not creating interaction with %s, shards=%s, tryCount=%d, executor=%s, result=%s (id=%d)", node, nodeShardMap.get(node), tryCount, executor.isShutdown() ? "shutdown" : "running", resultReceiverWrapper, instanceId));
             }
         }
-    }
-
-    /**
-     * Stop all threads. Close the result set (making it immutable).
-     * Any calls to execute() after this will be ignored.
-     */
-    public void shutdown() {
-        if (LOG.isTraceEnabled()) {
-            LOG.trace(String.format("Shutdown() called (id=%d)", instanceId));
-        }
-        if (!executor.isShutdown()) {
-            executor.shutdownNow();
-        }
-        if (!results.isClosed()) {
-            results.close();
-        }
-    }
-
-    /**
-     * Wait up to timeout msec for the results to be complete (all shards
-     * reporting) then stop the threads and return what we have so far.
-     *
-     * @param timeout maximum msec to wait for.
-     * @return the results of the call, which will be closed.
-     */
-    public ClientResult<T> getResults(long timeout) {
-        return getResults(new ResultCompletePolicy<>(timeout, true));
-    }
-
-    /**
-     * Wait up to timeout msec for the results to be complete (all shards
-     * reporting) then return what we have so far. If shutdown is true, the result
-     * will be closed and any remaining threads will be killed.
-     * <p>
-     * If you want to do your own polling, pass in 0, true. If you want a simple
-     * all-or-nothing result, pass in N, true, then check isOK() on the result. If
-     * you want to wait for a while then decide for yourself what to do, pass in
-     * N, false (or see IResultPolicy).
-     *
-     * @param timeout  maximum msec to wait for.
-     * @param shutdown if true, stops the search.
-     * @return the results of the call, which will be closed.
-     */
-    public ClientResult<T> getResults(long timeout, boolean shutdown) {
-        return getResults(new ResultCompletePolicy<>(timeout, shutdown));
     }
 
     /**
@@ -195,9 +136,8 @@ class WorkQueue<T> implements INodeExecutor {
      * terminate the call.
      *
      * @param policy How to decide when to return and to terminate the call.
-     * @return the results, which may or may not be complete and/or closed.
      */
-    public ClientResult<T> getResults(IResultPolicy<T> policy) {
+    public void waitTillDone(IResultPolicy<T> policy) throws Exception {
         int callId = callCounter++;
         long start = 0;
         if (LOG.isTraceEnabled()) {
@@ -206,39 +146,45 @@ class WorkQueue<T> implements INodeExecutor {
         }
         long waitTime;
         while (true) {
-            synchronized (results) {
+            synchronized (resultReceiverWrapper) {
                 // Need to stay synchronized before waitTime() through wait() or we will
                 // miss notifications.
-                waitTime = policy.waitTime(results);
-                if (waitTime > 0 && !results.isClosed()) {
+                waitTime = policy.waitTime(resultReceiverWrapper);
+                if (waitTime > 0 && !resultReceiverWrapper.isClosed()) {
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace(String.format("Waiting %d ms, results = %s (id=%d:%d)", waitTime, results, instanceId, callId));
+                        LOG.trace(String.format("Waiting %d ms, results = %s (id=%d:%d)", waitTime, resultReceiverWrapper, instanceId, callId));
                     }
                     try {
-                        results.wait(waitTime);
-                    } catch (InterruptedException e) {
+                        resultReceiverWrapper.wait(waitTime);
+                    }
+                    catch (InterruptedException e) {
                         LOG.debug("Interrupted", e);
                     }
                     if (LOG.isTraceEnabled()) {
-                        LOG.trace(String.format("Done waiting, results = %s (id=%d:%d)", results, instanceId, callId));
+                        LOG.trace(String.format("Done waiting, results = %s (id=%d:%d)", resultReceiverWrapper, instanceId, callId));
                     }
-                } else {
+                }
+                else {
                     break;
                 }
             }
         }
-        if (waitTime < 0) {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace(String.format("Shutting down work queue, results = %s (id=%d:%d)", results, instanceId, callId));
-            }
-            executor.shutdownNow();
-            results.close();
-        }
+//        if (waitTime < 0) {
+//            if (LOG.isTraceEnabled()) {
+//                LOG.trace(String.format("Shutting down work queue, results = %s (id=%d:%d)", resultReceiverWrapper, instanceId, callId));
+//            }
+//            resultReceiverWrapper.close();
+//        }
+//        if (executor.isShutdown()) {
+//            if (LOG.isTraceEnabled()) {
+//                LOG.trace(String.format("Executor is shutdown. Shutting down work queue, results = %s (id=%d:%d)", resultReceiverWrapper, instanceId, callId));
+//            }
+//            resultReceiverWrapper.close();
+//        }
         if (LOG.isTraceEnabled()) {
             long time = System.currentTimeMillis() - start;
-            LOG.trace(String.format("Returning results = %s, took %d ms (id=%d:%d)", results, time, instanceId, callId));
+            LOG.trace(String.format("Returning results = %s, took %d ms (id=%d:%d)", resultReceiverWrapper, time, instanceId, callId));
         }
-        return results;
     }
 
     @Override
@@ -249,7 +195,7 @@ class WorkQueue<T> implements INodeExecutor {
     }
 
     public interface INodeInteractionFactory<T> {
-        Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiver<T> results);
+        Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, ImmutableSetMultimap<String, String> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiverWrapper<T> results);
     }
 
 }

@@ -16,6 +16,7 @@
 package com.dasasian.chok.client;
 
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multiset;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.RPC;
@@ -29,7 +30,6 @@ import java.lang.reflect.Proxy;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -95,7 +95,7 @@ public class NodeProxyManager implements INodeProxyManager {
     }
 
     @Override
-    public Map<String, List<String>> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException {
+    public ImmutableSetMultimap<String, String> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException {
         return selectionPolicy.createNode2ShardsMap(shards);
     }
 

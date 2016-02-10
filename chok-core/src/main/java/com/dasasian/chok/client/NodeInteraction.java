@@ -16,6 +16,8 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.util.ChokException;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.apache.hadoop.ipc.VersionedProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,8 +25,6 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  * This class is responsible for calling the sever node via an RPC proxy, and
@@ -32,7 +32,7 @@ import java.util.Map;
  * whereby M is the given maxRetryCount (M calls total). With replication level
  * N, there can be at most N-1 retries (N calls total).
  */
-class NodeInteraction<T> implements Runnable {
+public class NodeInteraction<T> implements Runnable {
 
     private static final Logger LOG = LoggerFactory.getLogger(NodeInteraction.class);
 
@@ -43,13 +43,13 @@ class NodeInteraction<T> implements Runnable {
     private final Object[] args;
     private final int shardArrayIndex;
     private final String node;
-    private final Map<String, List<String>> node2ShardsMap;
-    private final List<String> shards;
+    private final ImmutableSetMultimap<String, String> node2ShardsMap;
+    private final ImmutableSet<String> shards;
     private final int tryCount;
     private final int maxTryCount;
     private final INodeExecutor workQueue;
     private final INodeProxyManager shardManager;
-    private final IResultReceiver<T> result;
+    private final IResultReceiverWrapper<T> result;
     private final int instanceId = interactionInstanceCounter++;
 
     /**
@@ -60,11 +60,11 @@ class NodeInteraction<T> implements Runnable {
      *                        from the same interface used to creat the RPC proxy in the first
      *                        place (see Client constructor).
      * @param args            The arguments to pass to the method. When calling the server, the
-     *                        shard list argument will be modified if shardArrayIndex >= 0.
+     *                        shard list argument will be modified if shardArrayIndex &gt;= 0.
      * @param shardArrayIndex Which parameter, if any, to overwrite with a String[] of shard
      *                        names (this one arg then changes an a per-node basis, otherwise
      *                        all arguments are the same for all calls to nodes). This is
-     *                        optional, depending on the needs of the server. When < 0, no
+     *                        optional, depending on the needs of the server. When &lt; 0, no
      *                        overwriting is done.
      * @param node            The name of the node to contact. This is used to get the node's
      *                        proxy object (see IShardProxyManager).
@@ -85,14 +85,14 @@ class NodeInteraction<T> implements Runnable {
      * retry jobs will write to it for us). If we get an error and do not
      * retry we write the error to it.
      */
-    public NodeInteraction(Method method, Object[] args, int shardArrayIndex, String node, Map<String, List<String>> node2ShardsMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor workQueue, IResultReceiver<T> result) {
+    public NodeInteraction(Method method, Object[] args, int shardArrayIndex, String node, ImmutableSetMultimap<String, String> node2ShardsMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor workQueue, IResultReceiverWrapper<T> result) {
         this.method = method;
         // Make a copy in case we will be modifying the shard list.
         this.args = Arrays.copyOf(args, args.length);
         this.shardArrayIndex = shardArrayIndex;
         this.node = node;
         this.node2ShardsMap = node2ShardsMap;
-        shards = node2ShardsMap.get(node);
+        this.shards = node2ShardsMap.get(node);
         this.tryCount = tryCount;
         this.maxTryCount = maxTryCount;
         this.workQueue = workQueue;
@@ -127,19 +127,19 @@ class NodeInteraction<T> implements Runnable {
                     LOG.error(String.format("Method call changed from %s to %s (id=%d)", methodDesc, methodDesc2, instanceId));
                 }
             }
-            this.result.addResult(result, shards);
+            this.result.addNodeResult(result, shards);
         } catch (Throwable t) {
             // Notify the work queue, so it can mark the node as down.
             shardManager.reportNodeCommunicationFailure(node, t);
             if (tryCount >= maxTryCount) {
                 LOG.error(String.format("Error calling %s (try # %d of %d) (id=%d)", (methodDesc != null ? methodDesc : method + " on " + node), tryCount, maxTryCount, instanceId), t);
-                result.addError(new ChokException(String.format("%s for shards %s failed (id=%d)", getClass().getSimpleName(), shards, instanceId), t), shards);
+                result.addNodeError(new ChokException(String.format("%s for shards %s failed (id=%d)", getClass().getSimpleName(), shards, instanceId), t), shards);
                 return;
             }
             if (!result.isClosed()) {
                 try {
                     // Find new node(s) for our shards and add to global node2ShardMap
-                    Map<String, List<String>> retryMap = shardManager.createNode2ShardsMap(node2ShardsMap.get(node));
+                    ImmutableSetMultimap<String, String> retryMap = shardManager.createNode2ShardsMap(node2ShardsMap.get(node));
                     LOG.warn(String.format("Failed to interact with node %s. Trying with other node(s) %s (id=%d)", node, retryMap.keySet(), instanceId), t);
                     // Execute the action again for every node
                     for (String newNode : retryMap.keySet()) {
@@ -147,7 +147,7 @@ class NodeInteraction<T> implements Runnable {
                     }
                 } catch (ShardAccessException e) {
                     LOG.error(String.format("Error calling %s (try # %d of %d) (id=%d)", (methodDesc != null ? methodDesc : method + " on " + node), tryCount, maxTryCount, instanceId), t);
-                    result.addError(e, shards);
+                    result.addNodeError(e, shards);
                 }
             }
             // We have no results to report. Submitted jobs will hopefully get results
@@ -205,4 +205,6 @@ class NodeInteraction<T> implements Runnable {
     public String toString() {
         return "NodeInteraction: call " + method.getName() + " on " + node;
     }
+
+
 }

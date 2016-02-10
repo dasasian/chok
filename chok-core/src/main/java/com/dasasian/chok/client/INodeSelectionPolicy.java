@@ -15,9 +15,10 @@
  */
 package com.dasasian.chok.client;
 
+import com.google.common.collect.ImmutableSetMultimap;
+
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Returns a Map with Nodes and shards within those nodes that have to be
@@ -72,6 +73,6 @@ public interface INodeSelectionPolicy {
      * @return the node to shards map
      * @throws ShardAccessException if one of the shards could not be accessed
      */
-    Map<String, List<String>> createNode2ShardsMap(Iterable<String> shards) throws ShardAccessException;
+    ImmutableSetMultimap<String, String> createNode2ShardsMap(Iterable<String> shards) throws ShardAccessException;
 
 }

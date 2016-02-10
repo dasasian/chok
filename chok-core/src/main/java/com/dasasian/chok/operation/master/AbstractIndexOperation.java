@@ -15,6 +15,8 @@
  */
 package com.dasasian.chok.operation.master;
 
+import com.dasasian.chok.master.CopyToAllNodesDistributionPolicy;
+import com.dasasian.chok.master.IDeployPolicy;
 import com.dasasian.chok.master.MasterContext;
 import com.dasasian.chok.operation.OperationId;
 import com.dasasian.chok.operation.node.DeployResult;
@@ -27,21 +29,20 @@ import com.dasasian.chok.protocol.metadata.IndexDeployError;
 import com.dasasian.chok.protocol.metadata.IndexDeployError.ErrorType;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.metadata.IndexMetaData.Shard;
-import com.dasasian.chok.util.CollectionUtil;
-import com.dasasian.chok.util.One2ManyListMap;
-import com.google.common.collect.Lists;
+import com.google.common.collect.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public abstract class AbstractIndexOperation implements MasterOperation {
 
     public static final char INDEX_SHARD_NAME_SEPARATOR = '#';
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(AbstractIndexOperation.class);
-    private Map<String, List<String>> newShardsByNodeMap = new HashMap<>();
+    private ImmutableSetMultimap<String, String> newShard2Nodes = ImmutableSetMultimap.of();
 
     public static String createShardName(String indexName, String shardPath) {
         int lastIndexOf = shardPath.lastIndexOf("/");
@@ -70,75 +71,67 @@ public abstract class AbstractIndexOperation implements MasterOperation {
 
         InteractionProtocol protocol = context.getProtocol();
         Set<Shard> shards = indexMD.getShards();
+        Set<String> shardNames = shards.stream().map(Shard::getName).collect(Collectors.toSet());
+
+        IDeployPolicy deployPolicy = (indexMD.isCopyToAllNodes()) ? new CopyToAllNodesDistributionPolicy() : context.getDeployPolicy();
 
         // now distribute shards
-        final Map<String, List<String>> currentIndexShard2NodesMap = protocol.getShard2NodesMap(Shard.getShardNames(shards));
-        Map<String, List<String>> currentGlobalNode2ShardsMap = getCurrentNode2ShardMap(liveNodes, protocol.getShard2NodesMap(protocol.getShard2NodeShards()));
-        addRunningDeployments(currentGlobalNode2ShardsMap, runningOperations);
+        final ImmutableSetMultimap<String, String> currentShard2NodesMap = getCurrentShard2NodesMap(protocol, shards, runningOperations);
 
-        final Map<String, List<String>> newNode2ShardMap = context.getDeployPolicy().createDistributionPlan(currentIndexShard2NodesMap, cloneMap(currentGlobalNode2ShardsMap), new ArrayList<>(liveNodes), indexMD.getReplicationLevel());
+        final ImmutableSetMultimap<String, String> newNode2ShardMap = deployPolicy
+                .createDistributionPlan(shardNames, liveNodes, currentShard2NodesMap, indexMD.getReplicationLevel());
 
+        return getOperationIds(indexMD, protocol, currentShard2NodesMap, newNode2ShardMap);
+    }
+
+    private List<OperationId> getOperationIds(IndexMetaData indexMD, InteractionProtocol protocol, ImmutableSetMultimap<String, String> currentShard2NodesMap, ImmutableSetMultimap<String, String> newNode2ShardMap) {
+        final ImmutableSetMultimap<String, String> currentNode2ShardsMap = currentShard2NodesMap.inverse();
         // System.out.println(distributionMap);// node to shards
-        Set<String> nodes = newNode2ShardMap.keySet();
-        List<OperationId> operationIds = new ArrayList<>(nodes.size());
-        One2ManyListMap<String, String> newShardsByNode = new One2ManyListMap<>();
-        for (String node : nodes) {
-            List<String> nodeShards = newNode2ShardMap.get(node);
-            List<String> listOfAdded = CollectionUtil.getListOfAdded(currentGlobalNode2ShardsMap.get(node), nodeShards);
+        Set<String> operationNodes = newNode2ShardMap.keySet();
+
+        List<OperationId> operationIds = new ArrayList<>(operationNodes.size());
+
+        ImmutableSetMultimap.Builder<String, String> newShard2NodesBuilder = ImmutableSetMultimap.builder();
+
+        for (String node : operationNodes) {
+            Collection<String> nodeShards = newNode2ShardMap.get(node);
+            ImmutableSet<String> currentShards = currentNode2ShardsMap.get(node);
+
+            List<String> listOfAdded = nodeShards.stream().filter(shard -> !currentShards.contains(shard)).collect(Collectors.toList());
             if (!listOfAdded.isEmpty()) {
                 ShardDeployOperation deployInstruction = new ShardDeployOperation(indexMD.getAutoReload());
-                for (String shard : listOfAdded) {
+                listOfAdded.stream().forEach(shard -> {
                     deployInstruction.addShard(shard, indexMD.getShardUri(shard));
-                    newShardsByNode.add(node, shard);
-                }
+                    newShard2NodesBuilder.put(shard, node);
+                });
                 OperationId operationId = protocol.addNodeOperation(node, deployInstruction);
                 operationIds.add(operationId);
             }
-            List<String> listOfRemoved = CollectionUtil.getListOfRemoved(currentGlobalNode2ShardsMap.get(node), nodeShards);
+
+            List<String> listOfRemoved = currentShards.stream().filter(shard -> !nodeShards.contains(shard)).collect(Collectors.toList());
             if (!listOfRemoved.isEmpty()) {
                 ShardUndeployOperation undeployInstruction = new ShardUndeployOperation(listOfRemoved);
                 OperationId operationId = protocol.addNodeOperation(node, undeployInstruction);
                 operationIds.add(operationId);
             }
         }
-        newShardsByNodeMap = newShardsByNode.asMap();
+        this.newShard2Nodes = newShard2NodesBuilder.build();
         return operationIds;
     }
 
-    protected Map<String, List<String>> getNewShardsByNodeMap() {
-        return newShardsByNodeMap;
+    private ImmutableSetMultimap<String, String> getCurrentShard2NodesMap(InteractionProtocol protocol, Set<Shard> shards, List<MasterOperation> runningOperations) {
+        ImmutableSetMultimap.Builder<String, String> builder = ImmutableSetMultimap.builder();
+        builder.putAll(protocol.getShard2NodesMap(Shard.getShardNames(shards)));
+        runningOperations.stream()
+                .filter(masterOperation -> masterOperation instanceof AbstractIndexOperation)
+                .map(masterOperation -> ((AbstractIndexOperation) masterOperation))
+                .map(AbstractIndexOperation::getNewShard2Nodes)
+                .forEach(builder::putAll);
+        return builder.build();
     }
 
-    private void addRunningDeployments(Map<String, List<String>> currentNode2ShardsMap, List<MasterOperation> runningOperations) {
-        for (MasterOperation masterOperation : runningOperations) {
-            if (masterOperation instanceof AbstractIndexOperation) {
-                AbstractIndexOperation indexOperation = (AbstractIndexOperation) masterOperation;
-                for (Entry<String, List<String>> entry : indexOperation.getNewShardsByNodeMap().entrySet()) {
-                    List<String> shardList = currentNode2ShardsMap.get(entry.getKey());
-                    if (shardList == null) {
-                        shardList = new ArrayList<>(entry.getValue().size());
-                        currentNode2ShardsMap.put(entry.getKey(), shardList);
-                    }
-                    shardList.addAll(entry.getValue());
-                }
-            }
-        }
-    }
-
-    private Map<String, List<String>> cloneMap(Map<String, List<String>> currentShard2NodesMap) {
-        // return currentShard2NodesMap;
-        Set<Entry<String, List<String>>> entries = currentShard2NodesMap.entrySet();
-        HashMap<String, List<String>> clonedMap = new HashMap<>();
-        for (Entry<String, List<String>> e : entries) {
-            clonedMap.put(e.getKey(), new ArrayList<>(e.getValue()));
-        }
-        return clonedMap;
-    }
-
-    private Map<String, List<String>> getCurrentNode2ShardMap(Collection<String> liveNodes, final Map<String, List<String>> currentShard2NodesMap) {
-        final Map<String, List<String>> currentNodeToShardsMap = CollectionUtil.invertListMap(currentShard2NodesMap);
-        liveNodes.stream().filter(node -> !currentNodeToShardsMap.containsKey(node)).forEach(node -> currentNodeToShardsMap.put(node, Lists.newArrayListWithCapacity(3)));
-        return currentNodeToShardsMap;
+    protected ImmutableSetMultimap<String, String> getNewShard2Nodes() {
+        return newShard2Nodes;
     }
 
     protected boolean canAndShouldRegulateReplication(InteractionProtocol protocol, IndexMetaData indexMD) {

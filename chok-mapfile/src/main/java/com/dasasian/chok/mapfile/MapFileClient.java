@@ -18,6 +18,7 @@ package com.dasasian.chok.mapfile;
 import com.dasasian.chok.client.Client;
 import com.dasasian.chok.client.ClientResult;
 import com.dasasian.chok.client.INodeSelectionPolicy;
+import com.dasasian.chok.client.ResultCompletePolicy;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
@@ -72,7 +73,7 @@ public class MapFileClient implements IMapFileClient {
     }
 
     public List<String> get(final String key, final String[] indexNames) throws ChokException {
-        ClientResult<TextArrayWritable> results = chokClient.broadcastToIndices(TIMEOUT, true, GET_METHOD, GET_METHOD_SHARD_ARG_IDX, indexNames, new Text(key), null);
+        ClientResult<TextArrayWritable> results = chokClient.broadcastToIndices(ResultCompletePolicy.awaitCompletion(TIMEOUT), GET_METHOD, GET_METHOD_SHARD_ARG_IDX, indexNames, new Text(key), null);
         if (results.isError()) {
             throw results.getChokException();
         }

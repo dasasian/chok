@@ -15,6 +15,7 @@
  */
 package com.dasasian.chok.integration;
 
+import com.dasasian.chok.master.DefaultDistributionPolicy;
 import com.dasasian.chok.node.Node;
 import com.dasasian.chok.operation.master.CheckIndicesOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
@@ -25,6 +26,7 @@ import com.dasasian.chok.testutil.TestUtil;
 import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
 import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.TestLoggerWatcher;
 import com.dasasian.chok.util.UtilModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -38,6 +40,9 @@ import static org.junit.Assert.assertTrue;
 public class IndexAutoRepairTest extends AbstractTest {
 
     protected Injector injector = Guice.createInjector(new UtilModule());
+
+    @Rule
+    public TestLoggerWatcher defaultDistributionPolicyLoggingRule = TestLoggerWatcher.logErrors(DefaultDistributionPolicy.class, "testReplicateUnderReplicatedIndexesAfterNodeAdding");
 
     @Rule
     public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
@@ -82,7 +87,7 @@ public class IndexAutoRepairTest extends AbstractTest {
     }
 
     @Test
-    public void testReplicateUnderreplicatedIndexesAfterNodeAdding() throws Exception {
+    public void testReplicateUnderReplicatedIndexesAfterNodeAdding() throws Exception {
         int replicationCount = miniCluster.getRunningNodeCount() + 1;
 
         TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 3);

@@ -13,16 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.dasasian.chok.testutil.server.simpletest;
+package com.dasasian.chok.client;
 
-import com.dasasian.chok.util.ChokException;
-
-import java.util.List;
+import java.util.Set;
 
 /**
+ * Created by damith.chandrasekara on 8/25/15.
  */
-public interface ISimpleTestClient extends AutoCloseable {
+public interface IResultReceiverWrapper<T> extends AutoCloseable {
 
-    String[] testRequest(String query) throws ChokException;
+    boolean isClosed();
 
+    boolean isComplete();
+
+    double getShardCoverage();
+
+    void addNodeResult(T result, Set<String> shards);
+
+    void addNodeError(Throwable error, Set<String> shards);
+
+    Set<String> getAllShards();
+
+    Set<String> getMissingShards();
+
+    Set<String> getSeenShards();
 }

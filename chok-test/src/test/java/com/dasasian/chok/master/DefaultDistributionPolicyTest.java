@@ -15,7 +15,10 @@
  */
 package com.dasasian.chok.master;
 
-import com.dasasian.chok.testutil.AbstractTest;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.junit.Test;
 
 import java.util.*;
@@ -23,33 +26,33 @@ import java.util.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class DefaultDistributionPolicyTest extends AbstractTest {
+public class DefaultDistributionPolicyTest {
 
-    Map<String, List<String>> _currentShard2NodesMap = new HashMap<>();
-    Map<String, List<String>> _currentNode2ShardsMap = new HashMap<>();
-    private DefaultDistributionPolicy _distributionPolicy = new DefaultDistributionPolicy();
+    private DefaultDistributionPolicy distributionPolicy = new DefaultDistributionPolicy();
 
     @Test
     public void testInitialDistribution() throws Exception {
         int replicationLevel = 2;
-        List<String> nodes = createNodes("node1", "node2", "node3");
-        Set<String> shards = createShards("shard1", "shard2");
-        Map<String, List<String>> node2ShardsMap = _distributionPolicy.createDistributionPlan(_currentShard2NodesMap, _currentNode2ShardsMap, nodes, replicationLevel);
-        assertEquals(nodes.size(), node2ShardsMap.size());
+        List<String> nodes = ImmutableList.of("node1", "node2", "node3");
+        Set<String> shards = ImmutableSet.of("shard1", "shard2");
+        ImmutableSetMultimap<String, String> currentShard2NodesMap = ImmutableSetMultimap.of();
+        ImmutableMultimap<String, String> node2ShardsMap = distributionPolicy.createDistributionPlan(shards, nodes, currentShard2NodesMap, replicationLevel);
+        assertEquals(nodes.size(), node2ShardsMap.keySet().size());
         assertSufficientDistribution(replicationLevel, nodes, shards, node2ShardsMap);
     }
 
     @Test
     public void testEqualDistributionOnMultipleSequentialDeploys() throws Exception {
         int replicationLevel = 1;
-        List<String> nodes = createNodes("node1", "node2", "node3", "node4");
-        createShards("shard1", "shard2");
-        Map<String, List<String>> node2ShardsMap = _distributionPolicy.createDistributionPlan(_currentShard2NodesMap, _currentNode2ShardsMap, nodes, replicationLevel);
+        List<String> nodes = ImmutableList.of("node1", "node2", "node3", "node4");
+        Set<String> shards = ImmutableSet.of("shard1", "shard2");
+        ImmutableSetMultimap<String, String> currentShard2NodesMap = ImmutableSetMultimap.of();
+
+        ImmutableMultimap<String, String> node2ShardsMap = distributionPolicy.createDistributionPlan(shards, nodes, currentShard2NodesMap, replicationLevel);
         System.out.println(node2ShardsMap);
 
-        _currentShard2NodesMap.clear();
-        createShards("shard3", "shard4");
-        node2ShardsMap = _distributionPolicy.createDistributionPlan(_currentShard2NodesMap, _currentNode2ShardsMap, nodes, replicationLevel);
+        Set<String> shards2 = ImmutableSet.of("shard1", "shard2");
+        node2ShardsMap = distributionPolicy.createDistributionPlan(shards2, nodes, currentShard2NodesMap, replicationLevel);
         for (String node : node2ShardsMap.keySet()) {
             assertEquals("shards are not equally distributed: " + node2ShardsMap, 1, node2ShardsMap.get(node).size());
         }
@@ -58,40 +61,49 @@ public class DefaultDistributionPolicyTest extends AbstractTest {
 
     @Test
     public void testInitialDistribution_TooLessNodes() throws Exception {
-        List<String> nodes = createNodes("node1");
-        Set<String> shards = createShards("shard1", "shard2");
-        Map<String, List<String>> node2ShardsMap = _distributionPolicy.createDistributionPlan(_currentShard2NodesMap, _currentNode2ShardsMap, nodes, 3);
-        assertEquals(nodes.size(), node2ShardsMap.size());
+        int replicationLevel = 3;
+        List<String> nodes = ImmutableList.of("node1");
+        Set<String> shards = ImmutableSet.of("shard1", "shard2");
+        ImmutableSetMultimap<String, String> currentShard2NodesMap = ImmutableSetMultimap.of();
+        ImmutableMultimap<String, String> node2ShardsMap = distributionPolicy.createDistributionPlan(shards, nodes, currentShard2NodesMap, replicationLevel);
+        assertEquals(nodes.size(), node2ShardsMap.keySet().size());
         assertEquals(shards.size(), node2ShardsMap.get("node1").size());
     }
 
     @Test
     public void testUnderReplicatedDistribution() throws Exception {
         int replicationLevel = 3;
-        List<String> nodes = createNodes("node1", "node2", "node3");
-        Set<String> shards = createShards("shard1", "shard2", "shard3");
-        addMapping("shard1", "node1", "node2", "node3");
-        addMapping("shard2", "node1");
+        List<String> nodes = ImmutableList.of("node1", "node2", "node3");
+        Set<String> shards = ImmutableSet.of("shard1", "shard2", "shard3");
 
-        Map<String, List<String>> node2ShardsMap = _distributionPolicy.createDistributionPlan(_currentShard2NodesMap, _currentNode2ShardsMap, nodes, replicationLevel);
-        assertEquals(nodes.size(), node2ShardsMap.size());
+        ImmutableSetMultimap.Builder<String, String> builder = ImmutableSetMultimap.builder();
+        builder.putAll("shard1", "node1", "node2", "node3");
+        builder.putAll("shard2", "node1");
+        ImmutableSetMultimap<String, String> currentShard2NodesMap = builder.build();
+
+        ImmutableMultimap<String, String> node2ShardsMap = distributionPolicy.createDistributionPlan(shards, nodes,
+                currentShard2NodesMap, replicationLevel);
+        assertEquals(nodes.size(), node2ShardsMap.keySet().size());
         assertSufficientDistribution(replicationLevel, nodes, shards, node2ShardsMap);
     }
 
     @Test
     public void testOverReplicatedDistribution() throws Exception {
         int replicationLevel = 2;
-        List<String> nodes = createNodes("node1", "node2", "node3", "node4");
-        Set<String> shards = createShards("shard1", "shard2");
-        addMapping("shard1", "node1", "node2", "node3", "node4");
-        addMapping("shard2", "node1", "node2");
+        List<String> nodes = ImmutableList.of("node1", "node2", "node3", "node4");
+        Set<String> shards = ImmutableSet.of("shard1", "shard2");
+        ImmutableSetMultimap.Builder<String, String> builder = ImmutableSetMultimap.builder();
+        builder.putAll("shard1", "node1", "node2", "node3", "node4");
+        builder.putAll("shard2", "node1", "node2");
+        ImmutableSetMultimap<String, String> currentShard2NodesMap = builder.build();
 
-        Map<String, List<String>> node2ShardsMap = _distributionPolicy.createDistributionPlan(_currentShard2NodesMap, _currentNode2ShardsMap, nodes, replicationLevel);
-        assertEquals(nodes.size(), node2ShardsMap.size());
+        ImmutableMultimap<String, String> node2ShardsMap = distributionPolicy.createDistributionPlan(shards, nodes,
+                currentShard2NodesMap, replicationLevel);
+        assertEquals(nodes.size(), node2ShardsMap.keySet().size());
         assertSufficientDistribution(replicationLevel, nodes, shards, node2ShardsMap);
     }
 
-    private void assertSufficientDistribution(int replicationLevel, List<String> nodes, Set<String> shards, Map<String, List<String>> node2ShardsMap) {
+    private void assertSufficientDistribution(int replicationLevel, List<String> nodes, Set<String> shards, ImmutableMultimap<String, String> node2ShardsMap) {
         int deployedShardCount = 0;
         for (String node : nodes) {
             deployedShardCount += node2ShardsMap.get(node).size();
@@ -101,32 +113,4 @@ public class DefaultDistributionPolicyTest extends AbstractTest {
         assertEquals(shards.size() * replicationLevel, deployedShardCount);
     }
 
-    private void addMapping(String shard, String... nodes) {
-        List<String> shardNodes = _currentShard2NodesMap.get(shard);
-        for (String node : nodes) {
-            List<String> shards = _currentNode2ShardsMap.get(node);
-            shards.add(shard);
-            shardNodes.add(node);
-        }
-    }
-
-    private List<String> createNodes(String... nodeNames) {
-        List<String> nodes = new ArrayList<>();
-        for (String nodeName : nodeNames) {
-            nodes.add(nodeName);
-            _currentNode2ShardsMap.put(nodeName, new ArrayList<>());
-        }
-        return nodes;
-    }
-
-    private Set<String> createShards(String... shardNames) {
-        Set<String> shards = new HashSet<>();
-        for (String shardName : shardNames) {
-            shards.add(shardName);
-            if (!_currentNode2ShardsMap.containsKey(shardName)) {
-                _currentShard2NodesMap.put(shardName, new ArrayList<>());
-            }
-        }
-        return shards;
-    }
 }

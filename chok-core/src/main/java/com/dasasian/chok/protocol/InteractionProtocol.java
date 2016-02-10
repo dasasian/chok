@@ -29,8 +29,7 @@ import com.dasasian.chok.protocol.metadata.NodeMetaData;
 import com.dasasian.chok.protocol.metadata.Version;
 import com.dasasian.chok.util.*;
 import com.dasasian.chok.util.ZkConfiguration.PathDef;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.*;
 import org.I0Itec.zkclient.IZkChildListener;
 import org.I0Itec.zkclient.IZkDataListener;
 import org.I0Itec.zkclient.IZkStateListener;
@@ -45,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Abstracts the interaction between master and nodes via zookeeper files and
@@ -64,13 +64,13 @@ public class InteractionProtocol {
     protected volatile boolean connected = true;
     // we govern the various listener and ephemerals to remove burden from
     // listener-users to unregister/delete them
-    protected final One2ManyListMap<ConnectedComponent, ListenerAdapter> zkListenerByComponent = new One2ManyListMap<>();
-    private final SetMultimap<ConnectedComponent, String> zkEphemeralPublishesByComponent = HashMultimap.create();
+    protected final SetMultimap<ConnectedComponent, ListenerAdapter> zkComponent2Listeners = HashMultimap.create();
+    private final SetMultimap<ConnectedComponent, String> zkEphemeralComponent2Publishes = HashMultimap.create();
 
     private final IZkStateListener stateListener = new IZkStateListener() {
         @Override
         public void handleStateChanged(KeeperState state) throws Exception {
-            Set<ConnectedComponent> components = new HashSet<>(zkListenerByComponent.keySet());
+            ImmutableSet<ConnectedComponent> components = ImmutableSet.copyOf(zkComponent2Listeners.keySet());
             switch (state) {
                 case Disconnected:
                 case Expired:
@@ -108,57 +108,53 @@ public class InteractionProtocol {
     }
 
     public void registerComponent(ConnectedComponent connectedComponent) {
-        if (zkListenerByComponent.size() == 0) {
+        if (zkComponent2Listeners.size() == 0) {
             zkClient.subscribeStateChanges(stateListener);
         }
-        zkListenerByComponent.add(connectedComponent);
+        zkComponent2Listeners.put(connectedComponent, null);
     }
 
     public void unregisterComponent(ConnectedComponent component) {
-        List<ListenerAdapter> listeners = zkListenerByComponent.removeKey(component);
-        for (ListenerAdapter listener : listeners) {
-            if (listener instanceof IZkChildListener) {
-                zkClient.unsubscribeChildChanges(listener.getPath(), (IZkChildListener) listener);
-            } else if (listener instanceof IZkDataListener) {
-                zkClient.unsubscribeDataChanges(listener.getPath(), (IZkDataListener) listener);
-            } else {
-                throw new IllegalStateException("could not handle lister of type " + listener.getClass().getName());
+        for (ListenerAdapter listener : zkComponent2Listeners.removeAll(component)) {
+            if(listener != null) {
+                if (listener instanceof IZkChildListener) {
+                    zkClient.unsubscribeChildChanges(listener.getPath(), (IZkChildListener) listener);
+                } else if (listener instanceof IZkDataListener) {
+                    zkClient.unsubscribeDataChanges(listener.getPath(), (IZkDataListener) listener);
+                } else {
+                    throw new IllegalStateException("could not handle lister of type " + listener.getClass().getName());
+                }
             }
         }
         // we deleting the ephemeral's since this is the fastest and the safest
 
         // way, but if this does not work, it shouldn't be too bad
-        Collection<String> zkPublishes = zkEphemeralPublishesByComponent.removeAll(component);
+        Collection<String> zkPublishes = zkEphemeralComponent2Publishes.removeAll(component);
         zkPublishes.forEach(zkClient::delete);
 
-        if (zkListenerByComponent.size() == 0) {
+        if (zkComponent2Listeners.keySet().size() == 0) {
             zkClient.unsubscribeStateChanges(stateListener);
         }
-        LOG.info("unregistering component " + component + ": " + zkListenerByComponent);
+        LOG.info("unregistering component " + component + ": " + zkComponent2Listeners);
     }
 
     public void disconnect() {
-        if (zkListenerByComponent.size() > 0) {
-            LOG.warn("following components still connected:" + zkListenerByComponent.keySet());
+        if (zkComponent2Listeners.keySet().size() > 0) {
+            LOG.warn("following components still connected:" + zkComponent2Listeners.keySet());
         }
-        if (zkEphemeralPublishesByComponent.size() > 0) {
-            LOG.warn("following ephemeral still exists:" + zkEphemeralPublishesByComponent.keySet());
+        if (zkEphemeralComponent2Publishes.size() > 0) {
+            LOG.warn("following ephemeral still exists:" + zkEphemeralComponent2Publishes.keySet());
         }
         connected = false;
         zkClient.close();
     }
 
     public int getRegisteredComponentCount() {
-        return zkListenerByComponent.size();
+        return zkComponent2Listeners.keySet().size();
     }
 
     public int getRegisteredListenerCount() {
-        int count = 0;
-        Collection<List<ListenerAdapter>> values = zkListenerByComponent.asMap().values();
-        for (List<ListenerAdapter> list : values) {
-            count += list.size();
-        }
-        return count;
+        return (int) zkComponent2Listeners.values().stream().filter(Objects::nonNull).count();
     }
 
     public List<String> registerChildListener(ConnectedComponent component, PathDef pathDef, IAddRemoveListener listener) {
@@ -193,7 +189,7 @@ public class InteractionProtocol {
         synchronized (component) {
             ZkDataListenerAdapter listenerAdapter = new ZkDataListenerAdapter(dataListener, zkPath);
             zkClient.subscribeDataChanges(zkPath, listenerAdapter);
-            zkListenerByComponent.add(component, listenerAdapter);
+            zkComponent2Listeners.put(component, listenerAdapter);
         }
     }
 
@@ -201,7 +197,7 @@ public class InteractionProtocol {
         synchronized (component) {
             ZkDataListenerAdapter listenerAdapter = getComponentListener(component, ZkDataListenerAdapter.class, zkPath);
             zkClient.unsubscribeDataChanges(zkPath, listenerAdapter);
-            zkListenerByComponent.removeValue(component, listenerAdapter);
+            zkComponent2Listeners.remove(component, listenerAdapter);
         }
     }
 
@@ -212,7 +208,7 @@ public class InteractionProtocol {
                 List<String> childs = zkClient.subscribeChildChanges(zkPath, listenerAdapter);
                 listenerAdapter.setCachedChilds(childs);
             }
-            zkListenerByComponent.add(component, listenerAdapter);
+            zkComponent2Listeners.put(component, listenerAdapter);
             return listenerAdapter.getCachedChilds();
         }
     }
@@ -221,18 +217,18 @@ public class InteractionProtocol {
         synchronized (component) {
             AddRemoveListenerAdapter listenerAdapter = getComponentListener(component, AddRemoveListenerAdapter.class, zkPath);
             zkClient.unsubscribeChildChanges(zkPath, listenerAdapter);
-            zkListenerByComponent.removeValue(component, listenerAdapter);
+            zkComponent2Listeners.remove(component, listenerAdapter);
         }
     }
 
     @SuppressWarnings("unchecked")
     private <T extends ListenerAdapter> T getComponentListener(final ConnectedComponent component, Class<T> listenerClass, String zkPath) {
-        for (ListenerAdapter pathListener : zkListenerByComponent.getValues(component)) {
-            if (listenerClass.isAssignableFrom(pathListener.getClass()) && pathListener.getPath().equals(zkPath)) {
+        for (ListenerAdapter pathListener : zkComponent2Listeners.get(component)) {
+            if (pathListener != null && listenerClass.isAssignableFrom(pathListener.getClass()) && pathListener.getPath().equals(zkPath)) {
                 return (T) pathListener;
             }
         }
-        throw new IllegalStateException("no listener adapter for component " + component + " and path " + zkPath + " found: " + zkListenerByComponent);
+        throw new IllegalStateException("no listener adapter for component " + component + " and path " + zkPath + " found: " + zkComponent2Listeners);
     }
 
     public List<String> getKnownNodes() {
@@ -283,25 +279,23 @@ public class InteractionProtocol {
         return zkClient.getCreationTime(zkConf.getPath(PathDef.SHARD_TO_NODES, shard, node));
     }
 
-    public Map<String, List<String>> getShard2NodesMap(Collection<String> shardNames) {
-        final Map<String, List<String>> shard2NodeNames = new HashMap<>();
+    public ImmutableSetMultimap<String, String> getShard2NodesMap(Collection<String> shardNames) {
+        final ImmutableSetMultimap.Builder<String, String> shard2NodeNamesBuilder = ImmutableSetMultimap.builder();
         for (final String shard : shardNames) {
             final String shard2NodeRootPath = zkConf.getPath(PathDef.SHARD_TO_NODES, shard);
             if (zkClient.exists(shard2NodeRootPath)) {
-                shard2NodeNames.put(shard, zkClient.getChildren(shard2NodeRootPath));
-            } else {
-                shard2NodeNames.put(shard, Collections.<String>emptyList());
+                shard2NodeNamesBuilder.putAll(shard, zkClient.getChildren(shard2NodeRootPath));
             }
         }
-        return shard2NodeNames;
+        return shard2NodeNamesBuilder.build();
     }
 
-    public List<String> getShardNodes(String shard) {
+    public ImmutableList<String> getShardNodes(String shard) {
         final String shard2NodeRootPath = zkConf.getPath(PathDef.SHARD_TO_NODES, shard);
         if (!zkClient.exists(shard2NodeRootPath)) {
-            return Collections.emptyList();
+            return ImmutableList.of();
         }
-        return zkClient.getChildren(shard2NodeRootPath);
+        return ImmutableList.copyOf(zkClient.getChildren(shard2NodeRootPath));
     }
 
     public List<String> getShard2NodeShards() {
@@ -453,7 +447,7 @@ public class InteractionProtocol {
         if (zkClient.exists(shard2NodePath)) {
             zkClient.delete(shard2NodePath);
         }
-        zkEphemeralPublishesByComponent.remove(node, shard2NodePath);
+        zkEphemeralComponent2Publishes.remove(node, shard2NodePath);
     }
 
     public void setMetric(String nodeName, MetricsRecord metricsRecord) {
@@ -475,7 +469,7 @@ public class InteractionProtocol {
 
     private void createEphemeral(ConnectedComponent component, String path, Serializable content) {
         zkClient.createEphemeral(path, content);
-        zkEphemeralPublishesByComponent.put(component, path);
+        zkEphemeralComponent2Publishes.put(component, path);
     }
 
     public void addMasterOperation(MasterOperation operation) {
@@ -579,14 +573,14 @@ public class InteractionProtocol {
     }
 
     static class ListenerAdapter {
-        private final String _path;
+        private final String path;
 
         public ListenerAdapter(String path) {
-            _path = path;
+            this.path = path;
         }
 
         public final String getPath() {
-            return _path;
+            return path;
         }
 
         @Override
@@ -619,34 +613,34 @@ public class InteractionProtocol {
 
         @Override
         public synchronized void handleChildChange(String parentPath, List<String> currentChilds) throws Exception {
-            if (currentChilds == null) {
-                currentChilds = Collections.emptyList();
-            }
-            List<String> addedChilds = CollectionUtil.getListOfAdded(cachedChilds, currentChilds);
-            List<String> removedChilds = CollectionUtil.getListOfRemoved(cachedChilds, currentChilds);
-            addedChilds.forEach(listener::added);
-            removedChilds.forEach(listener::removed);
-            cachedChilds = currentChilds;
+            final List<String> newChilds = (currentChilds == null) ? Collections.emptyList() : currentChilds;
+
+            newChilds.stream().filter(shard -> !cachedChilds.contains(shard))
+                    .forEach(listener::added);
+            cachedChilds.stream().filter(shard -> !newChilds.contains(shard))
+                    .forEach(listener::removed);
+
+            cachedChilds = newChilds;
         }
     }
 
     static class ZkDataListenerAdapter extends ListenerAdapter implements IZkDataListener {
 
-        private final IZkDataListener _dataListener;
+        private final IZkDataListener dataListener;
 
         public ZkDataListenerAdapter(IZkDataListener dataListener, String path) {
             super(path);
-            _dataListener = dataListener;
+            this.dataListener = dataListener;
         }
 
         @Override
         public void handleDataChange(String dataPath, Object data) throws Exception {
-            _dataListener.handleDataChange(dataPath, data);
+            dataListener.handleDataChange(dataPath, data);
         }
 
         @Override
         public void handleDataDeleted(String dataPath) throws Exception {
-            _dataListener.handleDataDeleted(dataPath);
+            dataListener.handleDataDeleted(dataPath);
         }
 
     }

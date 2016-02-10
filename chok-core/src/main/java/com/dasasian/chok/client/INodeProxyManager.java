@@ -15,11 +15,10 @@
  */
 package com.dasasian.chok.client;
 
+import com.google.common.collect.ImmutableSetMultimap;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * The interaction required between a NodeInteraction and Client.
@@ -62,7 +61,7 @@ public interface INodeProxyManager {
      * @return A node to shard map with one occurrence of each shard.
      * @throws ShardAccessException if the node selection policy had an error.
      */
-    Map<String, List<String>> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException;
+    ImmutableSetMultimap<String, String> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException;
 
     void shutdown();
 

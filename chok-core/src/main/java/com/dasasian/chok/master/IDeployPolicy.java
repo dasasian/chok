@@ -15,8 +15,10 @@
  */
 package com.dasasian.chok.master;
 
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.ImmutableSetMultimap;
+
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Exchangeable policy for which creates an distribution plan for the shards of
@@ -28,15 +30,16 @@ public interface IDeployPolicy {
      * Creates a distribution plan for the shards of one index. Note that the
      * index can already be deployed, in that case its more a "replication" plan.
      *
-     * @param currentShard2NodesMap all current deployments of the shards of the one index to
+     *
+     * @param shards the shards that are being deployed
+     * @param nodes the nodes that are alive
+     *@param currentShard2NodesMap all current deployments of the shards of the one index to
      *                              distribute/replicate
-     * @param currentNode2ShardsMap all nodes and their shards
-     * @param aliveNodes the nodes that are alive
      * @param replicationLevel number of replicas
-     * @return the plan
+     * @return the plan of node to shard mappings
      */
-    Map<String, List<String>> createDistributionPlan(Map<String, List<String>> currentShard2NodesMap,
-                                                     Map<String, List<String>> currentNode2ShardsMap,
-                                                     List<String> aliveNodes, int replicationLevel);
+    ImmutableSetMultimap<String, String> createDistributionPlan(final Set<String> shards, final Collection<String> nodes,
+                                                                final ImmutableSetMultimap<String, String> currentShard2NodesMap,
+                                                                final int replicationLevel);
 
 }

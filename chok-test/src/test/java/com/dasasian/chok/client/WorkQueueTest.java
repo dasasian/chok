@@ -17,14 +17,23 @@ package com.dasasian.chok.client;
 
 import com.dasasian.chok.client.WorkQueue.INodeInteractionFactory;
 import com.dasasian.chok.testutil.AbstractTest;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.apache.hadoop.ipc.VersionedProtocol;
-import org.slf4j.Logger;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 /**
@@ -55,149 +64,186 @@ public class WorkQueueTest extends AbstractTest {
         }
     }
 
+    private ExecutorService executorService;
+    private TestNodeInteractionFactory factory;
+    private TestShardManager shardManager;
+
+
+    @Before
+    public void setUp() {
+        executorService = Executors.newCachedThreadPool();
+        factory = new TestNodeInteractionFactory(10);
+        shardManager = new TestShardManager();
+        WorkQueue.resetInstanceCounter();
+    }
+
+    @After
+    public void tearDown() {
+        if (!executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+        factory = null;
+        shardManager = null;
+    }
+
     @Test
     public void testWorkQueue() throws Exception {
-        TestShardManager sm = new TestShardManager();
         Method method = TestServer.class.getMethod("doSomething", Integer.TYPE);
-        WorkQueue.resetInstanceCounter();
+
         for (int i = 0; i < 500; i++) {
-            sm.reset();
+            shardManager.reset();
             TestNodeInteractionFactory factory = new TestNodeInteractionFactory(10);
-            WorkQueue<Integer> wq = new WorkQueue<>(factory, sm, sm.allShards(), method, -1, 16);
+            ImmutableSetMultimap<String, String> node2ShardsMap = shardManager.createNode2ShardsMap(shardManager.allShards());
+
+
+            ClientResult<Integer> result = new ClientResult<>(shardManager.allShards());
+            WorkQueue<Integer> wq = new WorkQueue<>(executorService, factory, shardManager, method, -1, result.getResultReceiverWrapper(), 16);
             assertEquals(String.format("WorkQueue[TestServer.doSomething(16) (id=%d)]", i), wq.toString());
-            Map<String, List<String>> plan = sm.createNode2ShardsMap(sm.allShards());
-            for (String node : plan.keySet()) {
-                wq.execute(node, plan, 1, 3);
+            for (String node : node2ShardsMap.keySet()) {
+                wq.execute(node, node2ShardsMap, 1, 3);
             }
-            ClientResult<Integer> r = wq.getResults(1000);
-            int numNodes = plan.keySet().size();
-            int numShards = sm.allShards().size();
-            assertEquals(String.format("ClientResult: %d results, 0 errors, %d/%d shards (closed) (complete)", numNodes, numShards, numShards), r.toString());
+            wq.waitTillDone(ResultCompletePolicy.awaitCompletion(100000));
+
+            result.close();
+
+            int numNodes = node2ShardsMap.keySet().size();
+            int numShards = shardManager.allShards().size();
+            assertEquals(String.format("ClientResult: %d results, 0 errors, %d/%d shards (closed) (complete)", numNodes, numShards, numShards), result.toString());
             assertEquals(6, factory.getCalls().size());
-            wq.shutdown();
         }
     }
 
     @Test
     public void testSubmitAfterShutdown() throws Exception {
-        TestNodeInteractionFactory factory = new TestNodeInteractionFactory(10);
-        TestShardManager sm = new TestShardManager();
+        ImmutableSet<String> allShards = shardManager.allShards();
+        ImmutableSetMultimap<String, String> node2ShardsMap = shardManager.createNode2ShardsMap(allShards);
         Method method = TestServer.class.getMethod("doSomething", Integer.TYPE);
-        WorkQueue.resetInstanceCounter();
-        WorkQueue<Integer> wq = new WorkQueue<>(factory, sm, sm.allShards(), method, -1, 16);
-        ClientResult<Integer> r = wq.getResults(0, false);
-        assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", r.toString());
-        wq.shutdown();
-        r = wq.getResults(0, false);
-        assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", r.toString());
-        Map<String, List<String>> plan = sm.createNode2ShardsMap(sm.allShards());
-        for (String node : plan.keySet()) {
-            wq.execute(node, plan, 1, 3);
+
+        try (ClientResult<Integer> result = new ClientResult<>(shardManager.allShards())) {
+            WorkQueue<Integer> wq = new WorkQueue<>(executorService, factory, shardManager, method, -1, result.getResultReceiverWrapper(), 16);
+//            for (String node : node2ShardsMap.keySet()) {
+//                wq.execute(node, node2ShardsMap, 1, 3);
+//            }
+            wq.waitTillDone(ResultCompletePolicy.awaitCompletion(0));
+            assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", result.toString());
+            executorService.shutdown();
+            wq.waitTillDone(ResultCompletePolicy.awaitCompletion(0));
+            assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", result.toString());
+            for (String node : node2ShardsMap.keySet()) {
+                wq.execute(node, node2ShardsMap, 1, 3);
+            }
+            assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", result.toString());
         }
-        r = wq.getResults(0, false);
-        assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", r.toString());
-        assertEquals(0, factory.getCalls().size());
+        assertThat(factory.getCalls().size(), is(equalTo(0)));
     }
 
     @Test
     public void testSubmitAfterClose() throws Exception {
-        TestNodeInteractionFactory factory = new TestNodeInteractionFactory(10);
-        TestShardManager sm = new TestShardManager();
+        ImmutableSet<String> allShards = shardManager.allShards();
+        ImmutableSetMultimap<String, String> node2ShardsMap = shardManager.createNode2ShardsMap(allShards);
         Method method = TestServer.class.getMethod("doSomething", Integer.TYPE);
-        WorkQueue.resetInstanceCounter();
-        WorkQueue<Integer> wq = new WorkQueue<>(factory, sm, sm.allShards(), method, -1, 16);
-        ClientResult<Integer> r = wq.getResults(0, false);
-        assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", r.toString());
-        r.close();
-        assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", r.toString());
-        r = wq.getResults(0, false);
-        assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", r.toString());
-        Map<String, List<String>> plan = sm.createNode2ShardsMap(sm.allShards());
-        for (String node : plan.keySet()) {
-            wq.execute(node, plan, 1, 3);
+
+        try (ClientResult<Integer> result = new ClientResult<>(shardManager.allShards())) {
+            WorkQueue<Integer> wq = new WorkQueue<>(executorService, factory, shardManager, method, -1, result.getResultReceiverWrapper(), 16);
+////            for (String node : node2ShardsMap.keySet()) {
+////                wq.execute(node, node2ShardsMap, 1, 3);
+////            }
+//            wq.waitTillDone(0, false);
+            assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", result.toString());
+            result.close();
+            assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", result.toString());
+            for (String node : node2ShardsMap.keySet()) {
+                wq.execute(node, node2ShardsMap, 1, 3);
+            }
+            assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", result.toString());
         }
-        r = wq.getResults(0, false);
-        assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", r.toString());
-        assertEquals(0, factory.getCalls().size());
+        assertThat(factory.getCalls().size(), is(equalTo(0)));
     }
 
     @Test
     public void testGetResultTimeout() throws Exception {
-        TestShardManager sm = new TestShardManager();
-        Method method = TestServer.class.getMethod("doSomething", Integer.TYPE);
-        WorkQueue.resetInstanceCounter();
-        TestNodeInteractionFactory factory = new TestNodeInteractionFactory(10);
         factory.additionalSleepTime = 60000;
-        WorkQueue<Integer> wq = new WorkQueue<>(factory, sm, sm.allShards(), method, -1, 16);
-        Map<String, List<String>> plan = sm.createNode2ShardsMap(sm.allShards());
-        for (String node : plan.keySet()) {
-            wq.execute(node, plan, 1, 3);
+        ImmutableSet<String> allShards = shardManager.allShards();
+        ImmutableSetMultimap<String, String> node2ShardsMap = shardManager.createNode2ShardsMap(allShards);
+        Method method = TestServer.class.getMethod("doSomething", Integer.TYPE);
+
+        try(ClientResult<Integer> result = new ClientResult<>(shardManager.allShards())) {
+            WorkQueue<Integer> wq = new WorkQueue<>(executorService, factory, shardManager, method, -1, result.getResultReceiverWrapper(), 16);
+            for (String node : node2ShardsMap.keySet()) {
+                wq.execute(node, node2ShardsMap, 1, 3);
+            }
+
+            int numShards = allShards.size();
+            long slop = 20;
+            // No delay
+            long t1 = System.currentTimeMillis();
+            wq.waitTillDone(ResultCompletePolicy.awaitCompletion(0));
+            long t2 = System.currentTimeMillis();
+            assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards", numShards), result.toString());
+            assertTrue(t2 - t1 < slop);
+            // Short delay
+            t1 = System.currentTimeMillis();
+            wq.waitTillDone(ResultCompletePolicy.awaitCompletion(500));
+            t2 = System.currentTimeMillis();
+            assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards", numShards), result.toString());
+            assertTrue(t2 - t1 >= 500);
+            assertTrue(t2 - t1 < 500 + slop);
+            // Tiny delay.
+            t1 = System.currentTimeMillis();
+            wq.waitTillDone(ResultCompletePolicy.awaitCompletion(10));
+            t2 = System.currentTimeMillis();
+            assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards", numShards), result.toString());
+            assertTrue(t2 - t1 >= 10);
+            assertTrue(t2 - t1 < 10 + slop);
+            // Stop soon.
+            t1 = System.currentTimeMillis();
+            wq.waitTillDone(ResultCompletePolicy.awaitCompletion(100));
+            t2 = System.currentTimeMillis();
+            assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards", numShards), result.toString());
+            assertTrue(t2 - t1 >= 100);
+            assertTrue(t2 - t1 < 100 + slop);
         }
-        int numShards = sm.allShards().size();
-        long slop = 20;
-        // No delay
-        long t1 = System.currentTimeMillis();
-        ClientResult<Integer> r = wq.getResults(0, false);
-        long t2 = System.currentTimeMillis();
-        assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards", numShards), r.toString());
-        assertTrue(t2 - t1 < slop);
-        // Short delay
-        t1 = System.currentTimeMillis();
-        r = wq.getResults(500, false);
-        t2 = System.currentTimeMillis();
-        assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards", numShards), r.toString());
-        assertTrue(t2 - t1 >= 500);
-        assertTrue(t2 - t1 < 500 + slop);
-        // Tiny delay.
-        t1 = System.currentTimeMillis();
-        r = wq.getResults(10, false);
-        t2 = System.currentTimeMillis();
-        assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards", numShards), r.toString());
-        assertTrue(t2 - t1 >= 10);
-        assertTrue(t2 - t1 < 10 + slop);
-        // Stop soon.
-        t1 = System.currentTimeMillis();
-        r = wq.getResults(100, true);
-        t2 = System.currentTimeMillis();
-        assertEquals(String.format("ClientResult: 0 results, 0 errors, 0/%d shards (closed)", numShards), r.toString());
-        assertTrue(t2 - t1 >= 100);
-        assertTrue(t2 - t1 < 100 + slop);
-        wq.shutdown();
     }
 
     // Does user calling close() wake up the work queue?
     @Test
     public void testUserCloseEvent() throws Exception {
-        for (IResultPolicy<String> policy : new IResultPolicy[]{new ResultCompletePolicy<String>(4000), new ResultCompletePolicy<String>(4000, true), new ResultCompletePolicy<String>(4000, false), new ResultCompletePolicy<String>(50, 950, 0.99, true), new ResultCompletePolicy<String>(950, 50, 0.99, true), new ResultCompletePolicy<String>(50, 950, 0.99, false), new ResultCompletePolicy<String>(950, 50, 0.99, false)}) {
-            INodeInteractionFactory<String> factory = nullFactory();
-            TestShardManager sm = new TestShardManager();
-            Method method = Object.class.getMethod("toString");
-            WorkQueue.resetInstanceCounter();
-            WorkQueue<String> wq = new WorkQueue<>(factory, sm, sm.allShards(), method, -1);
-            final ClientResult<String> result = wq.getResults(0, false);
-            assertFalse(result.isClosed());
-            sleep(10);
-      /*
-       * Simulate the user polling then eventually closing the result.
-       */
-            final long start = System.currentTimeMillis();
-            new Thread(() -> {
-                sleep(100);
-                result.close();
-            }).start();
-      /*
-       * Now block on results.
-       */
-            ClientResult<String> result2 = wq.getResults(policy);
-            long time = System.currentTimeMillis() - start;
-            //
-            if (time <= 50 || time >= 200) {
-                System.err.println("Took " + time + ", expected 100. Policy = " + policy);
+        INodeInteractionFactory<String> factory = nullFactory();
+        Method method = Object.class.getMethod("toString");
+
+        for (IResultPolicy<String> policy : ImmutableList.of(
+//                ResultCompletePolicy.<String>awaitCompletionThenShutdown(4000),
+//                ResultCompletePolicy.<String>awaitCompletionThenShutdown(4000),
+                ResultCompletePolicy.<String>awaitCompletion(4000),
+//                ResultCompletePolicy.<String>awaitCompletion(50, 950, 0.99),
+//                ResultCompletePolicy.<String>awaitCompletion(950, 50, 0.99),
+                ResultCompletePolicy.<String>awaitCompletion(50, 950, 0.99),
+                ResultCompletePolicy.<String>awaitCompletion(950, 50, 0.99))) {
+
+            try (final ClientResult<String> result = new ClientResult<>(shardManager.allShards())) {
+                final WorkQueue<String> wq = new WorkQueue<>(executorService, factory, shardManager, method, -1, result.getResultReceiverWrapper(), 16);
+                wq.waitTillDone(ResultCompletePolicy.awaitCompletion(0));
+                assertThat(result.isClosed(), is(false));
+                sleep(10);
+
+                // Simulate the user polling then eventually closing the result.
+                final long start = System.currentTimeMillis();
+                new Thread(() -> {
+                    sleep(100);
+                    result.close();
+                }).start();
+
+                // Now block on results.
+                wq.waitTillDone(policy);
+                long time = System.currentTimeMillis() - start;
+                //
+                if (time <= 50 || time >= 200) {
+                    System.err.println("Took " + time + ", expected 100. Policy = " + policy);
+                }
+                assertTrue(time > 50);
+                assertTrue(time < 200);
+                assertTrue(result.isClosed());
             }
-            assertTrue(time > 50);
-            assertTrue(time < 200);
-            assertTrue(result2.isClosed());
-            wq.shutdown();
         }
     }
 
@@ -205,18 +251,23 @@ public class WorkQueueTest extends AbstractTest {
     @Test(timeout = 10000)
     public void testPolicyCloseEvent() throws Exception {
         INodeInteractionFactory<String> factory = nullFactory();
-        TestShardManager sm = new TestShardManager();
+        ImmutableSet<String> allShards = shardManager.allShards();
         Method method = Object.class.getMethod("toString");
-        WorkQueue.resetInstanceCounter();
+
         IResultPolicy<String> policy = new IResultPolicy<String>() {
             private long now = System.currentTimeMillis();
             private long closeTime = now + 100;
             private long stopTime = now + 1000;
 
-            public long waitTime(ClientResult<String> result) {
+            @Override
+            public long waitTime(IResultReceiverWrapper<String> result) {
                 final long innerNow = System.currentTimeMillis();
                 if (innerNow >= closeTime) {
-                    result.close();
+                    try {
+                        result.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
                 if (innerNow >= stopTime) {
                     return 0;
@@ -227,49 +278,57 @@ public class WorkQueueTest extends AbstractTest {
                 }
             }
         };
-        WorkQueue<String> wq = new WorkQueue<>(factory, sm, sm.allShards(), method, -1);
-        sleep(10);
-        long startTime = System.currentTimeMillis();
-        ClientResult<String> result = wq.getResults(policy);
-        long time = System.currentTimeMillis() - startTime;
-        assertTrue(result.isClosed());
-        //
-        if (time <= 50 || time >= 200) {
-            System.err.println("Took " + time + ", expected 100. Policy = " + policy);
+
+        try (ClientResult<String> result = new ClientResult<>(allShards)) {
+            WorkQueue<String> wq = new WorkQueue<>(executorService, factory, shardManager, method, -1, result.getResultReceiverWrapper(), 16);
+            sleep(10);
+
+            long startTime = System.currentTimeMillis();
+            wq.waitTillDone(policy);
+            long time = System.currentTimeMillis() - startTime;
+            assertTrue(result.isClosed());
+            //
+            if (time <= 50 || time >= 200) {
+                System.err.println("Took " + time + ", expected 100. Policy = " + policy);
+            }
+            assertTrue(time > 50);
+            assertTrue(time < 200);
         }
-        assertTrue(time > 50);
-        assertTrue(time < 200);
-        wq.shutdown();
     }
 
     @Test
     public void testPolling() throws Exception {
-        TestShardManager sm = new TestShardManager(null, 80, 1);
+        shardManager = new TestShardManager(null, 80, 1);
+        factory = new TestNodeInteractionFactory(2500);
         Method method = TestServer.class.getMethod("doSomething", Integer.TYPE);
-        WorkQueue.resetInstanceCounter();
-        TestNodeInteractionFactory factory = new TestNodeInteractionFactory(2500);
-        WorkQueue<Integer> wq = new WorkQueue<>(factory, sm, sm.allShards(), method, -1, 16);
-        Map<String, List<String>> plan = sm.createNode2ShardsMap(sm.allShards());
-        ClientResult<Integer> r = wq.getResults(0, false);
-        System.out.println("Expected graph:");
-        for (int len : new int[]{0, 6, 12, 16, 23, 34, 40, 50, 51, 58, 64, 68, 76, 80}) {
-            bar(len);
-        }
-        System.out.println("Progress:");
-        for (String node : plan.keySet()) {
-            wq.execute(node, plan, 1, 3);
-        }
-        double coverage;
-        do {
-            coverage = r.getShardCoverage();
-            int len = (int) Math.round(coverage * 80);
-            bar(len);
-            if (coverage < 1.0) {
-                sleep(200);
+        ImmutableSet<String> allShards = shardManager.allShards();
+        ImmutableSetMultimap<String, String> node2ShardsMap = shardManager.createNode2ShardsMap(allShards);
+
+        try (ClientResult<Integer> result = new ClientResult<>(allShards)) {
+            WorkQueue<Integer> wq = new WorkQueue<>(executorService, factory, shardManager, method, -1, result.getResultReceiverWrapper(), 16);
+//            for (String node : node2ShardsMap.keySet()) {
+//                wq.execute(node, node2ShardsMap, 1, 3);
+//            }
+//            wq.waitTillDone(0, false);
+            System.out.println("Expected graph:");
+            for (int len : new int[]{0, 6, 12, 16, 23, 34, 40, 50, 51, 58, 64, 68, 76, 80}) {
+                bar(len);
             }
-        } while (coverage < 1.0);
-        System.out.println("Done.");
-        wq.shutdown();
+            System.out.println("Progress:");
+            for (String node : node2ShardsMap.keySet()) {
+                wq.execute(node, node2ShardsMap, 1, 3);
+            }
+            double coverage;
+            do {
+                coverage = result.getShardCoverage();
+                int len = (int) Math.round(coverage * 80);
+                bar(len);
+                if (coverage < 1.0) {
+                    sleep(200);
+                }
+            } while (coverage < 1.0);
+            System.out.println("Done.");
+        }
     }
 
     private void bar(int len) {
@@ -287,13 +346,11 @@ public class WorkQueueTest extends AbstractTest {
     }
 
     public static class TestShardManager implements INodeProxyManager {
-
         private int numNodes;
         private int replication;
-        private List<String> allNodes;
-        private Set<String> allShards;
-        private Map<String, List<String>> shardMap;
-        private INodeSelectionPolicy _selectionPolicy;
+        private ImmutableSet<String> allShards;
+        private ImmutableSetMultimap<String, String> shardMap;
+        private INodeSelectionPolicy nodeSelectionPolicy;
         private ProxyProvider proxyProvider;
         private boolean shardMapsFail = false;
 
@@ -314,24 +371,23 @@ public class WorkQueueTest extends AbstractTest {
             for (int i = 0; i < numNodes; i++) {
                 nodes[i] = "n" + (i + 1);
             }
-            allNodes = Arrays.asList(nodes);
             // Shards s1, s3, s3... (same # as nodes)
             String[] shards = new String[numNodes];
             for (int i = 0; i < numNodes; i++) {
                 shards[i] = "s" + (i + 1);
             }
-            allShards = new HashSet<>(Arrays.asList(shards));
+            allShards = ImmutableSet.copyOf(shards);
             // Node i has shards i, i+1, i+2... depending on replication level.
-            shardMap = new HashMap<>();
+            ImmutableSetMultimap.Builder<String, String> builder = ImmutableSetMultimap.builder();
             for (int i = 0; i < numNodes; i++) {
-                List<String> shardList = new ArrayList<>();
                 for (int j = 0; j < replication; j++) {
-                    shardList.add(shards[(i + j) % numNodes]);
+                    builder.put(nodes[i], shards[(i + j) % numNodes]);
                 }
-                shardMap.put(nodes[i], shardList);
             }
+            shardMap = builder.build();
+
             // Compute reverse map.
-            _selectionPolicy = new DefaultNodeSelectionPolicy();
+            nodeSelectionPolicy = new DefaultNodeSelectionPolicy();
             for (int i = 0; i < numNodes; i++) {
                 String thisShard = shards[i];
                 List<String> nodeList = new ArrayList<>();
@@ -340,7 +396,7 @@ public class WorkQueueTest extends AbstractTest {
                         nodeList.add(nodes[j]);
                     }
                 }
-                _selectionPolicy.update(thisShard, nodeList);
+                nodeSelectionPolicy.update(thisShard, nodeList);
             }
             shardMapsFail = false;
         }
@@ -349,31 +405,26 @@ public class WorkQueueTest extends AbstractTest {
             this.shardMapsFail = shardMapsFail;
         }
 
-        public Map<String, List<String>> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException {
+        @Override
+        public ImmutableSetMultimap<String, String> createNode2ShardsMap(Collection<String> shards) throws ShardAccessException {
             if (shardMapsFail) {
                 throw new ShardAccessException("Test error");
             }
-            return Collections.unmodifiableMap(_selectionPolicy.createNode2ShardsMap(shards));
+            return nodeSelectionPolicy.createNode2ShardsMap(shards);
         }
 
+        @Override
         public VersionedProtocol getProxy(String node, boolean establishIfNotExists) {
             return proxyProvider != null ? proxyProvider.getProxy(node) : null;
         }
 
+        @Override
         public void reportNodeCommunicationFailure(String node, Throwable t) {
-            _selectionPolicy.removeNode(node);
+            nodeSelectionPolicy.removeNode(node);
         }
 
-        public List<String> allNodes() {
-            return Collections.unmodifiableList(allNodes);
-        }
-
-        public Set<String> allShards() {
-            return Collections.unmodifiableSet(allShards);
-        }
-
-        public Map<String, List<String>> getMap() {
-            return Collections.unmodifiableMap(shardMap);
+        public ImmutableSet<String> allShards() {
+            return allShards;
         }
 
         @Override
@@ -392,15 +443,17 @@ public class WorkQueueTest extends AbstractTest {
         public List<Entry> calls = new ArrayList<>();
         public int maxSleep;
         public long additionalSleepTime = 0; // TODO combine sleeps
+
         public TestNodeInteractionFactory(int maxSleep) {
             this.maxSleep = maxSleep;
         }
 
-        public Runnable createInteraction(Method method, final Object[] args, int shardArrayParamIndex, final String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, final IResultReceiver<Integer> results) {
+        @Override
+        public Runnable createInteraction(Method method, Object[] args, int shardArrayParamIndex, String node, ImmutableSetMultimap<String, String> nodeShardMap, int tryCount, int maxTryCount, INodeProxyManager shardManager, INodeExecutor nodeExecutor, IResultReceiverWrapper<Integer> results) {
             calls.add(new Entry(node, method, args));
             final long additionalSleepTime2 = additionalSleepTime;
             final TestServer server = new TestServer(maxSleep);
-            final List<String> shards = nodeShardMap.get(node);
+            final Set<String> shards = nodeShardMap.get(node);
             return () -> {
                 if (additionalSleepTime2 > 0) {
                     sleep(additionalSleepTime2);
@@ -409,7 +462,7 @@ public class WorkQueueTest extends AbstractTest {
                 int r = server.doSomething(n);
                 // System.out.printf("Test interaction, node=%s, f(%d)=%d, shards=%s\n",
                 // node, n, r, shards);
-                results.addResult(r, shards);
+                results.addNodeResult(r, shards);
             };
         }
 

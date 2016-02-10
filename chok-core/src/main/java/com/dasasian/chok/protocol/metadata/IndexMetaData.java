@@ -31,6 +31,8 @@ public class IndexMetaData implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public static final int REPLICATE_TO_ALL_NODES = -477; // ALL
+
     private final String name;
     private final URI uri;
     private final Set<Shard> shards = Sets.newHashSet();
@@ -55,6 +57,10 @@ public class IndexMetaData implements Serializable {
 
     public void setReplicationLevel(int replicationLevel) {
         this.replicationLevel = replicationLevel;
+    }
+
+    public boolean isCopyToAllNodes() {
+        return this.replicationLevel == REPLICATE_TO_ALL_NODES;
     }
 
     public boolean getAutoReload() {

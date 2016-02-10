@@ -16,9 +16,12 @@
 package com.dasasian.chok.client;
 
 import com.dasasian.chok.testutil.AbstractTest;
+import com.dasasian.chok.util.TestLoggerWatcher;
+import com.google.common.collect.ImmutableSetMultimap;
 import org.apache.hadoop.ipc.ProtocolSignature;
 import org.apache.hadoop.ipc.VersionedProtocol;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -26,6 +29,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -38,7 +42,10 @@ public class NodeInteractionTest extends AbstractTest {
     private TestProxyProvider proxyProvider;
     private WorkQueueTest.TestShardManager shardManager;
     private TestNodeExecutor nodeExecutor;
-    private Map<String, List<String>> node2ShardsMap;
+    private ImmutableSetMultimap<String, String> node2ShardsMap;
+
+    @Rule
+    public TestLoggerWatcher nodeInteractionLoggingRule = TestLoggerWatcher.logOff(NodeInteraction.class, "testRetries", "testMaxRetries", "testRetriesPolicyFailure", "testNoProxy");
 
     @Before
     public void setUp() throws Exception {
@@ -52,8 +59,8 @@ public class NodeInteractionTest extends AbstractTest {
     public void testNormalCall() throws Exception {
         Method method = ITestServer.class.getMethod("testMethod", String.class, String[].class);
         Object[] args = new Object[]{"foo", null};
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
-        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r);
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
+        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call testMethod on n1", ni.toString());
         ni.run();
         assertEquals("ClientResult: 1 results, 0 errors, 3/8 shards", r.toString());
@@ -65,8 +72,8 @@ public class NodeInteractionTest extends AbstractTest {
     public void testNormalCallNoShardsParam() throws Exception {
         Method method = ITestServer.class.getMethod("testMethodNoShards", String.class);
         Object[] args = new Object[]{"foo"};
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
-        Runnable ni = new NodeInteraction<>(method, args, -1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r);
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
+        Runnable ni = new NodeInteraction<>(method, args, -1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call testMethodNoShards on n1", ni.toString());
         ni.run();
         assertEquals("ClientResult: 1 results, 0 errors, 3/8 shards", r.toString());
@@ -79,92 +86,86 @@ public class NodeInteractionTest extends AbstractTest {
         Method method = ITestServer.class.getMethod("failingMethod", String.class, String[].class);
         int maxTryCount = 3;
         Object[] args = new Object[]{"foo", null};
-    /*
-     * First try to call node n1 with shards s1, s2, s3. TryCount = 1. Node
-     * fails.
-     */
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
+
+        // First try to call node n1 with shards s1, s2, s3. TryCount = 1. Node
+        // fails.
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
         assertEquals(3, node2ShardsMap.get("n1").size());
         assertTrue(node2ShardsMap.get("n1").contains("s1"));
         assertTrue(node2ShardsMap.get("n1").contains("s2"));
         assertTrue(node2ShardsMap.get("n1").contains("s3"));
-        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, maxTryCount, shardManager, nodeExecutor, r);
+        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call failingMethod on n1", ni.toString());
         ni.run();
         assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", r.toString());
         assertEquals("n1:null:null", proxyProvider.toString());
         assertEquals("n3:2:{n3=[s3], n8=[s1, s2]}, n8:2:{n3=[s3], n8=[s1, s2]}", nodeExecutor.toString());
         List<NodeInteractionTest.TestNodeExecutor.Call> retriesA = nodeExecutor.calls;
-    /*
-     * Now simulate running the 2 retries. TryCount = 2. Node n3 with shard s3.
-     * Node fails.
-     */
+
+        // Now simulate running the 2 retries. TryCount = 2. Node n3 with shard s3.
+        // Node fails.
         nodeExecutor = new TestNodeExecutor();
-        NodeInteractionTest.TestNodeExecutor.Call call = retriesA.get(0);
+        NodeInteractionTest.TestNodeExecutor.Call call = retriesA.get(1);
         assertEquals("n3", call.node);
         assertEquals(1, call.nodeShardMap.get(call.node).size());
         assertTrue(call.nodeShardMap.get(call.node).contains("s3"));
-        r = new ClientResult<>(null, shardManager.allShards());
-        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 2, maxTryCount, shardManager, nodeExecutor, r);
+        r = new ClientResult<>(shardManager.allShards());
+        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 2, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         ni.run();
         assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", r.toString());
         assertEquals("n1:null:null, n3:null:null", proxyProvider.toString());
         assertEquals("n2:3:{n2=[s3]}", nodeExecutor.toString());
         NodeInteractionTest.TestNodeExecutor.Call retryB1 = nodeExecutor.calls.get(0);
-    /*
-     * Second retry. TryCount = 2. Node n8 with shards s1, s2. Node fails.
-     */
+
+        // Second retry. TryCount = 2. Node n8 with shards s1, s2. Node fails.
         nodeExecutor = new TestNodeExecutor();
-        call = retriesA.get(1);
+        call = retriesA.get(0);
         assertEquals("n8", call.node);
         assertEquals(2, call.nodeShardMap.get(call.node).size());
         assertTrue(call.nodeShardMap.get(call.node).contains("s1"));
         assertTrue(call.nodeShardMap.get(call.node).contains("s2"));
-        r = new ClientResult<>(null, shardManager.allShards());
-        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 2, maxTryCount, shardManager, nodeExecutor, r);
+        r = new ClientResult<>(shardManager.allShards());
+        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 2, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         ni.run();
         assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", r.toString());
         assertEquals("n1:null:null, n3:null:null, n8:null:null", proxyProvider.toString());
         assertEquals("n2:3:{n2=[s2], n7=[s1]}, n7:3:{n2=[s2], n7=[s1]}", nodeExecutor.toString());
         List<NodeInteractionTest.TestNodeExecutor.Call> retriesB2 = nodeExecutor.calls;
-    /*
-     * Third round of retries. TryCount = 3. No further retry attempts. Node n2
-     * with shard s3. Node fails.
-     */
+
+        // Third round of retries. TryCount = 3. No further retry attempts. Node n2
+        // with shard s3. Node fails.
         nodeExecutor = new TestNodeExecutor();
         assertEquals("n2", retryB1.node);
         assertEquals(1, retryB1.nodeShardMap.get(retryB1.node).size());
         assertTrue(retryB1.nodeShardMap.get(retryB1.node).contains("s3"));
-        r = new ClientResult<>(null, shardManager.allShards());
-        ni = new NodeInteraction<>(method, args, 1, retryB1.node, retryB1.nodeShardMap, 3, maxTryCount, shardManager, nodeExecutor, r);
+        r = new ClientResult<>(shardManager.allShards());
+        ni = new NodeInteraction<>(method, args, 1, retryB1.node, retryB1.nodeShardMap, 3, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         ni.run();
         assertEquals("ClientResult: 0 results, 1 errors, 1/8 shards", r.toString());
         assertEquals("n1:null:null, n2:null:null, n3:null:null, n8:null:null", proxyProvider.toString());
         assertEquals("", nodeExecutor.toString());
-    /*
-     * Node n2 with shard s2. TryCount = 3. Node fails.
-     */
+
+        // Node n2 with shard s2. TryCount = 3. Node fails.
         nodeExecutor = new TestNodeExecutor();
-        call = retriesB2.get(0);
+        call = retriesB2.get(1);
         assertEquals("n2", call.node);
         assertEquals(1, call.nodeShardMap.get(call.node).size());
         assertTrue(call.nodeShardMap.get(call.node).contains("s2"));
-        r = new ClientResult<>(null, shardManager.allShards());
-        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 3, maxTryCount, shardManager, nodeExecutor, r);
+        r = new ClientResult<>(shardManager.allShards());
+        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 3, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         ni.run();
         assertEquals("ClientResult: 0 results, 1 errors, 1/8 shards", r.toString());
         assertEquals("n1:null:null, n2:null:null, n3:null:null, n8:null:null", proxyProvider.toString());
         assertEquals("", nodeExecutor.toString());
-    /*
-     * Node n7 with shard s1. TryCount = 3. Node fails.
-     */
+
+        // Node n7 with shard s1. TryCount = 3. Node fails.
         nodeExecutor = new TestNodeExecutor();
-        call = retriesB2.get(1);
+        call = retriesB2.get(0);
         assertEquals("n7", call.node);
         assertEquals(1, call.nodeShardMap.get(call.node).size());
         assertTrue(call.nodeShardMap.get(call.node).contains("s1"));
-        r = new ClientResult<>(null, shardManager.allShards());
-        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 3, maxTryCount, shardManager, nodeExecutor, r);
+        r = new ClientResult<>(shardManager.allShards());
+        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 3, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         ni.run();
         assertEquals("ClientResult: 0 results, 1 errors, 1/8 shards", r.toString());
         assertEquals("n1:null:null, n2:null:null, n3:null:null, n7:null:null, n8:null:null", proxyProvider.toString());
@@ -176,33 +177,31 @@ public class NodeInteractionTest extends AbstractTest {
         Method method = ITestServer.class.getMethod("failingMethod", String.class, String[].class);
         int maxTryCount = 2;
         Object[] args = new Object[]{"foo", null};
-    /*
-     * First try to call node n1 with shards s1, s2, s3. TryCount = 1. Node
-     * fails.
-     */
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
+
+        // First try to call node n1 with shards s1, s2, s3. TryCount = 1. Node
+        // fails.
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
         assertEquals(3, node2ShardsMap.get("n1").size());
         assertTrue(node2ShardsMap.get("n1").contains("s1"));
         assertTrue(node2ShardsMap.get("n1").contains("s2"));
         assertTrue(node2ShardsMap.get("n1").contains("s3"));
-        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, maxTryCount, shardManager, nodeExecutor, r);
+        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call failingMethod on n1", ni.toString());
         ni.run();
         assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards", r.toString());
         assertEquals("n1:null:null", proxyProvider.toString());
         assertEquals("n3:2:{n3=[s3], n8=[s1, s2]}, n8:2:{n3=[s3], n8=[s1, s2]}", nodeExecutor.toString());
         List<NodeInteractionTest.TestNodeExecutor.Call> retriesA = nodeExecutor.calls;
-    /*
-     * Now simulate running the 2 retries. TryCount = 2. Node n3 with shard s3.
-     * Node fails.
-     */
+
+        // Now simulate running the 2 retries. TryCount = 2. Node n3 with shard s3.
+        // Node fails.
         nodeExecutor = new TestNodeExecutor();
-        NodeInteractionTest.TestNodeExecutor.Call call = retriesA.get(0);
+        NodeInteractionTest.TestNodeExecutor.Call call = retriesA.get(1);
         assertEquals("n3", call.node);
         assertEquals(1, call.nodeShardMap.get(call.node).size());
         assertTrue(call.nodeShardMap.get(call.node).contains("s3"));
-        r = new ClientResult<>(null, shardManager.allShards());
-        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 2, maxTryCount, shardManager, nodeExecutor, r);
+        r = new ClientResult<>(shardManager.allShards());
+        ni = new NodeInteraction<>(method, args, 1, call.node, call.nodeShardMap, 2, maxTryCount, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         ni.run();
         assertEquals("ClientResult: 0 results, 1 errors, 1/8 shards", r.toString());
         assertEquals("n1:null:null, n3:null:null", proxyProvider.toString());
@@ -213,17 +212,16 @@ public class NodeInteractionTest extends AbstractTest {
     public void testRetriesUserClosedResult() throws Exception {
         Method method = TestServer.class.getMethod("failingMethod", String.class, String[].class);
         Object[] args = new Object[]{"foo", null};
-    /*
-     * Close the result object. Then try to call node n1 with shards s1, s2, s3.
-     * TryCount = 1. Node fails. No retries should be attempted.
-     */
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
+
+        // Close the result object. Then try to call node n1 with shards s1, s2, s3.
+        // TryCount = 1. Node fails. No retries should be attempted.
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
         r.close();
         assertEquals(3, node2ShardsMap.get("n1").size());
         assertTrue(node2ShardsMap.get("n1").contains("s1"));
         assertTrue(node2ShardsMap.get("n1").contains("s2"));
         assertTrue(node2ShardsMap.get("n1").contains("s3"));
-        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r);
+        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call failingMethod on n1", ni.toString());
         ni.run();
         assertEquals("ClientResult: 0 results, 0 errors, 0/8 shards (closed)", r.toString());
@@ -236,17 +234,16 @@ public class NodeInteractionTest extends AbstractTest {
         shardManager.setShardMapsFail(true);
         Method method = ITestServer.class.getMethod("failingMethod", String.class, String[].class);
         Object[] args = new Object[]{"foo", null};
-    /*
-     * Try to call node n1 with shards s1, s2, s3. TryCount = 1. Node fails.
-     * When attempting to create retry node shard map, policy will throw an
-     * exception. Give up on retries and log error.
-     */
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
+
+        // Try to call node n1 with shards s1, s2, s3. TryCount = 1. Node fails.
+        // When attempting to create retry node shard map, policy will throw an
+        // exception. Give up on retries and log error.
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
         assertEquals(3, node2ShardsMap.get("n1").size());
         assertTrue(node2ShardsMap.get("n1").contains("s1"));
         assertTrue(node2ShardsMap.get("n1").contains("s2"));
         assertTrue(node2ShardsMap.get("n1").contains("s3"));
-        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r);
+        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call failingMethod on n1", ni.toString());
         ni.run();
         assertEquals("ClientResult: 0 results, 1 errors, 3/8 shards", r.toString());
@@ -260,8 +257,8 @@ public class NodeInteractionTest extends AbstractTest {
         proxyProvider.returnNullFor("n1");
         Method method = ITestServer.class.getMethod("testMethod", String.class, String[].class);
         Object[] args = new Object[]{"foo", null};
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
-        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r);
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
+        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call testMethod on n1", ni.toString());
         ni.run();
         assertEquals(2, nodeExecutor.calls.size());
@@ -276,8 +273,8 @@ public class NodeInteractionTest extends AbstractTest {
     public void testDefensiveArgCopy() throws Exception {
         Method method = ITestServer.class.getMethod("testMethod", String.class, String[].class);
         Object[] args = new Object[]{"OK", null};
-        ClientResult<String> r = new ClientResult<>(null, shardManager.allShards());
-        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r);
+        ClientResult<String> r = new ClientResult<>(shardManager.allShards());
+        Runnable ni = new NodeInteraction<>(method, args, 1, "n1", node2ShardsMap, 1, 3, shardManager, nodeExecutor, r.getResultReceiverWrapper());
         assertEquals("NodeInteraction: call testMethod on n1", ni.toString());
         args[0] = "FAIL";
         ni.run();
@@ -298,7 +295,7 @@ public class NodeInteractionTest extends AbstractTest {
 
         protected List<Call> calls = new ArrayList<>();
 
-        public void execute(String node, Map<String, List<String>> nodeShardMap, int tryCount, int maxTryCount) {
+        public void execute(String node, ImmutableSetMultimap<String, String> nodeShardMap, int tryCount, int maxTryCount) {
             Call call = new Call();
             call.node = node;
             call.nodeShardMap = nodeShardMap;
@@ -308,47 +305,82 @@ public class NodeInteractionTest extends AbstractTest {
 
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder();
-            String sep = "";
-            for (Call call : calls) {
-                sb.append(sep);
-                sb.append(call.toString());
-                sep = ", ";
-            }
-            return sb.toString();
+            return calls.stream().sorted()
+                    .map(Call::toString)
+                    .collect(Collectors.joining(", "));
         }
 
-        protected class Call {
+        protected class Call implements Comparable {
             protected String node;
-            protected Map<String, List<String>> nodeShardMap;
+            protected ImmutableSetMultimap<String, String> nodeShardMap;
             protected int tryCount;
 
             @Override
             public String toString() {
-                return node + ":" + tryCount + ":" + nodeShardMap;
+                return node + ":" + tryCount + ":" + toString(nodeShardMap);
+            }
+
+            private String toString(ImmutableSetMultimap<String, String> nodeShardMap) {
+                return "{"+nodeShardMap.keySet().stream()
+                        .sorted()
+                        .map(k -> k+"=["+
+                                nodeShardMap.get(k).stream()
+                                        .sorted()
+                                        .collect(Collectors.joining(", "))+"]")
+                        .collect(Collectors.joining(", "))+"}";
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+
+                Call call = (Call) o;
+
+                if (tryCount != call.tryCount) {
+                    return false;
+                }
+                if (!node.equals(call.node)) {
+                    return false;
+                }
+                return nodeShardMap.equals(call.nodeShardMap);
+
+            }
+
+            @Override
+            public int hashCode() {
+                int result = node.hashCode();
+                result = 31 * result + nodeShardMap.hashCode();
+                result = 31 * result + tryCount;
+                return result;
+            }
+
+            @Override
+            public int compareTo(Object o) {
+                return Integer.compare(this.hashCode(), o.hashCode());
             }
         }
     }
 
     private static class TestServer implements ITestServer, InvocationHandler {
 
-        private String _node;
-        private String _param;
-        private String[] _shards;
+        private String node;
+        private String param;
+        private String[] shards;
 
         public TestServer(String node) {
-            this._node = node;
+            this.node = node;
         }
 
         public String testMethod(String param, String[] shards) {
-            this._param = param;
-            this._shards = shards;
+            this.param = param;
+            this.shards = shards;
             return "bar";
         }
 
         public String testMethodNoShards(String param) {
-            this._param = param;
-            this._shards = null;
+            this.param = param;
+            this.shards = null;
             return "bar";
         }
 
@@ -359,11 +391,11 @@ public class NodeInteractionTest extends AbstractTest {
         @Override
         public String toString() {
             List<String> shards = null;
-            if (_shards != null) {
-                shards = Arrays.asList(_shards);
+            if (this.shards != null) {
+                shards = Arrays.asList(this.shards);
                 Collections.sort(shards);
             }
-            return _node + ":" + _param + ":" + (_shards != null ? shards.toString() : "null");
+            return node + ":" + param + ":" + (this.shards != null ? shards.toString() : "null");
         }
 
         @Override

@@ -18,6 +18,7 @@ package com.dasasian.chok.lucene;
 import com.dasasian.chok.client.Client;
 import com.dasasian.chok.client.ClientResult;
 import com.dasasian.chok.client.INodeSelectionPolicy;
+import com.dasasian.chok.client.ResultCompletePolicy;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
@@ -176,13 +177,13 @@ public class LuceneClient implements ILuceneClient {
         ClientResult<HitsMapWritable> results;
 
         if (sort == null && filter == null) {
-            results = client.broadcastToIndices(timeout, true, SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count);
+            results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(timeout), SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count);
         } else if (sort != null && filter == null) {
-            results = client.broadcastToIndices(timeout, true, SORTED_SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count, new SortWritable(sort));
+            results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(timeout), SORTED_SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count, new SortWritable(sort));
         } else if (sort == null && filter != null) {
-            results = client.broadcastToIndices(timeout, true, FILTERED_SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count, new FilterWritable(filter));
+            results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(timeout), FILTERED_SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count, new FilterWritable(filter));
         } else {
-            results = client.broadcastToIndices(timeout, true, FILTERED_SORTED_SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count, new SortWritable(sort), new FilterWritable(filter));
+            results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(timeout), FILTERED_SORTED_SEARCH_METHOD, SEARCH_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), docFreqs, null, timeout, count, new SortWritable(sort), new FilterWritable(filter));
         }
         if (results.isError()) {
             throw results.getChokException();
@@ -219,7 +220,7 @@ public class LuceneClient implements ILuceneClient {
 
     @Override
     public int count(final Query query, final String[] indexNames) throws ChokException {
-        ClientResult<Integer> results = client.broadcastToIndices(timeout, true, COUNT_METHOD, COUNT_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), null, timeout);
+        ClientResult<Integer> results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(timeout), COUNT_METHOD, COUNT_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), null, timeout);
         if (results.isError()) {
             throw results.getChokException();
         }
@@ -232,7 +233,7 @@ public class LuceneClient implements ILuceneClient {
 
     @Override
     public int count(final Query query, Filter filter, final String[] indexNames) throws ChokException {
-        ClientResult<Integer> results = client.broadcastToIndices(timeout, true, FILTER_COUNT_METHOD, FILTER_COUNT_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), new FilterWritable(filter), null, timeout);
+        ClientResult<Integer> results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(timeout), FILTER_COUNT_METHOD, FILTER_COUNT_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), new FilterWritable(filter), null, timeout);
         if (results.isError()) {
             throw results.getChokException();
         }
@@ -244,7 +245,7 @@ public class LuceneClient implements ILuceneClient {
     }
 
     protected DocumentFrequencyWritable getDocFrequencies(final Query query, final String[] indexNames) throws ChokException {
-        ClientResult<DocumentFrequencyWritable> results = client.broadcastToIndices(timeout, true, DOC_FREQ_METHOD, DOC_FREQ_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), null);
+        ClientResult<DocumentFrequencyWritable> results = client.broadcastToIndices(ResultCompletePolicy.awaitCompletion(timeout), DOC_FREQ_METHOD, DOC_FREQ_METHOD_SHARD_ARG_IDX, indexNames, new QueryWritable(query), null);
         if (results.isError()) {
             throw results.getChokException();
         }
@@ -288,7 +289,7 @@ public class LuceneClient implements ILuceneClient {
             method = GET_DETAILS_FIELDS_METHOD;
             shardArgIdx = GET_DETAILS_FIELDS_METHOD_SHARD_ARG_IDX;
         }
-        ClientResult<MapWritable> results = client.broadcastToShards(timeout, true, method, shardArgIdx, shards, args);
+        ClientResult<MapWritable> results = client.broadcastToShards(ResultCompletePolicy.awaitCompletion(timeout), method, shardArgIdx, shards, args);
         if (results.isError()) {
             throw results.getChokException();
         }

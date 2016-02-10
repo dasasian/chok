@@ -40,31 +40,49 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
     private final long coverageWait;
     private final long coverageStopTime;
     private final double coverage;
-    private final boolean shutDown;
 
     /**
-     * Wait for the results to be complete (all shards reporting with results or
-     * errors) until result is complete, result is closed, or N msec has passed,
-     * whichever comes first. Then close the result, shutting down the call.
+     * Returns a policy that waits for the results to be complete (all shards reporting with results or
+     * errors), result is closed, or N msec has passed, whichever comes first.
      *
      * @param timeout Max msec to wait for results.
+     * @param <T> the type of the response
+     * @return the result completion policy
+     *
      */
-    public ResultCompletePolicy(long timeout) {
-        this(timeout, 0, 1.0, true);
+    public static <T> ResultCompletePolicy<T> awaitCompletion(long timeout) {
+        return new ResultCompletePolicy<>(timeout, 0, 1.0);
     }
 
+//    /**
+//     * Returns a policy that waits for the results to be complete (all shards reporting with results or
+//     * errors), result is closed, or N msec has passed, whichever comes first. Then close the result,
+//     * shutting down the call.
+//     *
+//     * @param timeout Max msec to wait for results.
+//     */
+//    @Deprecated
+//    public static <T> ResultCompletePolicy<T> awaitCompletionThenShutdown(long timeout) {
+//        return new ResultCompletePolicy<>(timeout, 0, 1.0);
+//    }
+
     /**
-     * Wait for the results to be complete (all shards reporting with results or
-     * errors) until result is complete, result is closed, or N msec has passed,
-     * whichever comes first. Then, if shutDown is true, close the result which
-     * shuts down the call.
+     * Returns a policy that for the results to complete (all shards reporting a result or error),
+     * the results to be closed, or completeWait msec, whichever comes first. Then
+     * if not complete and not closed, wait for the results to be closed, shard
+     * coverage to be &gt;= coverage, or coverageWait msec, whichever comes first. If
+     * shutDown is set, close the result which terminates the call.
      *
-     * @param timeout the timeout value
-     * @param shutDown shutdown after
-     *
+     * @param completeWait How long (msec) to wait for complete results.
+     * @param coverageWait How long (msec, after completeWait) to wait for coverage to meet
+     *                     or exceed coverage param.
+     * @param coverage     The required coverage (0.0 .. 1.0) when waiting for coverage. Not
+     *                     used if coverageWait = 0.
+     * @param <T> the type of the response
+     * @return the result completion policy
      */
-    public ResultCompletePolicy(long timeout, boolean shutDown) {
-        this(timeout, 0, 1.0, shutDown);
+    public static <T> ResultCompletePolicy<T> awaitCompletion(long completeWait, long coverageWait, double coverage) {
+        return new ResultCompletePolicy<>(completeWait, coverageWait, coverage);
     }
 
     /**
@@ -79,9 +97,8 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
      *                     or exceed coverage param.
      * @param coverage     The required coverage (0.0 .. 1.0) when waiting for coverage. Not
      *                     used if coverageWait = 0.
-     * @param shutDown     Before returning the result, should it be closed.
      */
-    public ResultCompletePolicy(long completeWait, long coverageWait, double coverage, boolean shutDown) {
+    private ResultCompletePolicy(long completeWait, long coverageWait, double coverage) {
         long now = System.currentTimeMillis();
         if (completeWait < 0 || coverageWait < 0) {
             throw new IllegalArgumentException("Wait times must be >= 0");
@@ -94,7 +111,6 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
         completeStopTime = now + completeWait;
         coverageStopTime = now + completeWait + coverageWait;
         this.coverage = coverage;
-        this.shutDown = shutDown;
     }
 
     /**
@@ -108,7 +124,8 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
      * immediately. if &lt; 0, shutdown the WorkQueue, close the result, and
      * return it immediately.
      */
-    public long waitTime(ClientResult<T> result) {
+    @Override
+    public long waitTime(IResultReceiverWrapper<T> result) {
         boolean done = result.isClosed();
         long now = System.currentTimeMillis();
         if (!done) {
@@ -121,7 +138,7 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
             }
         }
         if (done) {
-            return shutDown ? -1 : 0;
+            return 0;
         }
         return coverageStopTime - now;
     }
@@ -131,9 +148,6 @@ public class ResultCompletePolicy<T> implements IResultPolicy<T> {
         String s = "Wait up to " + completeWait + " ms for complete results";
         if (coverageWait > 0) {
             s += ", then " + coverageWait + " ms for " + coverage + " coverage";
-        }
-        if (shutDown) {
-            s += ", then shut down";
         }
         s += ".";
         return s;

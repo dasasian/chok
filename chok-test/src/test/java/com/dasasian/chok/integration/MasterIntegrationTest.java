@@ -18,9 +18,11 @@ package com.dasasian.chok.integration;
 import com.dasasian.chok.client.DeployClient;
 import com.dasasian.chok.client.IDeployClient;
 import com.dasasian.chok.client.IIndexDeployFuture;
+import com.dasasian.chok.master.DefaultDistributionPolicy;
 import com.dasasian.chok.node.Node;
 import com.dasasian.chok.operation.master.IndexDeployOperation;
 import com.dasasian.chok.operation.master.IndexUndeployOperation;
+import com.dasasian.chok.operation.node.AbstractShardOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexDeployError.ErrorType;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
@@ -33,6 +35,7 @@ import com.dasasian.chok.testutil.integration.ChokMiniCluster;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestResources;
 import com.dasasian.chok.testutil.server.simpletest.SimpleTestServer;
 import com.dasasian.chok.util.ChokFileSystem;
+import com.dasasian.chok.util.TestLoggerWatcher;
 import com.dasasian.chok.util.UtilModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -43,9 +46,19 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Set;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
 public class MasterIntegrationTest extends AbstractTest {
 
     protected static Injector injector = Guice.createInjector(new UtilModule());
+
+    @Rule
+    public TestLoggerWatcher defaultDistributionPolicyLoggingRule = TestLoggerWatcher.logErrors(DefaultDistributionPolicy.class, "testReplicateUnderReplicatedIndexesAfterNodeAdding");
+
+    @Rule
+    public TestLoggerWatcher abstractShardOperationLoggingRule = TestLoggerWatcher.logOff(AbstractShardOperation.class, "testDeployError");
 
     @Rule
     public ChokMiniCluster miniCluster = new ChokMiniCluster(SimpleTestServer.class, 2, 20000, TestNodeConfigurationFactory.class, injector.getInstance(ChokFileSystem.Factory.class));
@@ -99,6 +112,9 @@ public class MasterIntegrationTest extends AbstractTest {
         IndexMetaData indexMD = protocol.getIndexMD(indexName);
         Assert.assertNotNull(indexMD.getDeployError());
         Assert.assertEquals(ErrorType.SHARDS_NOT_DEPLOYABLE, indexMD.getDeployError().getErrorType());
+//        System.out.println(abstractShardOperationLoggingRule.getLogMessages());
+        assertThat(abstractShardOperationLoggingRule.getLogEventCount(event -> true), is(equalTo(3)));
+        assertThat(abstractShardOperationLoggingRule.getLogEventCount(event -> event.getFormattedMessage().startsWith("failed to deploy shard")), is(equalTo(3)));
     }
 
     @Test(timeout = 20000)
@@ -137,7 +153,7 @@ public class MasterIntegrationTest extends AbstractTest {
     }
 
     @Test
-    public void testReplicateUnderreplicatedIndexesAfterNodeAdding() throws Exception {
+    public void testReplicateUnderReplicatedIndexesAfterNodeAdding() throws Exception {
         int replicationCount = miniCluster.getRunningNodeCount() + 1;
 
         TestIndex testIndex = TestIndex.createTestIndex(temporaryFolder, 3);
@@ -148,19 +164,19 @@ public class MasterIntegrationTest extends AbstractTest {
         Assert.assertEquals(1, protocol.getIndices().size());
 
         int optimumShardDeployCount = testIndex.getShardCount() * replicationCount;
-        printNodeShards();
+//        printNodeShards();
         Assert.assertTrue(optimumShardDeployCount > miniCluster.countShardDeployments(protocol, testIndex.getIndexName()));
 
         Node node = miniCluster.startAdditionalNode();
         TestUtil.waitUntilNodeServesShards(protocol, node.getName(), testIndex.getShardCount());
-        printNodeShards();
+//        printNodeShards();
         Assert.assertTrue(optimumShardDeployCount == miniCluster.countShardDeployments(protocol, testIndex.getIndexName()));
     }
 
-    public void printNodeShards() {
-        for (Node node : miniCluster.getNodes()) {
-            System.out.println(miniCluster.getProtocol().getNodeShards(node.getName()));
-        }
-    }
+//    public void printNodeShards() {
+//        for (Node node : miniCluster.getNodes()) {
+//            System.out.println(miniCluster.getProtocol().getNodeShards(node.getName()));
+//        }
+//    }
 
 }
