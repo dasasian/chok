@@ -147,7 +147,7 @@ public class MasterZkTest extends AbstractZkTest {
         master.start();
         TestUtil.waitUntilLeaveSafeMode(master);
         TestUtil.waitUntilNumberOfLiveNode(protocol, 1);
-        assertEquals(1, protocol.getLiveNodes().size());
+        assertEquals(1, protocol.getLiveNodeCount());
 
         // now break the node connection
         gateway.stop();

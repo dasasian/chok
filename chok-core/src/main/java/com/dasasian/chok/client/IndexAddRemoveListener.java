@@ -21,7 +21,6 @@ import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ZkConfiguration;
-import com.google.common.base.Predicates;
 import com.google.common.collect.*;
 import org.I0Itec.zkclient.IZkDataListener;
 import org.apache.hadoop.ipc.VersionedProtocol;
@@ -29,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -137,7 +137,7 @@ public class IndexAddRemoveListener implements ConnectedComponent, IAddRemoveLis
                 @Override
                 public void removed(String nodeName) {
                     LOG.info("shard '" + shardName + "' removed from node " + nodeName + "'");
-                    Iterable<String> shardNodes = Iterables.filter(selectionPolicy.getShardNodes(shardName), Predicates.not(Predicates.equalTo(nodeName)));
+                    List<String> shardNodes = selectionPolicy.getShardNodes(shardName).stream().filter(((Predicate<Object>) s -> Objects.equals(s, nodeName)).negate()).collect(Collectors.toList());
                     selectionPolicy.update(shardName, shardNodes);
                 }
 

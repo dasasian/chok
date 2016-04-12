@@ -18,7 +18,6 @@ package com.dasasian.chok.testutil.server.simpletest;
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.util.NodeConfiguration;
-import com.google.common.collect.ImmutableSet;
 import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.ProtocolSignature;
 import org.slf4j.Logger;
@@ -28,7 +27,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * The back end server which searches a set of Lucene indices. Each shard is a
@@ -43,6 +41,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
 
     private final static Logger LOG = LoggerFactory.getLogger(SimpleTestServer.class);
 
+    protected final Set<String> shards = Collections.synchronizedSet(new HashSet<>());
     protected String nodeName;
 
     public static final long versionID = 0L;
@@ -81,6 +80,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
         if (!Files.exists(dataFile)) {
             throw new IOException("File " + dataFile + " not found");
         }
+        shards.add(shardName);
     }
 
     @Override
@@ -100,11 +100,12 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
     @Override
     public void removeShard(final String shardName) {
         LOG.info("TestServer " + nodeName + " removing shard " + shardName);
+        shards.remove(shardName);
     }
 
     @Override
     public Collection<String> getShards() {
-        return ImmutableSet.of();
+        return shards;
     }
 
     /**
@@ -150,6 +151,7 @@ public class SimpleTestServer implements IContentServer, ISimpleTestServer {
      */
     @Override
     public void shutdown() throws IOException {
+        shards.clear();
     }
 
     @Override

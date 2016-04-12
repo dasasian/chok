@@ -149,7 +149,8 @@ public class MasterIntegrationTest extends AbstractTest {
 
         miniCluster.restartMaster();
         Assert.assertEquals(1, protocol.getIndices().size());
-        Assert.assertTrue(protocol.getReplicationReport(protocol.getIndexMD(testIndex.getIndexName())).isDeployed());
+        IndexMetaData indexMD = protocol.getIndexMD(testIndex.getIndexName());
+        Assert.assertTrue(protocol.getReplicationReport(indexMD, protocol.getLiveNodeCount()).isDeployed());
     }
 
     @Test

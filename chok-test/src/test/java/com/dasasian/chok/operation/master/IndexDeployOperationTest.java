@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.net.URI;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
@@ -169,10 +170,7 @@ public class IndexDeployOperationTest extends AbstractMasterNodeZkTest {
         operation2.execute(masterContext, runningOps);
 
         // check results
-        List<Integer> nodeQueueSizes = new ArrayList<>();
-        for (NodeQueue nodeQueue : nodeQueues) {
-            nodeQueueSizes.add(nodeQueue.size());
-        }
+        List<Integer> nodeQueueSizes = nodeQueues.stream().map(NodeQueue::size).collect(Collectors.toList());
         for (Integer integer : nodeQueueSizes) {
             assertEquals("unequal shard distribution: " + nodeQueueSizes, 1, integer.intValue());
         }

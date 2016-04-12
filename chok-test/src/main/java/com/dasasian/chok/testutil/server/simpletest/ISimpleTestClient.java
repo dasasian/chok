@@ -17,8 +17,6 @@ package com.dasasian.chok.testutil.server.simpletest;
 
 import com.dasasian.chok.util.ChokException;
 
-import java.util.List;
-
 /**
  */
 public interface ISimpleTestClient extends AutoCloseable {

@@ -15,11 +15,10 @@
  */
 package com.dasasian.chok.util;
 
-import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,6 +28,7 @@ import java.util.Set;
 public class ChokConfiguration implements Serializable {
 
     public static final String CHOK_CONFIGURATION_HOME = "chok.configuration.home";
+
     @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ChokConfiguration.class);
     private static final long serialVersionUID = 1L;
@@ -39,74 +39,59 @@ public class ChokConfiguration implements Serializable {
         properties = PropertyUtil.loadProperties(chokPropertyHome + path);
     }
 
-    public ChokConfiguration() {
+    ChokConfiguration() {
         properties = new Properties();
     }
 
     public String getProperty(final String key) {
-        return getProperty(key, Optional.<String>absent());
+        return getProperty(key, null);
     }
 
-    public String getProperty(final String key, final String defaultValue) {
-        return getProperty(key, Optional.of(defaultValue));
-    }
-
-    public String getProperty(final String key, final Optional<String> defaultValue) {
+    String getProperty(final String key, @Nullable final String defaultValue) {
         String value = properties.getProperty(key);
         if (value == null) {
-            if (defaultValue.isPresent()) {
-                value = defaultValue.get();
-            } else {
+            if(defaultValue != null) {
+                value = defaultValue;
+            }
+            else {
                 throw new IllegalStateException("no property with key '" + key + "' found");
             }
         }
         return value;
     }
 
-    protected void setProperty(String key, long value) {
+    void setProperty(String key, long value) {
         properties.setProperty(key, Long.toString(value));
     }
 
     @SuppressWarnings("unused")
     public boolean getBoolean(final String key) {
-        return getBoolean(key, Optional.<Boolean>absent());
+        return getBoolean(key, null);
     }
 
-    public boolean getBoolean(final String key, boolean defaultValue) {
-        return getBoolean(key, Optional.of(defaultValue));
-    }
-
-    public boolean getBoolean(final String key, final Optional<Boolean> defaultValue) {
-        Optional<String> defaultValueStr = (defaultValue.isPresent()) ? Optional.of(Boolean.toString(defaultValue.get())) : Optional.<String>absent();
+    public boolean getBoolean(final String key, @Nullable final Boolean defaultValue) {
+        String defaultValueStr = (defaultValue != null) ? Boolean.toString(defaultValue) : null;
 
         return Boolean.parseBoolean(getProperty(key, defaultValueStr));
     }
 
     public int getInt(final String key) {
-        return getInt(key, Optional.<Integer>absent());
+        return getInt(key, null);
     }
 
-    public int getInt(final String key, final int defaultValue) {
-        return getInt(key, Optional.of(defaultValue));
-    }
-
-    public int getInt(final String key, final Optional<Integer> defaultValue) {
-        Optional<String> defaultValueStr = (defaultValue.isPresent()) ? Optional.of(Integer.toString(defaultValue.get())) : Optional.<String>absent();
+    public int getInt(final String key, final Integer defaultValue) {
+        String defaultValueStr = (defaultValue != null) ? Integer.toString(defaultValue) : null;
 
         return Integer.parseInt(getProperty(key, defaultValueStr));
     }
 
     @SuppressWarnings("unused")
     public float getFloat(final String key) {
-        return getFloat(key, Optional.<Float>absent());
+        return getFloat(key, null);
     }
 
-    public float getFloat(final String key, final float defaultValue) {
-        return getFloat(key, Optional.of(defaultValue));
-    }
-
-    public float getFloat(final String key, final Optional<Float> defaultValue) {
-        Optional<String> defaultValueStr = (defaultValue.isPresent()) ? Optional.of(Float.toString(defaultValue.get())) : Optional.<String>absent();
+    public float getFloat(final String key, final Float defaultValue) {
+        String defaultValueStr = (defaultValue != null) ? Float.toString(defaultValue) : null;
         return Float.parseFloat(getProperty(key, defaultValueStr));
     }
 
@@ -115,16 +100,11 @@ public class ChokConfiguration implements Serializable {
     }
 
     public Class<?> getClass(final String key) {
-        return getClass(key, Optional.<Class<?>>absent());
+        return getClass(key, null);
     }
 
     public Class<?> getClass(final String key, Class<?> defaultValue) {
-        return getClass(key, Optional.<Class<?>>of(defaultValue));
-
-    }
-
-    public Class<?> getClass(final String key, Optional<Class<?>> defaultValue) {
-        Optional<String> defaultClassName = (defaultValue.isPresent()) ? Optional.of(defaultValue.get().getName()) : Optional.<String>absent();
+        String defaultClassName = (defaultValue != null) ? defaultValue.getName() : null;
 
         final String className = getProperty(key, defaultClassName);
         return ClassUtil.forName(className, Object.class);

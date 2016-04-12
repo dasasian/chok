@@ -19,7 +19,6 @@ import org.apache.hadoop.ipc.ProtocolInfo;
 import org.apache.hadoop.ipc.VersionedProtocol;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * The public interface to the back end LuceneServer. These are all the

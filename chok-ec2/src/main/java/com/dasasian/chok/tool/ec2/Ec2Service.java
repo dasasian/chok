@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class Ec2Service {
 
@@ -93,11 +94,7 @@ public abstract class Ec2Service {
             describeInstances = ec2.describeInstances(new ArrayList<>());
             for (ReservationDescription description : describeInstances) {
                 List<Instance> instances = description.getInstances();
-                for (Instance instance : instances) {
-                    if ("running".equals(instance.getState()) && (description.getGroups().contains(cluster) || description.getGroups().contains(clusterMaster))) {
-                        toTerminate.add(instance.getInstanceId());
-                    }
-                }
+                toTerminate.addAll(instances.stream().filter(instance -> "running".equals(instance.getState()) && (description.getGroups().contains(cluster) || description.getGroups().contains(clusterMaster))).map(Instance::getInstanceId).collect(Collectors.toList()));
             }
             ec2.terminateInstances(toTerminate);
 
@@ -197,9 +194,7 @@ public abstract class Ec2Service {
 
         ArrayList<String> instanceIds = new ArrayList<>();
         List<Instance> instances = master.getInstances();
-        for (Instance instance : instances) {
-            instanceIds.add(instance.getInstanceId());
-        }
+        instanceIds.addAll(instances.stream().map(Instance::getInstanceId).collect(Collectors.toList()));
 
         while (System.currentTimeMillis() < end) {
             List<ReservationDescription> describeInstances = ec2.describeInstances(instanceIds);

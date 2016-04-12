@@ -19,7 +19,6 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.NodeConfigurationFactory;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
 import com.dasasian.chok.testutil.server.sleep.SleepServer;
-import com.dasasian.chok.util.ChokFileSystem;
 import org.slf4j.Logger;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;

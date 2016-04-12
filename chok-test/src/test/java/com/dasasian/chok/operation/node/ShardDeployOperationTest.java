@@ -20,7 +20,6 @@ import org.mockito.InOrder;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
-import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;

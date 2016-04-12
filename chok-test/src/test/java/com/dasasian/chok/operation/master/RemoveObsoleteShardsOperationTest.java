@@ -33,7 +33,6 @@ import org.mockito.Mockito;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -54,7 +53,7 @@ public class RemoveObsoleteShardsOperationTest {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         MasterQueue queue = Mockito.mock(MasterQueue.class);
         MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue, injector.getInstance(ChokFileSystem.Factory.class));
-        Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(Arrays.asList(someOldShard));
+        Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(Collections.singletonList(someOldShard));
 
         RemoveObsoleteShardsOperation operation = new RemoveObsoleteShardsOperation(nodeName);
         operation.execute(context, EMPTY_LIST);
@@ -75,10 +74,10 @@ public class RemoveObsoleteShardsOperationTest {
         InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
         MasterQueue queue = Mockito.mock(MasterQueue.class);
         MasterContext context = new MasterContext(protocol, Mocks.mockMaster(), new DefaultDistributionPolicy(), queue, injector.getInstance(ChokFileSystem.Factory.class));
-        Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(Arrays.asList(someOldShard));
+        Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(Collections.singletonList(someOldShard));
 
         RemoveObsoleteShardsOperation operation = new RemoveObsoleteShardsOperation(nodeName);
-        operation.execute(context, new ArrayList<>(Arrays.asList(new IndexDeployOperation(indexName, new URI("path"), 1))));
+        operation.execute(context, new ArrayList<>(Collections.singletonList(new IndexDeployOperation(indexName, new URI("path"), 1))));
 
         Mockito.verify(protocol, Mockito.times(0)).addNodeOperation(Matchers.eq(nodeName), (NodeOperation) Matchers.notNull());
     }

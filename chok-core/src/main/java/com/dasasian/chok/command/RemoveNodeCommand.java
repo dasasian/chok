@@ -16,11 +16,7 @@
 package com.dasasian.chok.command;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
-import com.dasasian.chok.protocol.metadata.NodeMetaData;
 import com.dasasian.chok.util.ZkConfiguration;
-
-import java.util.Collections;
-import java.util.List;
 
 /**
  * User: damith.chandrasekara

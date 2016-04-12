@@ -95,9 +95,7 @@ public class LuceneClientTest extends AbstractTest {
         final Query query = new QueryParser(Version.LUCENE_30, "", new KeywordAnalyzer()).parse("content: the");
         client.search(query, null, 10);
 
-        for (String indexName : indexNames) {
-            deployClient.removeIndex(indexName);
-        }
+        indexNames.forEach(deployClient::removeIndex);
 
         for (String indexName : indexNames) {
             while (deployClient.existsIndex(indexName)) {
@@ -242,9 +240,7 @@ public class LuceneClientTest extends AbstractTest {
         final Query query = new QueryParser(Version.LUCENE_30, "", new KeywordAnalyzer()).parse("foo: bar");
         final Hits hits = client.search(query, new String[]{INDEX3, INDEX2});
         assertNotNull(hits);
-        for (final Hit hit : hits.getHits()) {
-            writeToLog(hit);
-        }
+        hits.getHits().forEach(this::writeToLog);
         assertEquals(8, hits.size());
         assertEquals(8, hits.getHits().size());
         client.close();
@@ -262,13 +258,13 @@ public class LuceneClientTest extends AbstractTest {
 
         Document document = new Document();
         document.add(new Field("text", "abc", Field.Store.YES, Index.NOT_ANALYZED));
-        document.add(new NumericField("timesort", Field.Store.YES, false).setLongValue(1234567890123l));
+        document.add(new NumericField("timesort", Field.Store.YES, false).setLongValue(1234567890123L));
         indexWriter1.addDocument(document);
         indexWriter1.close();
 
         document = new Document();
         document.add(new Field("text", "abc2", Field.Store.YES, Index.NOT_ANALYZED));
-        document.add(new NumericField("timesort", Field.Store.YES, false).setLongValue(1234567890123l));
+        document.add(new NumericField("timesort", Field.Store.YES, false).setLongValue(1234567890123L));
         indexWriter2.addDocument(document);
         indexWriter2.close();
 
@@ -331,9 +327,7 @@ public class LuceneClientTest extends AbstractTest {
         final Hits hits = client.search(query, new String[]{sortIndex.getName()}, 20, sort);
         assertNotNull(hits);
         List<Hit> hitsList = hits.getHits();
-        for (final Hit hit : hitsList) {
-            writeToLog(hit);
-        }
+        hitsList.forEach(this::writeToLog);
         assertEquals(9, hits.size());
         assertEquals(9, hitsList.size());
         assertEquals(1, hitsList.get(0).getSortFields().length);
@@ -351,9 +345,7 @@ public class LuceneClientTest extends AbstractTest {
         final Query query = new QueryParser(Version.LUCENE_30, "", new KeywordAnalyzer()).parse("foo: bar");
         final Hits hits = client.search(query, new String[]{INDEX3, INDEX2}, 1);
         assertNotNull(hits);
-        for (final Hit hit : hits.getHits()) {
-            writeToLog(hit);
-        }
+        hits.getHits().forEach(this::writeToLog);
         assertEquals(8, hits.size());
         assertEquals(1, hits.getHits().size());
         for (final Hit hit : hits.getHits()) {
@@ -370,9 +362,7 @@ public class LuceneClientTest extends AbstractTest {
         final Hits expectedHits = client.search(query, null, 4);
         assertNotNull(expectedHits);
         LOG.info("Expected hits:");
-        for (final Hit hit : expectedHits.getHits()) {
-            writeToLog(hit);
-        }
+        expectedHits.getHits().forEach(this::writeToLog);
         assertEquals(4, expectedHits.getHits().size());
 
         for (int i = 0; i < 100; i++) {
@@ -426,9 +416,7 @@ public class LuceneClientTest extends AbstractTest {
         final Query query = new QueryParser(Version.LUCENE_30, "", new KeywordAnalyzer()).parse("foo: bar");
         final Hits hits = client.search(query, new String[]{"index[2-3]+"});
         assertNotNull(hits);
-        for (final Hit hit : hits.getHits()) {
-            writeToLog(hit);
-        }
+        hits.getHits().forEach(this::writeToLog);
         assertEquals(8, hits.size());
         assertEquals(8, hits.getHits().size());
         client.close();
@@ -484,9 +472,7 @@ public class LuceneClientTest extends AbstractTest {
         final Hits hits = client.search(query, new String[]{filterIndex.getName()}, 100, null, filter);
         assertNotNull(hits);
         List<Hit> hitsList = hits.getHits();
-        for (final Hit hit : hitsList) {
-            writeToLog(hit);
-        }
+        hitsList.forEach(this::writeToLog);
         assertEquals(10, hits.size());
         assertEquals(10, hitsList.size());
 

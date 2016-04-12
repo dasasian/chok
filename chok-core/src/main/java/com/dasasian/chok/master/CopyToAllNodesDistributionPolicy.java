@@ -17,14 +17,12 @@ package com.dasasian.chok.master;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Simple deploy policy which distributes the shards in round robin style.<br>
@@ -53,10 +51,7 @@ public class CopyToAllNodesDistributionPolicy implements IDeployPolicy {
 
         final SetMultimap<String, String> newNode2ShardsMap = HashMultimap.create(currentShard2NodesMap.inverse());
 
-        aliveNodes.stream()
-                .forEach(node -> {
-                    newNode2ShardsMap.putAll(node, shards);
-                });
+        aliveNodes.stream().forEach(node -> newNode2ShardsMap.putAll(node, shards));
 
         return ImmutableSetMultimap.copyOf(newNode2ShardsMap);
     }

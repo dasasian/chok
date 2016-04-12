@@ -19,7 +19,6 @@ import com.dasasian.chok.util.NodeConfiguration;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 

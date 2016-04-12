@@ -16,13 +16,11 @@
 package com.dasasian.chok.node;
 
 import com.dasasian.chok.node.monitor.IMonitor;
-import com.dasasian.chok.operation.node.NodeOperation;
-import com.dasasian.chok.operation.node.OperationResult;
-import com.dasasian.chok.operation.node.ShardRedeployOperation;
-import com.dasasian.chok.operation.node.ShardReloadOperation;
+import com.dasasian.chok.operation.node.*;
 import com.dasasian.chok.protocol.ConnectedComponent;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.NodeQueue;
+import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.protocol.metadata.NodeMetaData;
 import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
@@ -40,6 +38,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -137,8 +136,12 @@ public class Node implements ConnectedComponent {
         context.getShardManager().cleanup();
 
         redeployInstalledShards();
+
         NodeMetaData nodeMetaData = new NodeMetaData(nodeName);
         NodeQueue nodeOperationQueue = protocol.publishNode(this, nodeMetaData);
+
+        deployCopyToAllNodexIndexes();
+
         startOperatorThread(nodeOperationQueue);
         if (scheduledExecutorService != null) {
             scheduledExecutorService.scheduleAtFixedRate(() -> {
@@ -150,6 +153,29 @@ public class Node implements ConnectedComponent {
                     LOG.error("Error redeploying installed shards:", e);
                 }
             }, nodeConfiguration.getReloadCheckInterval(), nodeConfiguration.getReloadCheckInterval(), TimeUnit.SECONDS);
+        }
+    }
+
+    private void deployCopyToAllNodexIndexes() {
+        Collection<String> installedShards = contentServer.getShards();
+        InteractionProtocol interactionProtocol = context.getProtocol();
+        interactionProtocol.getIndices().stream()
+                .map(interactionProtocol::getIndexMD)
+                .filter(IndexMetaData::isCopyToAllNodes)
+                .forEach(indexMetaData -> deployCopyToAllNodesIndex(installedShards, indexMetaData));
+    }
+
+    private void deployCopyToAllNodesIndex(Collection<String> installedShards, IndexMetaData indexMetaData) {
+        ShardDeployOperation shardDeployOperation = new ShardDeployOperation(indexMetaData.getAutoReload());
+        indexMetaData.getShards().stream()
+                .filter(shard -> !installedShards.contains(shard.getName()))
+                .forEach(shard -> shardDeployOperation.addShard(shard.getName(), shard.getURI()));
+        if (!shardDeployOperation.getShardNames().isEmpty()) {
+            try {
+                shardDeployOperation.execute(context);
+            } catch (InterruptedException e) {
+                LOG.error("Error deploying shards:", e);
+            }
         }
     }
 

@@ -25,8 +25,6 @@ import org.mockito.Mockito;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Matchers.eq;

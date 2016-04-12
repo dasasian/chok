@@ -18,7 +18,6 @@ package com.dasasian.chok.operation.node;
 import com.dasasian.chok.node.NodeContext;
 
 import java.util.Collection;
-import java.util.List;
 
 public class ShardUndeployOperation extends AbstractShardOperation {
 

@@ -25,6 +25,7 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Mocks {
 
@@ -61,11 +62,7 @@ public class Mocks {
     }
 
     public static List<NodeQueue> publishNodes(InteractionProtocol protocol, List<Node> nodes) {
-        List<NodeQueue> nodeQueues = new ArrayList<>();
-        for (Node node : nodes) {
-            nodeQueues.add(publishNode(protocol, node));
-        }
-        return nodeQueues;
+        return nodes.stream().map(node -> publishNode(protocol, node)).collect(Collectors.toList());
     }
 
 }

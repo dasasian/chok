@@ -19,9 +19,7 @@ import com.dasasian.chok.util.ChokConfiguration;
 import com.dasasian.chok.util.ClassUtil;
 import com.dasasian.chok.util.NodeConfiguration;
 import com.dasasian.chok.util.NodeConfigurationLoader;
-import com.google.common.base.Optional;
 
-import java.io.File;
 import java.nio.file.Path;
 
 /**
@@ -57,7 +55,7 @@ public class LuceneNodeConfigurationLoader {
         return new LuceneNodeConfiguration(nodeConfiguration, searcherFactoryClass, timeoutPercentage, threadPoolCoreSize, threadPoolMaxSize, filterCacheEnabled, filterCacheMaxSize);
     }
 
-    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<Path> overrideShardFolder) throws ClassNotFoundException {
+    public static NodeConfiguration loadConfiguration(Integer overrideStartPort, Path overrideShardFolder) throws ClassNotFoundException {
         NodeConfiguration nodeConfiguration = NodeConfigurationLoader.loadConfiguration(overrideStartPort, overrideShardFolder);
         return getLuceneNodeConfiguration(nodeConfiguration);
     }

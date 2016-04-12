@@ -15,8 +15,6 @@
  */
 package com.dasasian.chok.util;
 
-import com.google.common.base.Optional;
-
 import java.io.File;
 
 public class ZkConfigurationLoader {
@@ -35,29 +33,29 @@ public class ZkConfigurationLoader {
     public static final String ZOOKEEPER_ROOT_PATH = "zookeeper.root-path";
 
     public static ZkConfiguration loadConfiguration() {
-        return loadConfiguration(Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<Integer>absent(), Optional.<Integer>absent(), Optional.<Integer>absent(), Optional.<Integer>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
+        return loadConfiguration(null, null, null, null, null, null, null, null, null);
     }
 
-    public static ZkConfiguration loadConfiguration(Optional<Boolean> overrideEmbedded, Optional<String> overrideServers, Optional<Integer> overrideTimeOut, Optional<Integer> overrideTickTime, Optional<Integer> overrideInitLimit, Optional<Integer> overrideSyncLimit, Optional<String> overrideDataDir, Optional<String> overrideLogDataDir, Optional<String> overrideRootPath) {
+    public static ZkConfiguration loadConfiguration(Boolean overrideEmbedded, String overrideServers, Integer overrideTimeOut, Integer overrideTickTime, Integer overrideInitLimit, Integer overrideSyncLimit, String overrideDataDir, String overrideLogDataDir, String overrideRootPath) {
         ChokConfiguration chokConfiguration = new ChokConfiguration("/chok.zk.properties");
 
-        boolean embedded = overrideEmbedded.isPresent() ? overrideEmbedded.get() : chokConfiguration.getBoolean(ZOOKEEPER_EMBEDDED, true);
+        boolean embedded = overrideEmbedded != null ? overrideEmbedded : chokConfiguration.getBoolean(ZOOKEEPER_EMBEDDED, true);
 
-        String servers = overrideServers.isPresent() ? overrideServers.get() : chokConfiguration.getProperty(ZOOKEEPER_SERVERS, "localhost:2181");
+        String servers = overrideServers != null ? overrideServers : chokConfiguration.getProperty(ZOOKEEPER_SERVERS, "localhost:2181");
 
-        int timeOut = overrideTimeOut.isPresent() ? overrideTimeOut.get() : chokConfiguration.getInt(ZOOKEEPER_TIMEOUT, 1000);
+        int timeOut = overrideTimeOut != null ? overrideTimeOut : chokConfiguration.getInt(ZOOKEEPER_TIMEOUT, 1000);
 
-        int tickTime = overrideTickTime.isPresent() ? overrideTickTime.get() : chokConfiguration.getInt(ZOOKEEPER_TICK_TIME, 2000);
+        int tickTime = overrideTickTime != null ? overrideTickTime : chokConfiguration.getInt(ZOOKEEPER_TICK_TIME, 2000);
 
-        int initLimit = overrideInitLimit.isPresent() ? overrideInitLimit.get() : chokConfiguration.getInt(ZOOKEEPER_INIT_LIMIT, 5);
+        int initLimit = overrideInitLimit != null ? overrideInitLimit : chokConfiguration.getInt(ZOOKEEPER_INIT_LIMIT, 5);
 
-        int syncLimit = overrideSyncLimit.isPresent() ? overrideSyncLimit.get() : chokConfiguration.getInt(ZOOKEEPER_SYNC_LIMIT, 2);
+        int syncLimit = overrideSyncLimit != null ? overrideSyncLimit : chokConfiguration.getInt(ZOOKEEPER_SYNC_LIMIT, 2);
 
-        String dataDir = overrideDataDir.isPresent() ? overrideDataDir.get() : chokConfiguration.getProperty(ZOOKEEPER_DATA_DIR, "/tmp/zookeeper/data");
+        String dataDir = overrideDataDir != null ? overrideDataDir : chokConfiguration.getProperty(ZOOKEEPER_DATA_DIR, "/tmp/zookeeper/data");
 
-        String dataLogDir = overrideLogDataDir.isPresent() ? overrideLogDataDir.get() : chokConfiguration.getProperty(ZOOKEEPER_LOG_DATA_DIR, "/tmp/zookeeper/log");
+        String dataLogDir = overrideLogDataDir != null ? overrideLogDataDir : chokConfiguration.getProperty(ZOOKEEPER_LOG_DATA_DIR, "/tmp/zookeeper/log");
 
-        String rootPath = overrideRootPath.isPresent() ? overrideRootPath.get() : chokConfiguration.getProperty(ZOOKEEPER_ROOT_PATH, "/chok");
+        String rootPath = overrideRootPath != null ? overrideRootPath : chokConfiguration.getProperty(ZOOKEEPER_ROOT_PATH, "/chok");
 
         int snapshotRetainCount = chokConfiguration.getInt(ZOOKEEPER_SNAPSHOT_RETAIN_COUNT, 3);
 

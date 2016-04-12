@@ -85,7 +85,7 @@ public class IndexDeployOperation extends AbstractIndexOperation {
                 ChokFileSystem fileSystem = context.getChokFileSystem(indexMetaData);
                 indexMetaData.getShards().addAll(readShardsFromFs(fileSystem, indexName, indexUri));
                 LOG.info("Found shards '" + indexMetaData.getShards() + "' for index '" + indexName + "'");
-                return distributeIndexShards(context, indexMetaData, protocol.getLiveNodes(), runningOperations);
+                return distributeIndexShards(context, indexMetaData, runningOperations);
             } catch (final IOException e) {
                 throw new IndexDeployException(ErrorType.INDEX_NOT_ACCESSIBLE, "unable to retrieve file system for index path '" + indexUri + "', make sure your path starts with hadoop support prefix like file:// or hdfs://", e);
             }

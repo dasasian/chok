@@ -23,14 +23,12 @@ import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
 import com.dasasian.chok.util.NodeConfigurationLoader;
 import com.dasasian.chok.util.ZkConfiguration;
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * User: damith.chandrasekara
@@ -50,14 +48,14 @@ public class StartMapFileNodeCommand extends ProtocolCommand {
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, Map<String, String> optionMap) {
-        Optional<Integer> startPort = Optional.absent();
+        Integer startPort = null;
         if (optionMap.containsKey("-p")) {
-            startPort = Optional.of(Integer.parseInt(optionMap.get("-p")));
+            startPort = Integer.parseInt(optionMap.get("-p"));
         }
 
-        Optional<Path> shardFolder = Optional.absent();
+        Path shardFolder = null;
         if (optionMap.containsKey("-f")) {
-            shardFolder = Optional.of(Paths.get(optionMap.get("-f")));
+            shardFolder = Paths.get(optionMap.get("-f"));
         }
 
         try {

@@ -28,7 +28,6 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,7 +37,7 @@ import static org.junit.Assert.assertTrue;
 public class OperationWatchdogTest extends AbstractTest {
 
     private MasterOperation masterOperation = Mockito.mock(MasterOperation.class);
-    private List<OperationId> operationIds = Arrays.asList(new OperationId("node1", "ne1"));
+    private List<OperationId> operationIds = Collections.singletonList(new OperationId("node1", "ne1"));
     private OperationWatchdog watchdog = new OperationWatchdog("e1", masterOperation, operationIds);
     private InteractionProtocol protocol = Mockito.mock(InteractionProtocol.class);
     private MasterQueue masterQueue = Mockito.mock(MasterQueue.class);
@@ -49,7 +48,7 @@ public class OperationWatchdogTest extends AbstractTest {
     @Test
     public void testWatchdogCompletion_OperationsDone() throws Exception {
         // start watchdog - node operation pending
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList(operationIds.get(0).getNodeName()));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList(operationIds.get(0).getNodeName()));
         Mockito.when(protocol.isNodeOperationQueued(operationIds.get(0))).thenReturn(true);
         watchdog.start(context);
         assertFalse(watchdog.isDone());
@@ -64,7 +63,7 @@ public class OperationWatchdogTest extends AbstractTest {
     @Test
     public void testWatchdogCompletion_NodeDown() throws Exception {
         // start watchdog - node operation pending
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList(operationIds.get(0).getNodeName()));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList(operationIds.get(0).getNodeName()));
         Mockito.when(protocol.isNodeOperationQueued(operationIds.get(0))).thenReturn(true);
         watchdog.start(context);
         assertFalse(watchdog.isDone());

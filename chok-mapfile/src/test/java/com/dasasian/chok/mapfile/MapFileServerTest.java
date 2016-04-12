@@ -20,14 +20,12 @@ import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.NodeConfigurationFactory;
 import com.dasasian.chok.testutil.TestNodeConfigurationFactory;
-import com.dasasian.chok.util.ChokFileSystem;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.slf4j.Logger;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 

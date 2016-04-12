@@ -64,12 +64,13 @@ public abstract class AbstractIndexOperation implements MasterOperation {
         }
     }
 
-    protected List<OperationId> distributeIndexShards(MasterContext context, final IndexMetaData indexMD, Collection<String> liveNodes, List<MasterOperation> runningOperations) throws IndexDeployException {
+    protected List<OperationId> distributeIndexShards(MasterContext context, final IndexMetaData indexMD, List<MasterOperation> runningOperations) throws IndexDeployException {
+        InteractionProtocol protocol = context.getProtocol();
+        Collection<String> liveNodes = protocol.getLiveNodes();
         if (liveNodes.isEmpty()) {
             throw new IndexDeployException(ErrorType.NO_NODES_AVAILIBLE, "no nodes availible");
         }
 
-        InteractionProtocol protocol = context.getProtocol();
         Set<Shard> shards = indexMD.getShards();
         Set<String> shardNames = shards.stream().map(Shard::getName).collect(Collectors.toSet());
 
@@ -135,16 +136,16 @@ public abstract class AbstractIndexOperation implements MasterOperation {
     }
 
     protected boolean canAndShouldRegulateReplication(InteractionProtocol protocol, IndexMetaData indexMD) {
-        ReplicationReport replicationReport = protocol.getReplicationReport(indexMD);
-        return canAndShouldRegulateReplication(protocol, replicationReport);
+        int liveNodes = protocol.getLiveNodeCount();
+        ReplicationReport replicationReport = protocol.getReplicationReport(indexMD, liveNodes);
+        return canAndShouldRegulateReplication(replicationReport, liveNodes);
     }
 
-    protected boolean canAndShouldRegulateReplication(InteractionProtocol protocol, ReplicationReport replicationReport) {
-        List<String> liveNodes = protocol.getLiveNodes();
+    protected boolean canAndShouldRegulateReplication(ReplicationReport replicationReport, int liveNodes) {
         if (replicationReport.isBalanced()) {
             return false;
         }
-        if (replicationReport.isUnderreplicated() && liveNodes.size() <= replicationReport.getMinimalShardReplicationCount()) {
+        if (replicationReport.isUnderreplicated() && liveNodes <= replicationReport.getMinimalShardReplicationCount()) {
             return false;
         }
         return true;
@@ -164,13 +165,14 @@ public abstract class AbstractIndexOperation implements MasterOperation {
     }
 
     protected void handleDeploymentComplete(MasterContext context, List<OperationResult> results, IndexMetaData indexMD, boolean newIndex) {
-        ReplicationReport replicationReport = context.getProtocol().getReplicationReport(indexMD);
+        InteractionProtocol protocol = context.getProtocol();
+        ReplicationReport replicationReport = protocol.getReplicationReport(indexMD, protocol.getLiveNodeCount());
         if (replicationReport.isDeployed()) {
             indexMD.setDeployError(null);
             updateShardMetaData(results, indexMD);
             // we ignore possible shard errors
-            if (canAndShouldRegulateReplication(context.getProtocol(), replicationReport)) {
-                context.getProtocol().addMasterOperation(new BalanceIndexOperation(indexMD.getName()));
+            if (canAndShouldRegulateReplication(replicationReport, protocol.getLiveNodeCount())) {
+                protocol.addMasterOperation(new BalanceIndexOperation(indexMD.getName()));
             }
         } else {
             IndexDeployError deployError = new IndexDeployError(indexMD.getName(), ErrorType.SHARDS_NOT_DEPLOYABLE);
@@ -184,9 +186,9 @@ public abstract class AbstractIndexOperation implements MasterOperation {
             indexMD.setDeployError(deployError);
         }
         if (newIndex) {
-            context.getProtocol().publishIndex(indexMD);
+            protocol.publishIndex(indexMD);
         } else {
-            context.getProtocol().updateIndexMD(indexMD);
+            protocol.updateIndexMD(indexMD);
         }
     }
 

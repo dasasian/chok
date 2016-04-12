@@ -17,8 +17,6 @@ package com.dasasian.chok.node;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
 
-import java.net.URI;
-
 public class NodeContext {
 
     private final Node node;

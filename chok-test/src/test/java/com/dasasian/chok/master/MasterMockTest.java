@@ -41,6 +41,7 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -64,7 +65,7 @@ public class MasterMockTest extends AbstractTest {
 
         MasterQueue masterQueue = mockBlockingOperationQueue();
         Mockito.when(protocol.publishMaster(master)).thenReturn(masterQueue);
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
 
         master.start();
         assertTrue(master.isMaster());
@@ -77,7 +78,7 @@ public class MasterMockTest extends AbstractTest {
         final Master master = new Master(TestMasterConfiguration.getTestConfiguration(), protocol, injector.getInstance(ChokFileSystem.Factory.class), false);
 
         Mockito.when(protocol.publishMaster(master)).thenReturn(null);
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
 
         master.start();
         assertFalse(master.isMaster());
@@ -90,7 +91,7 @@ public class MasterMockTest extends AbstractTest {
 
         MasterQueue masterQueue = mockBlockingOperationQueue();
         Mockito.when(protocol.publishMaster(master)).thenReturn(masterQueue);
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
 
         master.start();
         assertTrue(master.isMaster());
@@ -129,8 +130,8 @@ public class MasterMockTest extends AbstractTest {
         String nodeName = "node1";
         MasterQueue masterQueue = mockBlockingOperationQueue();
         Mockito.when(protocol.publishMaster(master)).thenReturn(masterQueue);
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList(nodeName));
-        Mockito.when(protocol.registerChildListener(Matchers.eq(master), Matchers.eq(PathDef.NODES_LIVE), Matchers.any(IAddRemoveListener.class))).thenReturn(Arrays.asList(nodeName));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList(nodeName));
+        Mockito.when(protocol.registerChildListener(Matchers.eq(master), Matchers.eq(PathDef.NODES_LIVE), Matchers.any(IAddRemoveListener.class))).thenReturn(Collections.singletonList(nodeName));
 
         List<String> shards = Arrays.asList("shard1", "shard2");
         Mockito.when(protocol.getNodeShards(nodeName)).thenReturn(shards);
@@ -156,7 +157,7 @@ public class MasterMockTest extends AbstractTest {
 
         MasterQueue masterQueue = mockBlockingOperationQueue();
         Mockito.when(protocol.publishMaster(master)).thenReturn(masterQueue);
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
 
         master.start();
         TestUtil.waitUntilLeaveSafeMode(master);

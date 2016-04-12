@@ -82,7 +82,7 @@ public class CheckCommand extends ProtocolCommand {
         for (String index : indices) {
             System.out.println("checking " + index + " ...");
             IndexMetaData indexMD = protocol.getIndexMD(index);
-            ReplicationReport replicationReport = protocol.getReplicationReport(indexMD);
+            ReplicationReport replicationReport = protocol.getReplicationReport(indexMD, protocol.getLiveNodeCount());
             Set<IndexMetaData.Shard> shards = indexMD.getShards();
             // cannot sort shards because Shard is declared inside IndexMetaData
             totalShards += shards.size() * indexMD.getReplicationLevel();

@@ -64,7 +64,7 @@ public class BalanceIndexOperation extends AbstractIndexOperation {
 
         LOG.info("balancing shards for index '" + indexName + "'");
         try {
-            return distributeIndexShards(context, indexMD, protocol.getLiveNodes(), runningOperations);
+            return distributeIndexShards(context, indexMD, runningOperations);
         } catch (Exception e) {
             ExceptionUtil.rethrowInterruptedException(e);
             LOG.error("failed to deploy balance " + indexName, e);

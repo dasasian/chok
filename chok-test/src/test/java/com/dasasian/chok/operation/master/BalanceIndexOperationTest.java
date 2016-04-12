@@ -20,13 +20,11 @@ import com.dasasian.chok.master.MasterContext;
 import com.dasasian.chok.node.Node;
 import com.dasasian.chok.operation.OperationId;
 import com.dasasian.chok.operation.master.MasterOperation.ExecutionInstruction;
-import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.MasterQueue;
 import com.dasasian.chok.protocol.NodeQueue;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
 import com.dasasian.chok.testutil.Mocks;
 import com.dasasian.chok.util.ChokFileSystem;
-import com.dasasian.chok.util.HDFSChokFileSystem;
 import com.dasasian.chok.util.TestLoggerWatcher;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +32,6 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -60,7 +57,7 @@ public class BalanceIndexOperationTest extends AbstractMasterNodeZkTest {
         MasterOperation op2 = new BalanceIndexOperation("index1");
 
         assertEquals(ExecutionInstruction.EXECUTE, op1.getExecutionInstruction(EMPTY_LIST));
-        assertEquals(ExecutionInstruction.CANCEL, op2.getExecutionInstruction(Arrays.asList(op1)));
+        assertEquals(ExecutionInstruction.CANCEL, op2.getExecutionInstruction(Collections.singletonList(op1)));
     }
 
     @Test
@@ -169,7 +166,7 @@ public class BalanceIndexOperationTest extends AbstractMasterNodeZkTest {
         assertEquals(1, masterQueue.size());
 
         assertThat(defaultDistributionPolicyLoggingRule.getLogEventCount(event -> true), is(equalTo(4)));
-        assertThat(defaultDistributionPolicyLoggingRule.getLogEventCount(event -> event.getFormattedMessage().matches("cannot replicate shard \\'.*\\' 3 times, cause only 2 nodes connected")), is(equalTo(4)));
+        assertThat(defaultDistributionPolicyLoggingRule.getLogEventCount(event -> event.getFormattedMessage().matches("cannot replicate shard '.*' 3 times, cause only 2 nodes connected")), is(equalTo(4)));
 //        assertThat(interactionProtocolLoggingRule.getLogEventCount(event -> true), is(equalTo(2)));
     }
 

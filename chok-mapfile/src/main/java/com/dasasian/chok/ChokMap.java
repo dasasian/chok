@@ -16,7 +16,6 @@
 package com.dasasian.chok;
 
 import com.dasasian.chok.command.*;
-import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.UtilModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;

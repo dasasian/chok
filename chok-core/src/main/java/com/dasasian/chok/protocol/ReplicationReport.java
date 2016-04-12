@@ -19,32 +19,32 @@ import java.util.Map;
 
 public class ReplicationReport {
 
-    private final int _desiredReplicationCount;
-    private final int _minimalShardReplicationCount;
-    private final int _maximalShardReplicationCount;
-    private final Map<String, Integer> _shard2ReplicationCount;
+    private final int desiredReplicationCount;
+    private final int minimalShardReplicationCount;
+    private final int maximalShardReplicationCount;
+    private final Map<String, Integer> shard2ReplicationCount;
 
     public ReplicationReport(Map<String, Integer> replicationCountByShardMap, int desiredReplicationCount, int minimalShardReplicationCount, int maximalShardReplicationCount) {
-        _shard2ReplicationCount = replicationCountByShardMap;
-        _desiredReplicationCount = desiredReplicationCount;
-        _minimalShardReplicationCount = minimalShardReplicationCount;
-        _maximalShardReplicationCount = maximalShardReplicationCount;
+        shard2ReplicationCount = replicationCountByShardMap;
+        this.desiredReplicationCount = desiredReplicationCount;
+        this.minimalShardReplicationCount = minimalShardReplicationCount;
+        this.maximalShardReplicationCount = maximalShardReplicationCount;
     }
 
     public int getReplicationCount(String shardName) {
-        return _shard2ReplicationCount.get(shardName);
+        return shard2ReplicationCount.get(shardName);
     }
 
     public int getDesiredReplicationCount() {
-        return _desiredReplicationCount;
+        return desiredReplicationCount;
     }
 
     public int getMinimalShardReplicationCount() {
-        return _minimalShardReplicationCount;
+        return minimalShardReplicationCount;
     }
 
     public int getMaximalShardReplicationCount() {
-        return _maximalShardReplicationCount;
+        return maximalShardReplicationCount;
     }
 
     public boolean isUnderreplicated() {
@@ -68,7 +68,7 @@ public class ReplicationReport {
 
     @Override
     public String toString() {
-        return String.format("desiredReplication: %s | minimalShardReplication: %s | maximalShardReplication: %s", _desiredReplicationCount, _minimalShardReplicationCount, _maximalShardReplicationCount);
+        return String.format("desiredReplication: %s | minimalShardReplication: %s | maximalShardReplication: %s", desiredReplicationCount, minimalShardReplicationCount, maximalShardReplicationCount);
     }
 
 }

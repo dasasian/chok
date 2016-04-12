@@ -18,9 +18,11 @@ package com.dasasian.chok.testutil.integration;
 import com.dasasian.chok.client.DeployClient;
 import com.dasasian.chok.client.IDeployClient;
 import com.dasasian.chok.client.IIndexDeployFuture;
+import com.dasasian.chok.client.IndexDeployFuture;
 import com.dasasian.chok.master.Master;
 import com.dasasian.chok.node.IContentServer;
 import com.dasasian.chok.node.Node;
+import com.dasasian.chok.operation.master.BalanceIndexOperation;
 import com.dasasian.chok.operation.master.IndexDeployOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
@@ -156,11 +158,7 @@ public class ChokMiniCluster extends ExternalResource {
     }
 
     private void stop() {
-        for (Node node : nodes) {
-            if (node.isRunning()) {
-                node.shutdown();
-            }
-        }
+        nodes.stream().filter(Node::isRunning).forEach(Node::shutdown);
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
@@ -216,21 +214,21 @@ public class ChokMiniCluster extends ExternalResource {
         return master;
     }
 
-    public List<String> deployTestIndexes(URI indexUri, int replicationCount) throws InterruptedException {
-        List<String> indices = new ArrayList<>();
-        IDeployClient deployClient = new DeployClient(protocol);
-        String indexName = Paths.get(indexUri).getFileName().toString();
-        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexUri, replicationCount, false);
-        indices.add(indexName);
-        deployFuture.joinDeployment();
-
-        try {
-            TestUtil.waitUntilIndexDeployed(protocol, indexName);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return indices;
-    }
+//    public List<String> deployTestIndexes(URI indexUri, int replicationCount) throws InterruptedException {
+//        List<String> indices = new ArrayList<>();
+//        IDeployClient deployClient = new DeployClient(protocol);
+//        String indexName = Paths.get(indexUri).getFileName().toString();
+//        IIndexDeployFuture deployFuture = deployClient.addIndex(indexName, indexUri, replicationCount, false);
+//        indices.add(indexName);
+//        deployFuture.joinDeployment();
+//
+//        try {
+//            TestUtil.waitUntilIndexDeployed(protocol, indexName);
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//        return indices;
+//    }
 
     public InteractionProtocol createInteractionProtocol() {
         return new InteractionProtocol(zkTestSystem.createZkClient(), zkConfiguration);
@@ -261,6 +259,22 @@ public class ChokMiniCluster extends ExternalResource {
         InteractionProtocol protocol = getProtocol();
         protocol.addMasterOperation(deployOperation);
         TestUtil.waitUntilIndexDeployed(protocol, indexName);
+        return protocol.getIndexMD(indexName);
+    }
+
+    public IndexMetaData balanceIndex(String indexName) throws Exception {
+        BalanceIndexOperation balanceIndexOperation = new BalanceIndexOperation(indexName);
+        InteractionProtocol protocol = getProtocol();
+        protocol.addMasterOperation(balanceIndexOperation);
+        IIndexDeployFuture deployFuture = new IndexDeployFuture(protocol, indexName);
+        deployFuture.joinDeployment();
+
+        try {
+            TestUtil.waitUntilIndexDeployed(protocol, indexName);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         return protocol.getIndexMD(indexName);
     }
 

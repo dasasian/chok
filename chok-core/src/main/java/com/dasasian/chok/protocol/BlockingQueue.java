@@ -114,7 +114,7 @@ public class BlockingQueue<T extends Serializable> {
                 String elementName = getSmallestElement(elementNames);
                 try {
                     String elementPath = getElementPath(elementName);
-                    return new Element<>(elementName, (T) zkClient.readData(elementPath));
+                    return new Element<>(elementName, zkClient.readData(elementPath));
                 } catch (ZkNoNodeException e) {
                     // somebody else picked up the element first, so we have to
                     // retry with the new first element

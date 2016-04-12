@@ -55,9 +55,7 @@ public class DocumentFrequencyWritableTest extends AbstractTest {
             threads.add(new Thread(runnable));
         }
 
-        for (Thread thread : threads) {
-            thread.start();
-        }
+        threads.forEach(Thread::start);
 
         for (Thread thread : threads) {
             thread.join();

@@ -20,7 +20,6 @@ import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.FileUtil;
 import com.dasasian.chok.util.ThrottledFileSystem;
 import com.dasasian.chok.util.ThrottledInputStream.ThrottleSemaphore;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -36,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class ShardManager {
 
@@ -236,7 +236,7 @@ public class ShardManager {
                 }
                 return false;
             };
-            return Maps.filterEntries(autoReloadShards, reloadPredicate);
+            return Maps.filterEntries(autoReloadShards, reloadPredicate::test);
         }
         return ImmutableMap.of();
     }

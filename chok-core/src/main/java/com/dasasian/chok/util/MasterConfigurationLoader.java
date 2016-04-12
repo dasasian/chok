@@ -17,7 +17,6 @@ package com.dasasian.chok.util;
 
 import com.dasasian.chok.master.DefaultDistributionPolicy;
 import com.dasasian.chok.master.IDeployPolicy;
-import com.google.common.base.Optional;
 
 /**
  * User: damith.chandrasekara
@@ -28,15 +27,15 @@ public class MasterConfigurationLoader {
     private final static String SAFE_MODE_MAX_TIME = "safemode.maxTime";
 
     public static MasterConfiguration loadConfiguration() throws InstantiationException, IllegalAccessException {
-        return loadConfiguration(Optional.<Class<? extends IDeployPolicy>>absent(), Optional.<Integer>absent());
+        return loadConfiguration(null, null);
     }
 
-    public static MasterConfiguration loadConfiguration(Optional<Class<? extends IDeployPolicy>> overrideDeployPolicyClass, Optional<Integer> overrideSafeModeMaxTime) throws IllegalAccessException, InstantiationException {
+    public static MasterConfiguration loadConfiguration(Class<? extends IDeployPolicy> overrideDeployPolicyClass, Integer overrideSafeModeMaxTime) throws IllegalAccessException, InstantiationException {
         ChokConfiguration chokConfiguration = new ChokConfiguration("/chok.master.properties");
 
-        Class<? extends IDeployPolicy> deployPolicyClass = overrideDeployPolicyClass.isPresent() ? overrideDeployPolicyClass.get() : ClassUtil.forName(chokConfiguration.getProperty(DEPLOY_POLICY, DefaultDistributionPolicy.class.getName()), IDeployPolicy.class);
+        Class<? extends IDeployPolicy> deployPolicyClass = overrideDeployPolicyClass != null ? overrideDeployPolicyClass : ClassUtil.forName(chokConfiguration.getProperty(DEPLOY_POLICY, DefaultDistributionPolicy.class.getName()), IDeployPolicy.class);
 
-        int safeModeMaxTime = overrideSafeModeMaxTime.isPresent() ? overrideSafeModeMaxTime.get() : chokConfiguration.getInt(SAFE_MODE_MAX_TIME, 25);
+        int safeModeMaxTime = overrideSafeModeMaxTime != null ? overrideSafeModeMaxTime : chokConfiguration.getInt(SAFE_MODE_MAX_TIME, 25);
 
         IDeployPolicy deployPolicy = deployPolicyClass.newInstance();
 

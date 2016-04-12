@@ -19,15 +19,12 @@ import com.dasasian.chok.client.*;
 import com.dasasian.chok.util.ChokException;
 import com.dasasian.chok.util.ClientConfiguration;
 import com.dasasian.chok.util.ZkConfiguration;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -132,7 +132,7 @@ public class CommandLineInterface {
 
     private void printUsageAndExit() {
         printUsageHeader();
-        commands.forEach((command) -> printUsage(command));
+        commands.forEach(this::printUsage);
         printUsageFooter();
         System.exit(1);
     }

@@ -21,7 +21,6 @@ import com.dasasian.chok.testutil.AbstractTest;
 import com.dasasian.chok.testutil.TestIndex;
 import com.dasasian.chok.testutil.mockito.ChainedAnswer;
 import com.dasasian.chok.testutil.mockito.SleepingAnswer;
-import com.dasasian.chok.util.ChokFileSystem;
 import com.dasasian.chok.util.NodeConfiguration;
 import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.queryParser.ParseException;

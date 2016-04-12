@@ -42,8 +42,8 @@ public class StatusCommand extends ProtocolCommand {
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) {
 
-        final int knownNodesCount = protocol.getKnownNodes().size();
-        final int liveNodesCount = protocol.getLiveNodes().size();
+        final int knownNodesCount = protocol.getKnownNodeCount();
+        final int liveNodesCount = protocol.getLiveNodeCount();
         final boolean nodesHealthy = liveNodesCount == knownNodesCount;
 
         List<String> indices = protocol.getIndices();
@@ -53,7 +53,7 @@ public class StatusCommand extends ProtocolCommand {
             final IndexMetaData indexMD = protocol.getIndexMD(index);
             if (!indexMD.hasDeployError()) {
                 deployedCount++;
-                ReplicationReport report = protocol.getReplicationReport(indexMD);
+                ReplicationReport report = protocol.getReplicationReport(indexMD, liveNodesCount);
                 if (report.isBalanced()) {
                     balancedCount++;
                 }

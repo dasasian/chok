@@ -98,7 +98,7 @@ public class ClientHelper {
         }
 
         try {
-            WorkQueue<T> workQueue = new WorkQueue<T>(executor, proxyManager, method, shardArrayParamIndex, resultReceiverWrapper, args);
+            WorkQueue<T> workQueue = new WorkQueue<>(executor, proxyManager, method, shardArrayParamIndex, resultReceiverWrapper, args);
             node2ShardsMap.keySet().stream().forEach(node -> workQueue.execute(node, node2ShardsMap, 1, maxTryCount));
             workQueue.waitTillDone(resultPolicy);
         }

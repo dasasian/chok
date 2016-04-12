@@ -37,7 +37,6 @@ import org.apache.zookeeper.Watcher.Event.KeeperState;
 import org.apache.zookeeper.proto.WatcherEvent;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 
 import java.util.List;
 import java.util.Set;
@@ -130,9 +129,7 @@ public class FailoverTest extends AbstractTest {
                     Set<Shard> shards = protocol.getIndexMD(indexName).getShards();
                     for (Shard shard : shards) {
                         List<Exception> shardErrors = deployError.getShardErrors(shard.getName());
-                        for (Exception errorDetail : shardErrors) {
-                            errorDetail.printStackTrace();
-                        }
+                        shardErrors.forEach(Exception::printStackTrace);
                     }
                     System.out.println(deployError.getErrorTrace());
                 }

@@ -17,8 +17,8 @@ package com.dasasian.chok.util;
 
 import com.dasasian.chok.node.monitor.IMonitor;
 import com.dasasian.chok.node.monitor.JmxMonitor;
-import com.google.common.base.Optional;
 
+import javax.annotation.Nullable;
 import java.nio.file.Path;
 
 public class NodeConfigurationLoader {
@@ -31,31 +31,31 @@ public class NodeConfigurationLoader {
     private static final String RPC_HANDLER_COUNT = "node.rpc.handler-count";
 
     public static NodeConfiguration loadConfiguration() throws ClassNotFoundException {
-        return loadConfiguration(Optional.<Integer>absent(), Optional.<Path>absent(), Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent(), Optional.<Integer>absent());
+        return loadConfiguration(null, null, null, null, null, null);
     }
 
     public static NodeConfiguration loadConfiguration(int overrideStartPort) throws ClassNotFoundException {
-        return loadConfiguration(Optional.of(overrideStartPort), Optional.<Path>absent(), Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent(), Optional.<Integer>absent());
+        return loadConfiguration(overrideStartPort, null, null, null, null, null);
     }
 
-    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<Path> overrideShardFolder) throws ClassNotFoundException {
-        return loadConfiguration(overrideStartPort, overrideShardFolder, Optional.<Integer>absent(), Optional.<Class<? extends IMonitor>>absent(), Optional.<Integer>absent(), Optional.<Integer>absent());
+    public static NodeConfiguration loadConfiguration(@Nullable Integer overrideStartPort, @Nullable Path overrideShardFolder) throws ClassNotFoundException {
+        return loadConfiguration(overrideStartPort, overrideShardFolder, null, null, null, null);
     }
 
-    public static NodeConfiguration loadConfiguration(Optional<Integer> overrideStartPort, Optional<Path> overrideShardFolder, Optional<Integer> overrideShardDeployThrottle, Optional<Class<? extends IMonitor>> overrideMonitorClass, Optional<Integer> overrideRPCHandlerCount, Optional<Integer> overrideShardReloachCheckInterval) throws ClassNotFoundException {
+    public static NodeConfiguration loadConfiguration(@Nullable Integer overrideStartPort, @Nullable Path overrideShardFolder, Integer overrideShardDeployThrottle, Class<? extends IMonitor> overrideMonitorClass, Integer overrideRPCHandlerCount, Integer overrideShardReloachCheckInterval) throws ClassNotFoundException {
         ChokConfiguration chokConfiguration = new ChokConfiguration("/chok.node.properties");
 
-        int startPort = overrideStartPort.isPresent() ? overrideStartPort.get() : chokConfiguration.getInt(NODE_SERVER_PORT_START);
+        int startPort = overrideStartPort != null ? overrideStartPort : chokConfiguration.getInt(NODE_SERVER_PORT_START);
 
-        Path shardFolder = overrideShardFolder.isPresent() ? overrideShardFolder.get() : chokConfiguration.getPath(SHARD_FOLDER);
+        Path shardFolder = overrideShardFolder != null ? overrideShardFolder : chokConfiguration.getPath(SHARD_FOLDER);
 
-        int shardDeployThrottle = overrideShardDeployThrottle.isPresent() ? overrideShardDeployThrottle.get() : chokConfiguration.getInt(SHARD_DEPLOY_THROTTLE, 0);
+        int shardDeployThrottle = overrideShardDeployThrottle != null ? overrideShardDeployThrottle : chokConfiguration.getInt(SHARD_DEPLOY_THROTTLE, 0);
 
-        Class<? extends IMonitor> monitorClass = overrideMonitorClass.isPresent() ? overrideMonitorClass.get() : ClassUtil.forName(chokConfiguration.getProperty(MONITOR_CLASS, JmxMonitor.class.getName()), IMonitor.class);
+        Class<? extends IMonitor> monitorClass = overrideMonitorClass != null ? overrideMonitorClass : ClassUtil.forName(chokConfiguration.getProperty(MONITOR_CLASS, JmxMonitor.class.getName()), IMonitor.class);
 
-        int rpcHandlerCount = overrideRPCHandlerCount.isPresent() ? overrideRPCHandlerCount.get() : chokConfiguration.getInt(RPC_HANDLER_COUNT, 25);
+        int rpcHandlerCount = overrideRPCHandlerCount != null ? overrideRPCHandlerCount : chokConfiguration.getInt(RPC_HANDLER_COUNT, 25);
 
-        int reloadCheckInterval = overrideShardReloachCheckInterval.isPresent() ? overrideShardReloachCheckInterval.get() : chokConfiguration.getInt(SHARD_RELOAD_CHECK_INTERVAL, 25);
+        int reloadCheckInterval = overrideShardReloachCheckInterval != null ? overrideShardReloachCheckInterval : chokConfiguration.getInt(SHARD_RELOAD_CHECK_INTERVAL, 25);
 
         return new NodeConfiguration(startPort, shardFolder, shardDeployThrottle, monitorClass, rpcHandlerCount, reloadCheckInterval);
     }

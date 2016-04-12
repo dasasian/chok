@@ -18,6 +18,7 @@ package com.dasasian.chok.util;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Peter Voss
@@ -58,10 +59,7 @@ public class MergeSort {
             }
         }
 
-        final List<T> currentElements = new ArrayList<>();
-        for (final Iterator<T> iterator : iterators) {
-            currentElements.add(iterator.next());
-        }
+        final List<T> currentElements = iterators.stream().map(Iterator::next).collect(Collectors.toList());
 
         final List<T> sortedResult = new ArrayList<>();
         while (iterators.size() > 0) {

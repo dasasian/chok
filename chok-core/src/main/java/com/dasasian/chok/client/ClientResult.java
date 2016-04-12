@@ -58,7 +58,7 @@ public class ClientResult<T> implements IResultReceiver<T>, Iterable<ClientResul
      * @param allShards      The set of all shards to expect results from.
      */
     public ClientResult(ImmutableSet<String> allShards) {
-        this.resultReceiverWrapper = new ResultReceiverWrapper<T>(allShards, this);
+        this.resultReceiverWrapper = new ResultReceiverWrapper<>(allShards, this);
         if (LOG.isTraceEnabled()) {
             LOG.trace(String.format("Created ClientResult(%s)", allShards));
         }

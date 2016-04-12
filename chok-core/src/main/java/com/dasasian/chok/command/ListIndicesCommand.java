@@ -78,7 +78,7 @@ public class ListIndicesCommand extends ProtocolCommand {
                 state = "ERROR";
                 replicationState = "-";
             } else {
-                ReplicationReport report = protocol.getReplicationReport(indexMD);
+                ReplicationReport report = protocol.getReplicationReport(indexMD, protocol.getLiveNodeCount());
                 if (report.isUnderreplicated()) {
                     replicationState = "UNDERREPLICATED";
                 } else if (report.isOverreplicated()) {

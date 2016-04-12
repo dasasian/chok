@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Abstracts the interaction between master and nodes via zookeeper files and
@@ -302,9 +301,12 @@ public class InteractionProtocol {
         return zkClient.getChildren(zkConf.getPath(PathDef.SHARD_TO_NODES));
     }
 
-    public ReplicationReport getReplicationReport(IndexMetaData indexMD) {
+    public ReplicationReport getReplicationReport(IndexMetaData indexMD, int liveNodeCount) {
         int desiredReplicationCount = indexMD.getReplicationLevel();
-        int minimalShardReplicationCount = indexMD.getReplicationLevel();
+        if(desiredReplicationCount == IndexMetaData.REPLICATE_TO_ALL_NODES) {
+            desiredReplicationCount = liveNodeCount;
+        }
+        int minimalShardReplicationCount = desiredReplicationCount;
         int maximaShardReplicationCount = 0;
 
         Map<String, Integer> replicationCountByShardMap = new HashMap<>();
@@ -570,6 +572,14 @@ public class InteractionProtocol {
 
     public boolean isIndexAutoRepairEnabled() {
         return !zkClient.exists(zkConf.getPath(PathDef.FLAGS, DISABLE_INDEX_AUTO_REPAIR_FLAG));
+    }
+
+    public int getLiveNodeCount() {
+        return getLiveNodes().size();
+    }
+
+    public int getKnownNodeCount() {
+        return getKnownNodes().size();
     }
 
     static class ListenerAdapter {

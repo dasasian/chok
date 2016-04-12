@@ -41,7 +41,7 @@ public class DeployClient implements IDeployClient {
 
     private void validateIndexData(String name, int replicationLevel) {
         // TODO jz: try to access path already ?
-        if (replicationLevel <= 0) {
+        if (replicationLevel <= 0 && replicationLevel != IndexMetaData.REPLICATE_TO_ALL_NODES) {
             throw new IllegalArgumentException("replication level must be 1 or greater");
         }
         if (name.trim().equals("*")) {

@@ -146,6 +146,11 @@ public class TestUtil {
         });
     }
 
+    public static boolean indexHasDeployError(final InteractionProtocol protocol, final String indexName) throws Exception {
+        IndexMetaData indexMetaData = protocol.getIndexMD(indexName);
+        return indexMetaData.hasDeployError();
+    }
+
     public static void waitUntilLeaveSafeMode(final Master master) throws Exception {
         waitUntil(false, master::isInSafeMode, TimeUnit.SECONDS, 30);
         assertEquals(false, master.isInSafeMode());
@@ -166,7 +171,7 @@ public class TestUtil {
             if (indexMD.hasDeployError()) {
                 throw new IllegalStateException("index " + indexName + " has a deploy error");
             }
-            return protocol.getReplicationReport(indexMD).isBalanced();
+            return protocol.getReplicationReport(indexMD, protocol.getLiveNodeCount()).isBalanced();
         }, TimeUnit.SECONDS, 30);
     }
 
@@ -191,8 +196,8 @@ public class TestUtil {
     }
 
     public static void waitUntilNumberOfLiveNode(final InteractionProtocol protocol, final int nodeCount) throws Exception {
-        waitUntil(true, () -> protocol.getLiveNodes().size() == nodeCount, TimeUnit.SECONDS, 30);
-        assertEquals(nodeCount, protocol.getLiveNodes().size());
+        waitUntil(true, () -> protocol.getLiveNodeCount() == nodeCount, TimeUnit.SECONDS, 30);
+        assertEquals(nodeCount, protocol.getLiveNodeCount());
     }
 
     public static void waitUntilEmptyOperationQueues(final InteractionProtocol protocol, final Master master, final List<Node> nodes) throws Exception {

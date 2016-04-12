@@ -55,8 +55,8 @@ public class HealthcheckCommand extends ProtocolCommand {
         Map<String, Map<String, Object>> healthchecks = Maps.newHashMap();
 
         Map<String, Object> nodesHealthcheckResult = Maps.newHashMap();
-        final int knownNodesCount = protocol.getKnownNodes().size();
-        final int liveNodesCount = protocol.getLiveNodes().size();
+        final int knownNodesCount = protocol.getKnownNodeCount();
+        final int liveNodesCount = protocol.getLiveNodeCount();
         nodesHealthcheckResult.put("healthy", (liveNodesCount == knownNodesCount));
         nodesHealthcheckResult.put("message", "Nodes (active/known): " + liveNodesCount + "/" + knownNodesCount);
         healthchecks.put("nodes", nodesHealthcheckResult);
@@ -69,7 +69,7 @@ public class HealthcheckCommand extends ProtocolCommand {
             final IndexMetaData indexMD = protocol.getIndexMD(index);
             if (!indexMD.hasDeployError()) {
                 deployedCount++;
-                ReplicationReport report = protocol.getReplicationReport(indexMD);
+                ReplicationReport report = protocol.getReplicationReport(indexMD, liveNodesCount);
                 if (report.isBalanced()) {
                     balancedCount++;
                 }

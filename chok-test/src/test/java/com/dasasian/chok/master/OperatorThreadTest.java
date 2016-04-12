@@ -68,7 +68,7 @@ public class OperatorThreadTest {
         assertTrue(operatorThread.isInSafeMode());
 
         // connect nodes
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
 
         // check safe mode & operation execution
         Thread.sleep(safeModeMaxTime + 200);
@@ -95,7 +95,7 @@ public class OperatorThreadTest {
     @Test(timeout = 10000)
     public void testGracefulShutdownWhileWaitingForOperations() throws Exception {
         Mockito.when(queue.peek()).thenAnswer(new SleepingAnswer());
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         long safeModeMaxTime = 200;
         OperatorThread operatorThread = new OperatorThread(context, safeModeMaxTime);
         operatorThread.start();
@@ -114,7 +114,7 @@ public class OperatorThreadTest {
         final MasterOperation masterOperation3 = mockOperation(ExecutionInstruction.EXECUTE);
         Mockito.when(queue.peek()).thenReturn(masterOperation1).thenReturn(masterOperation2).thenReturn(masterOperation3).thenAnswer(new SleepingAnswer());
 
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         long safeModeMaxTime = 200;
         OperatorThread operatorThread = new OperatorThread(context, safeModeMaxTime);
         operatorThread.start();
@@ -132,7 +132,7 @@ public class OperatorThreadTest {
     @Test(timeout = 10000)
     public void testOperationWatchdog() throws Exception {
         String nodeName = "node1";
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList(nodeName));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList(nodeName));
         List<OperationId> operationIds = new ArrayList<>();
         operationIds.add(new OperationId(nodeName, "e1"));
 
@@ -184,7 +184,7 @@ public class OperatorThreadTest {
     @Test(timeout = 10000)
     public void testRecreateWatchdogs() throws Exception {
         Mockito.when(queue.peek()).thenAnswer(new SleepingAnswer());
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         OperationWatchdog watchdog1 = Mockito.mock(OperationWatchdog.class);
         OperationWatchdog watchdog2 = Mockito.mock(OperationWatchdog.class);
         Mockito.when(watchdog1.isDone()).thenReturn(true);
@@ -206,7 +206,7 @@ public class OperatorThreadTest {
 
     @Test(timeout = 10000)
     public void testInterruptedException_Queue() throws Exception {
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         Mockito.when(queue.peek()).thenThrow(new InterruptedException());
         OperatorThread operatorThread = new OperatorThread(context, 50);
         operatorThread.start();
@@ -215,7 +215,7 @@ public class OperatorThreadTest {
 
     @Test(timeout = 10000)
     public void testInterruptedException_Queue_Zk() throws Exception {
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         ZkInterruptedException zkInterruptedException = Mockito.mock(ZkInterruptedException.class);
         Mockito.when(queue.peek()).thenThrow(zkInterruptedException);
         OperatorThread operatorThread = new OperatorThread(context, 50);
@@ -225,7 +225,7 @@ public class OperatorThreadTest {
 
     @Test(timeout = 10000)
     public void testInterruptedException_Operation() throws Exception {
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         final MasterOperation masterOperation = mockOperation(ExecutionInstruction.EXECUTE);
         Mockito.when(masterOperation.execute(context, EMPTY_LIST)).thenThrow(new InterruptedException());
         Mockito.when(queue.peek()).thenReturn(masterOperation);
@@ -236,7 +236,7 @@ public class OperatorThreadTest {
 
     @Test(timeout = 1000000)
     public void testInterruptedException_Operation_Zk() throws Exception {
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         ZkInterruptedException zkInterruptedException = Mockito.mock(ZkInterruptedException.class);
         final MasterOperation masterOperation = mockOperation(ExecutionInstruction.EXECUTE);
         Mockito.when(masterOperation.execute(context, EMPTY_LIST)).thenThrow(zkInterruptedException);
@@ -248,7 +248,7 @@ public class OperatorThreadTest {
 
     @Test(timeout = 10000000)
     public void testDontStopOnOOM() throws Exception {
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList("node1"));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList("node1"));
         Mockito.when(queue.peek()).thenThrow(new OutOfMemoryError("test exception")).thenAnswer(new SleepingAnswer());
 
         OperatorThread operatorThread = new OperatorThread(context, 50);
@@ -262,7 +262,7 @@ public class OperatorThreadTest {
 
     private void runLockSituation(final MasterOperation leaderOperation1, final MasterOperation leaderOperation2, ExecutionInstruction instruction) throws Exception {
         String nodeName = "node1";
-        Mockito.when(protocol.getLiveNodes()).thenReturn(Arrays.asList(nodeName));
+        Mockito.when(protocol.getLiveNodes()).thenReturn(Collections.singletonList(nodeName));
         List<OperationId> operationIds = new ArrayList<>();
         operationIds.add(new OperationId(nodeName, "e1"));
 

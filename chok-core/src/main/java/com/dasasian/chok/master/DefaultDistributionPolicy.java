@@ -20,13 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import static com.google.common.base.Predicates.in;
-import static com.google.common.base.Predicates.not;
 
 /**
  * Simple deploy policy which distributes the shards in round robin style.<br>
