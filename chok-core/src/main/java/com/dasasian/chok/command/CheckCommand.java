@@ -82,16 +82,23 @@ public class CheckCommand extends ProtocolCommand {
         for (String index : indices) {
             System.out.println("checking " + index + " ...");
             IndexMetaData indexMD = protocol.getIndexMD(index);
+
+            int replicationLevel = indexMD.getReplicationLevel();
+            if(replicationLevel == IndexMetaData.REPLICATE_TO_ALL_NODES) {
+                replicationLevel = protocol.getLiveNodes().size();
+            }
+
             ReplicationReport replicationReport = protocol.getReplicationReport(indexMD, protocol.getLiveNodeCount());
             Set<IndexMetaData.Shard> shards = indexMD.getShards();
             // cannot sort shards because Shard is declared inside IndexMetaData
-            totalShards += shards.size() * indexMD.getReplicationLevel();
+            totalShards += shards.size() * replicationLevel;
+
             for (IndexMetaData.Shard shard : shards) {
                 int shardReplication = replicationReport.getReplicationCount(shard.getName());
-                if (shardReplication < indexMD.getReplicationLevel()) {
-                    System.out.println("\tshard " + shard + " is under-replicated (" + shardReplication + "/" + indexMD.getReplicationLevel() + ")");
-                } else if (shardReplication > indexMD.getReplicationLevel()) {
-                    System.out.println("\tshard " + shard + " is over-replicated (" + shardReplication + "/" + indexMD.getReplicationLevel() + ")");
+                if (shardReplication < replicationLevel) {
+                    System.out.println("\tshard " + shard + " is under-replicated (" + shardReplication + "/" + replicationLevel + ")");
+                } else if (shardReplication > replicationLevel) {
+                    System.out.println("\tshard " + shard + " is over-replicated (" + shardReplication + "/" + replicationLevel + ")");
                 }
             }
         }

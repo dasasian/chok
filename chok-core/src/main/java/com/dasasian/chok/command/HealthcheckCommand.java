@@ -15,6 +15,7 @@
  */
 package com.dasasian.chok.command;
 
+import com.dasasian.chok.operation.master.CheckIndicesOperation;
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.protocol.ReplicationReport;
 import com.dasasian.chok.protocol.metadata.IndexMetaData;
@@ -36,14 +37,16 @@ public class HealthcheckCommand extends ProtocolCommand {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private boolean prettyView;
+    private boolean attempRepair;
 
     public HealthcheckCommand() {
-        super("healthcheck", "[-p]", "Shows the status of a Chok installation. -p for pretty view.");
+        super("healthcheck", "[-p] [-r]", "Shows the status of a Chok installation. -p for pretty view, -r to attempt index repair.");
     }
 
     @Override
     protected void parseArguments(ZkConfiguration zkConf, String[] args, java.util.Map<String, String> optionMap) {
         prettyView = optionMap.containsKey("-p");
+        attempRepair = optionMap.containsKey("-r");
     }
 
     @Override
@@ -75,7 +78,8 @@ public class HealthcheckCommand extends ProtocolCommand {
                 }
             }
         }
-        indicesHealthcheckResult.put("healthy", ((indices.size() == deployedCount) && (deployedCount == balancedCount)));
+        boolean indicesHealthy = (indices.size() == deployedCount) && (deployedCount == balancedCount);
+        indicesHealthcheckResult.put("healthy", indicesHealthy);
         indicesHealthcheckResult.put("message", "Indices (deployed/balanced/known): " + deployedCount + "/" + balancedCount + "/" + indices.size());
         healthchecks.put("indices", indicesHealthcheckResult);
 
@@ -85,5 +89,9 @@ public class HealthcheckCommand extends ProtocolCommand {
             e.printStackTrace();
         }
 
+        // if indices are not healthy then attempt a repair
+        if(attempRepair && !indicesHealthy) {
+            protocol.addMasterOperation(new CheckIndicesOperation());
+        }
     }
 }

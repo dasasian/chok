@@ -45,7 +45,9 @@ public class AddIndexCommand extends ProtocolCommand {
             if("ALL".equalsIgnoreCase(args[3])) {
                 replicationLevel = IndexMetaData.REPLICATE_TO_ALL_NODES;
             }
-            replicationLevel = Integer.parseInt(args[3]);
+            else {
+                replicationLevel = Integer.parseInt(args[3]);
+            }
         }
         if (args.length >= 5) {
             autoReload = Boolean.parseBoolean(args[4].trim());

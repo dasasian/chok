@@ -41,7 +41,6 @@ public class StatusCommand extends ProtocolCommand {
 
     @Override
     public void execute(ZkConfiguration zkConf, InteractionProtocol protocol) {
-
         final int knownNodesCount = protocol.getKnownNodeCount();
         final int liveNodesCount = protocol.getLiveNodeCount();
         final boolean nodesHealthy = liveNodesCount == knownNodesCount;
