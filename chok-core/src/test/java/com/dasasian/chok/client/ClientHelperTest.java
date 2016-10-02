@@ -34,10 +34,9 @@ import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
 
 /**
@@ -52,6 +51,7 @@ public class ClientHelperTest {
     private INodeSelectionPolicy selectionPolicy;
     private ClientHelper clientHelper;
     private ITestServer testServer;
+    private ExecutorService executorService;
 
     @Rule
     public TestRule watcher = new TestWatcherLoggingRule(NodeInteraction.class,
@@ -68,7 +68,8 @@ public class ClientHelperTest {
         when(proxyManager.getProxy(Matchers.anyString(), Matchers.anyBoolean())).thenReturn(testServer);
 
         selectionPolicy = new DefaultNodeSelectionPolicy();
-        clientHelper = new ClientHelper(1, indexToShards, proxyManager, selectionPolicy);
+        executorService = Executors.newCachedThreadPool();
+        clientHelper = new ClientHelper(executorService, 1, indexToShards, proxyManager, selectionPolicy);
     }
 
     @After
@@ -78,6 +79,7 @@ public class ClientHelperTest {
         proxyManager = null;
         selectionPolicy = null;
         clientHelper = null;
+        executorService.shutdown();
     }
 
     @Test
@@ -170,109 +172,102 @@ public class ClientHelperTest {
 
     @Test
     public void testBroadcastInternalReceiverWrapper() throws Exception {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        try {
-            Method method = ITestServer.class.getMethod("testMethod", String.class, String[].class);
-            Object[] args = new Object[]{"question", null};
+        Method method = ITestServer.class.getMethod("testMethod", String.class, String[].class);
+        Object[] args = new Object[]{"question", null};
 
-            {
-                ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of("node1", "node1#shard1");
+        {
+            ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of("node1", "node1#shard1");
 
-                doReturn(null).when(testServer).testMethod(anyString(), any(String[].class));
+            doReturn(null).when(testServer).testMethod(anyString(), any(String[].class));
 
-                @SuppressWarnings("unchecked")
-                IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
+            @SuppressWarnings("unchecked")
+            IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
 
-                @SuppressWarnings("unchecked")
-                IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
+            @SuppressWarnings("unchecked")
+            IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
 
-                clientHelper.broadcastInternalReceiverWrapper(executorService, ResultCompletePolicy.awaitCompletion(1000),
-                        method, 1, node2Shard, resultReceiverWrapper, args);
+            clientHelper.broadcastInternalReceiverWrapper(ResultCompletePolicy.awaitCompletion(1000),
+                    method, 1, node2Shard, resultReceiverWrapper, args);
 
-                assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
-                assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1"));
-                assertThat(resultReceiverWrapper.isClosed(), is(false));
-                assertThat(resultReceiverWrapper.isComplete(), is(true));
+            assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
+            assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1"));
+            assertThat(resultReceiverWrapper.isClosed(), is(false));
+            assertThat(resultReceiverWrapper.isComplete(), is(true));
 
-                verify(resultReceiver, never()).addError(any(Throwable.class), any());
-                verify(resultReceiver, times(1)).addResult(anyString(), eq(ImmutableSet.of("node1#shard1")));
-            }
-
-            {
-                ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of("node1", "node1#shard1");
-
-                doReturn("answer").when(testServer).testMethod(anyString(), any(String[].class));
-
-                @SuppressWarnings("unchecked")
-                IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
-
-                @SuppressWarnings("unchecked")
-                IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
-
-                clientHelper.broadcastInternalReceiverWrapper(executorService, ResultCompletePolicy.awaitCompletion(1000),
-                        method, 1, node2Shard, resultReceiverWrapper, args);
-
-                assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
-                assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1"));
-                assertThat(resultReceiverWrapper.isClosed(), is(false));
-                assertThat(resultReceiverWrapper.isComplete(), is(true));
-
-                verify(resultReceiver, never()).addError(any(Throwable.class), any());
-                verify(resultReceiver, times(1)).addResult(eq("answer"), eq(ImmutableSet.of("node1#shard1")));
-            }
-
-            {
-                ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of("node1", "node1#shard1");
-
-                doThrow(new RuntimeException("test exception")).when(testServer).testMethod(anyString(), any(String[].class));
-
-                @SuppressWarnings("unchecked")
-                IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
-
-                @SuppressWarnings("unchecked")
-                IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
-
-                clientHelper.broadcastInternalReceiverWrapper(executorService, ResultCompletePolicy.awaitCompletion(1000),
-                        method, 1, node2Shard, resultReceiverWrapper, args);
-
-                assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
-                assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1"));
-                assertThat(resultReceiverWrapper.isClosed(), is(false));
-                assertThat(resultReceiverWrapper.isComplete(), is(true));
-
-                verify(resultReceiver, times(1)).addError(any(Throwable.class), eq(ImmutableSet.of("node1#shard1")));
-                verify(resultReceiver, never()).addResult(eq("answer"), any());
-            }
-
-            {
-                ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of(
-                        "node1", "node1#shard1",
-                        "node2", "node2#shard2");
-
-                doReturn("answer").when(testServer).testMethod(anyString(), AdditionalMatchers.aryEq(Arrays.array("node1#shard1")));
-                doThrow(new RuntimeException("test exception")).when(testServer).testMethod(anyString(), AdditionalMatchers.aryEq(Arrays.array("node2#shard2")));
-
-                @SuppressWarnings("unchecked")
-                IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
-
-                @SuppressWarnings("unchecked")
-                IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
-
-                clientHelper.broadcastInternalReceiverWrapper(executorService, ResultCompletePolicy.awaitCompletion(1000),
-                        method, 1, node2Shard, resultReceiverWrapper, args);
-
-                assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
-                assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1", "node2#shard2"));
-                assertThat(resultReceiverWrapper.isClosed(), is(false));
-                assertThat(resultReceiverWrapper.isComplete(), is(true));
-
-                verify(resultReceiver, times(1)).addError(any(Throwable.class), eq(ImmutableSet.of("node2#shard2")));
-                verify(resultReceiver, times(1)).addResult(eq("answer"), eq(ImmutableSet.of("node1#shard1")));
-            }
-
+            verify(resultReceiver, never()).addError(any(Throwable.class), any());
+            verify(resultReceiver, times(1)).addResult(anyString(), eq(ImmutableSet.of("node1#shard1")));
         }
-        finally {
-            executorService.shutdownNow();
+
+        {
+            ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of("node1", "node1#shard1");
+
+            doReturn("answer").when(testServer).testMethod(anyString(), any(String[].class));
+
+            @SuppressWarnings("unchecked")
+            IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
+
+            @SuppressWarnings("unchecked")
+            IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
+
+            clientHelper.broadcastInternalReceiverWrapper(ResultCompletePolicy.awaitCompletion(1000),
+                    method, 1, node2Shard, resultReceiverWrapper, args);
+
+            assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
+            assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1"));
+            assertThat(resultReceiverWrapper.isClosed(), is(false));
+            assertThat(resultReceiverWrapper.isComplete(), is(true));
+
+            verify(resultReceiver, never()).addError(any(Throwable.class), any());
+            verify(resultReceiver, times(1)).addResult(eq("answer"), eq(ImmutableSet.of("node1#shard1")));
+        }
+
+        {
+            ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of("node1", "node1#shard1");
+
+            doThrow(new RuntimeException("test exception")).when(testServer).testMethod(anyString(), any(String[].class));
+
+            @SuppressWarnings("unchecked")
+            IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
+
+            @SuppressWarnings("unchecked")
+            IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
+
+            clientHelper.broadcastInternalReceiverWrapper(ResultCompletePolicy.awaitCompletion(1000),
+                    method, 1, node2Shard, resultReceiverWrapper, args);
+
+            assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
+            assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1"));
+            assertThat(resultReceiverWrapper.isClosed(), is(false));
+            assertThat(resultReceiverWrapper.isComplete(), is(true));
+
+            verify(resultReceiver, times(1)).addError(any(Throwable.class), eq(ImmutableSet.of("node1#shard1")));
+            verify(resultReceiver, never()).addResult(eq("answer"), any());
+        }
+
+        {
+            ImmutableSetMultimap<String, String> node2Shard = ImmutableSetMultimap.of(
+                    "node1", "node1#shard1",
+                    "node2", "node2#shard2");
+
+            doReturn("answer").when(testServer).testMethod(anyString(), AdditionalMatchers.aryEq(Arrays.array("node1#shard1")));
+            doThrow(new RuntimeException("test exception")).when(testServer).testMethod(anyString(), AdditionalMatchers.aryEq(Arrays.array("node2#shard2")));
+
+            @SuppressWarnings("unchecked")
+            IResultReceiver<String> resultReceiver = mock(IResultReceiver.class);
+
+            @SuppressWarnings("unchecked")
+            IResultReceiverWrapper<String> resultReceiverWrapper = new ResultReceiverWrapper(ImmutableSet.copyOf(node2Shard.values()), resultReceiver);
+
+            clientHelper.broadcastInternalReceiverWrapper(ResultCompletePolicy.awaitCompletion(1000),
+                    method, 1, node2Shard, resultReceiverWrapper, args);
+
+            assertThat(resultReceiverWrapper.getShardCoverage(), is(equalTo(1.0)));
+            assertThat(resultReceiverWrapper.getSeenShards(), hasItems("node1#shard1", "node2#shard2"));
+            assertThat(resultReceiverWrapper.isClosed(), is(false));
+            assertThat(resultReceiverWrapper.isComplete(), is(true));
+
+            verify(resultReceiver, times(1)).addError(any(Throwable.class), eq(ImmutableSet.of("node2#shard2")));
+            verify(resultReceiver, times(1)).addResult(eq("answer"), eq(ImmutableSet.of("node1#shard1")));
         }
     }
 

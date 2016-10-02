@@ -17,7 +17,10 @@ package com.dasasian.chok.client;
 
 import com.dasasian.chok.protocol.InteractionProtocol;
 import com.dasasian.chok.util.*;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.VersionedProtocol;
 import org.slf4j.Logger;
@@ -25,6 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Client implements AutoCloseable {
 
@@ -38,6 +43,7 @@ public class Client implements AutoCloseable {
     private final InteractionProtocol protocol;
     private final INodeProxyManager proxyManager;
     private final IndexAddRemoveListener indexAddRemoveListener;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
 
     public Client(Class<? extends VersionedProtocol> serverClass) {
         this(serverClass, new DefaultNodeSelectionPolicy(), ZkConfigurationLoader.loadConfiguration());
@@ -88,7 +94,7 @@ public class Client implements AutoCloseable {
         this.selectionPolicy = policy;
         this.protocol = protocol;
         this.indexAddRemoveListener = new IndexAddRemoveListener(policy, protocol, proxyManager);
-        this.clientHelper = new ClientHelper(maxTryCount, indexAddRemoveListener.getIndex2Shards(), proxyManager, policy);
+        this.clientHelper = new ClientHelper(executorService, maxTryCount, indexAddRemoveListener.getIndex2Shards(), proxyManager, policy);
     }
 
 
@@ -225,6 +231,10 @@ public class Client implements AutoCloseable {
             throw new ChokException("No shards selected: " + shards);
         }
         clientHelper.broadcastInternalReceiver(resultPolicy, method, shardArrayParamIndex, nodeShardsMap, resultReceiver, args);
+        try {
+            resultReceiver.close();
+        } catch (Exception ignore) {
+        }
     }
 
 
@@ -236,9 +246,9 @@ public class Client implements AutoCloseable {
 
     public void close() {
         indexAddRemoveListener.close();
-
-            protocol.disconnect();
-            proxyManager.shutdown();
+        protocol.disconnect();
+        proxyManager.shutdown();
+        executorService.shutdown();
     }
 
     @SuppressWarnings("unused")

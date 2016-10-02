@@ -25,9 +25,10 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * Client helper
@@ -40,12 +41,14 @@ public class ClientHelper {
 
     private long queryCount = 0;
     private final long startupTime;
+    private final ExecutorService executorService;
     private final int maxTryCount;
     private final SetMultimap<String, String> indexToShards;
     private final INodeProxyManager proxyManager;
     private final INodeSelectionPolicy selectionPolicy;
 
-    public ClientHelper(int maxTryCount, SetMultimap<String, String> indexToShards,INodeProxyManager proxyManager, INodeSelectionPolicy selectionPolicy) {
+    public ClientHelper(ExecutorService executorService, int maxTryCount, SetMultimap<String, String> indexToShards, INodeProxyManager proxyManager, INodeSelectionPolicy selectionPolicy) {
+        this.executorService = executorService;
         this.maxTryCount = maxTryCount;
         this.indexToShards = indexToShards;
         this.proxyManager = proxyManager;
@@ -55,21 +58,12 @@ public class ClientHelper {
 
 
     public <T> void broadcastInternalReceiver(IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, ImmutableSetMultimap<String, String> nodeShardsMap, IResultReceiver<T> resultReceiver, Object... args) throws ChokException {
-        final ExecutorService executorService = Executors.newCachedThreadPool();
-
-        try {
-            try (ResultReceiverWrapper<T> resultReceiverWrapper = new ResultReceiverWrapper<>(ImmutableSet.copyOf(nodeShardsMap.values()), resultReceiver)) {
-                broadcastInternalReceiverWrapper(executorService, resultPolicy, method, shardArrayParamIndex, nodeShardsMap, resultReceiverWrapper, args);
-            }
-        }
-        finally {
-            if(!executorService.isShutdown()) {
-                executorService.shutdownNow();
-            }
+        try (ResultReceiverWrapper<T> resultReceiverWrapper = new ResultReceiverWrapper<>(ImmutableSet.copyOf(nodeShardsMap.values()), resultReceiver)) {
+            broadcastInternalReceiverWrapper(resultPolicy, method, shardArrayParamIndex, nodeShardsMap, resultReceiverWrapper, args);
         }
     }
 
-    protected  <T> void broadcastInternalReceiverWrapper(ExecutorService executor, IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, ImmutableSetMultimap<String, String> node2ShardsMap, IResultReceiverWrapper<T> resultReceiverWrapper, Object... args) throws ChokException {
+    protected <T> void broadcastInternalReceiverWrapper(IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, ImmutableSetMultimap<String, String> node2ShardsMap, IResultReceiverWrapper<T> resultReceiverWrapper, Object... args) throws ChokException {
         queryCount++;
 
         // Validate inputs.
@@ -79,7 +73,7 @@ public class ClientHelper {
         Class<?>[] types = method.getParameterTypes();
 
         validateArgs(types, args);
-        validateShardArryaParamIndex(shardArrayParamIndex, types);
+        validateShardArrayParamIndex(shardArrayParamIndex, types);
 
         if (LOG.isTraceEnabled()) {
             for (String indexName : indexToShards.keySet()) {
@@ -98,11 +92,10 @@ public class ClientHelper {
         }
 
         try {
-            WorkQueue<T> workQueue = new WorkQueue<>(executor, proxyManager, method, shardArrayParamIndex, resultReceiverWrapper, args);
+            WorkQueue<T> workQueue = new WorkQueue<>(executorService, proxyManager, method, shardArrayParamIndex, resultReceiverWrapper, args);
             node2ShardsMap.keySet().stream().forEach(node -> workQueue.execute(node, node2ShardsMap, 1, maxTryCount));
             workQueue.waitTillDone(resultPolicy);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new ChokException("Got error", e);
         }
 
@@ -112,20 +105,13 @@ public class ClientHelper {
     }
 
     public <T> ClientResult<T> broadcastInternal(IResultPolicy<T> resultPolicy, Method method, int shardArrayParamIndex, ImmutableSetMultimap<String, String> nodeShardsMap, Object... args) throws ChokException {
-        final ExecutorService executorService = Executors.newCachedThreadPool();
-
-        try (ClientResult<T> clientResults = new ClientResult<>(ImmutableSet.copyOf(nodeShardsMap.values()))){
-            broadcastInternalReceiverWrapper(executorService, resultPolicy, method, shardArrayParamIndex, nodeShardsMap, clientResults.getResultReceiverWrapper(), args);
+        try (ClientResult<T> clientResults = new ClientResult<>(ImmutableSet.copyOf(nodeShardsMap.values()))) {
+            broadcastInternalReceiverWrapper(resultPolicy, method, shardArrayParamIndex, nodeShardsMap, clientResults.getResultReceiverWrapper(), args);
             return clientResults;
-        }
-        finally {
-            if(!executorService.isShutdown()) {
-                executorService.shutdownNow();
-            }
         }
     }
 
-    private void validateShardArryaParamIndex(int shardArrayParamIndex, Class<?>[] types) {
+    private void validateShardArrayParamIndex(int shardArrayParamIndex, Class<?>[] types) {
         if (shardArrayParamIndex > 0) {
             if (shardArrayParamIndex >= types.length) {
                 throw new IllegalArgumentException("shardArrayParamIndex out of range!");
